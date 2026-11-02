@@ -41,6 +41,12 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
               Labs
             </Link>
             <Link
+              href="/build"
+              className="rounded-md px-2.5 py-1.5 text-muted transition-colors hover:bg-surface-2 hover:text-text"
+            >
+              Build
+            </Link>
+            <Link
               href="/review"
               className="rounded-md px-2.5 py-1.5 text-muted transition-colors hover:bg-surface-2 hover:text-text"
             >

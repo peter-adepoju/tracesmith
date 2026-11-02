@@ -1,0 +1,27 @@
+{
+  "_comment": "Copy to config.json and point it at things you actually care about. Keep config.json out of git if any URL is private.",
+  "expected_every_s": 300,
+  "targets": [
+    {
+      "name": "example-home",
+      "url": "https://example.com",
+      "budget_ms": 1500,
+      "retries": 2,
+      "paused": false
+    },
+    {
+      "name": "example-api",
+      "url": "https://example.com/api/health",
+      "budget_ms": 800,
+      "retries": 3,
+      "paused": false
+    },
+    {
+      "name": "staging",
+      "url": "https://staging.example.com",
+      "budget_ms": 3000,
+      "retries": 1,
+      "paused": true
+    }
+  ]
+}

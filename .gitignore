@@ -9,3 +9,12 @@ next-env.d.ts
 *.tsbuildinfo
 .DS_Store
 .vercel
+
+# Project work: your own config and run logs stay local.
+projects/*/config.json
+projects/**/run-log.jsonl
+projects/**/.env
+
+# Python build output
+__pycache__/
+*.pyc
