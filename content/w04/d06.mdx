@@ -1,0 +1,111 @@
+The last day of Phase 1. A scavenger hunt: twelve questions, answered using nothing but DevTools.
+
+Time yourself. Note where you got stuck. Then do it again later in the week and beat the time — speed here is worth real money, because it is the difference between investigating a ticket in three minutes and in twenty.
+
+<Callout kind="practice">
+Use **Meridian** for this: open the lab at **Labs → Meridian: first contact**, stage 1, and click *Open in a tab* so you have the shop on its own with full DevTools.
+
+Any site works, but Meridian is the product you will be testing for the rest of the course, so getting to know it now is time well spent.
+</Callout>
+
+## The hunt
+
+**Elements**
+
+1. How many `<button>` elements are on the catalogue page?
+2. Find an element that is in the DOM but not visible on screen. What is hiding it, and which of the three methods is it?
+3. Pick any price. What is its computed `color`, as a hex or rgb value?
+4. Force the `:hover` state on a View button. What changes?
+
+**Console**
+
+5. Are there any errors on load? If so, which file produced each one, and is it the site's own code or a third party?
+6. How many images on the page are missing an `alt` attribute?
+7. Print the heading outline. Does it have exactly one `h1` and no skipped levels?
+
+**Network**
+
+8. How many requests does the page make on first load? How many are Fetch/XHR?
+9. Find the request that fetches the products. What is its status, and how long did it wait for the server?
+10. Add something to the cart. Which request fires, and what exactly is in its payload?
+
+**Application and device**
+
+11. Does the site store anything in Local Storage or cookies? If so, what?
+12. At 375 pixels wide, does the page scroll horizontally? If it does, which element is the culprit?
+
+## Scoring yourself
+
+- **Under 10 minutes** — you are fluent. Move on.
+- **10 to 20 minutes** — normal after one week. Repeat it in a few days.
+- **Over 20 minutes** — note which questions cost you the time and reread that day. There is no shame in it; this is a lot of surface area for one week.
+
+The questions you found hardest tell you which panel to practise. That signal is the real output of today, more than the answers.
+
+## Two habits to carry forward
+
+**Open DevTools first.** Before you touch the page, not after something goes wrong. Console and Network only record while they are open, and there is nothing more irritating than reproducing a rare bug and having no evidence of it.
+
+**Read the response, not the screen.** The screen shows what the page chose to display. The response shows what the server actually sent. Almost everything interesting — missing data, leaked data, the wrong value, the real error message — lives in the gap between the two.
+
+<Exercise
+  prompt="For question 2, you found an element you cannot see. Write the exact console line that tells you whether CSS is hiding it, and what three values you might get back."
+  accept={["getcomputedstyle", "display", "visibility", "opacity"]}
+  hint="One function gives the final value of any property."
+  solution="getComputedStyle(document.querySelector('.thing')).display, and the same for .visibility and .opacity. You might get display: none (removed from layout), visibility: hidden (invisible but occupying space), or opacity: 0 (invisible, in the layout, and still clickable). Each is a different bug with a different consequence."
+/>
+
+<Exercise
+  prompt="For question 10, the payload is visible in the Network tab. Why is reading it more valuable than checking that the cart updated on screen?"
+  accept={["what was sent", "actually sent", "screen can lie", "truth", "server"]}
+  hint="The screen is rendered by the same code that built the request."
+  solution="The screen shows what the page decided to display, which can be right while what was sent is wrong — or the reverse. The payload is what the server actually received, so it catches a wrong quantity, a wrong product id or a missing field that the interface happily hides."
+/>
+
+<Quiz questions={[
+  {
+    q: "You can find an element with querySelector but cannot see it. What have you ruled out?",
+    options: [
+      "That it is a CSS problem",
+      "That it is missing from the DOM",
+      "That the page loaded",
+      "Nothing"
+    ],
+    answer: 1,
+    why: "It exists in the tree, so it rendered. The problem is visibility or position, which is a different owner and a different fix from missing data."
+  },
+  {
+    q: "Which two panels only record while DevTools is open?",
+    options: [
+      "Elements and Application",
+      "Console and Network",
+      "Sources and Security",
+      "Performance and Memory"
+    ],
+    answer: 1,
+    why: "Both start capturing when opened. Anything before that is lost, which is why opening DevTools first is the habit that matters."
+  },
+  {
+    q: "What is the single most useful habit from this week?",
+    options: [
+      "Memorising every panel",
+      "Reading the raw response rather than trusting the screen",
+      "Running Lighthouse on every page",
+      "Always using mobile emulation"
+    ],
+    answer: 1,
+    why: "The gap between what the server sent and what the page displayed is where most interesting bugs live, and only the response shows you both sides."
+  }
+]} />
+
+## Phase 1 complete
+
+Twenty-four days. Look at what you can now do.
+
+You can follow a request from a URL to a response and back, name every step, and say whose problem a failure is from the status code alone. You can read HTML and say what it means rather than what it looks like, test a form systematically, and run an accessibility pass in five minutes. You can read CSS well enough to say which rule won and why, explain why an element is the wrong size, and tell a missing element from a hidden one. You understand the DOM as a live tree distinct from the file the server sent — and you use that distinction to assign a bug to the front end or the back end. And you can work every DevTools panel that matters.
+
+That is the foundation all three careers stand on, and it is more than many working testers can do.
+
+**Next: Phase 2, weeks 5 to 8** — JSON, APIs, endpoints, payloads, authentication, and calling APIs yourself with Postman and cURL. Everything you have learned to *read* this phase, you will learn to *send* in the next.
+
+And the Meridian lab is now properly yours. You have every skill it assumes.

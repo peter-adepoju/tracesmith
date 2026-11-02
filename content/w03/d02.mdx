@@ -1,0 +1,142 @@
+Many rules target the same element. Only one can win each property. Today you learn who wins, which turns "the CSS is weird" into a precise answer.
+
+## Selectors you will meet
+
+```css
+h1            { }  /* every h1 — a type selector */
+.btn          { }  /* every element with class="btn" */
+#checkout     { }  /* the element with id="checkout" */
+[disabled]    { }  /* every element with a disabled attribute */
+.card .btn    { }  /* a .btn anywhere inside a .card — descendant */
+.card > .btn  { }  /* a .btn that is a direct child of .card */
+.btn:hover    { }  /* a .btn while the pointer is over it */
+.btn:disabled { }  /* a .btn in the disabled state */
+```
+
+The last two are **pseudo-classes**: a state rather than a thing. They matter to testers because a bug can live in a state you have to work to reach. A button whose hover style makes the text the same colour as the background is invisible on hover — and you will never see it in a screenshot.
+
+<Callout kind="job">
+In DevTools you can force a state. Right-click an element in the Elements panel and choose **Force state**, or use the `:hov` button in the Styles panel, and tick `:hover`, `:focus`, `:active`. That makes state bugs reproducible instead of fiddly, and it is how you capture one for a report.
+</Callout>
+
+## The cascade, in the order it actually runs
+
+When several rules set the same property, the browser decides in this order. It stops at the first step that produces a winner.
+
+1. **Importance.** A declaration ending `!important` beats a normal one.
+2. **Specificity.** A more specific selector beats a less specific one.
+3. **Source order.** If everything above ties, the one written last wins.
+
+Most of the time you are in step 3 or step 2.
+
+## Specificity, counted
+
+Score a selector as three numbers: **ids, classes, elements**.
+
+| Selector | ids | classes | elements | Reads as |
+| --- | --- | --- | --- | --- |
+| `h1` | 0 | 0 | 1 | 0-0-1 |
+| `.title` | 0 | 1 | 0 | 0-1-0 |
+| `#page-title` | 1 | 0 | 0 | 1-0-0 |
+| `.card .title` | 0 | 2 | 0 | 0-2-0 |
+| `header .nav a:hover` | 0 | 2 | 2 | 0-2-2 |
+
+Compare left to right, like version numbers. **Any number of classes never beats a single id**: 0-9-0 loses to 1-0-0.
+
+Two things sit outside the scale:
+- An **inline style** beats every selector.
+- **`!important`** beats everything, including inline styles.
+
+<Video id="css-specificity" />
+
+## What this looks like in DevTools
+
+Select an element and read the **Styles** panel top to bottom. The winning rules are at the top. Where a declaration is **struck through**, something above it won.
+
+That strikethrough is the whole skill. It tells you, with no guessing:
+
+- Your rule *is* being applied to the right element — it is listed.
+- It is losing to something more specific or later.
+- The thing that beat it is visible directly above.
+
+A rule that is not in the list at all is a different problem: your selector does not match this element.
+
+<Callout kind="key">
+Two very different findings, and the Styles panel distinguishes them in one glance.
+
+**Struck through** → the rule matched and lost. Fix the specificity.
+
+**Not listed at all** → the rule never matched. Fix the selector.
+
+Reporting the right one of those saves a developer twenty minutes.
+</Callout>
+
+## Why `!important` is a smell
+
+It wins, which is why people reach for it. The cost is that the next person who needs to override it has only one tool left: another `!important`. Stylesheets where everything is important are stylesheets where nothing can be changed safely.
+
+Finding `!important` scattered through a codebase is worth mentioning in a review, though it is a maintainability note rather than a user-facing defect.
+
+<Exercise
+  prompt="Rule A is #main .btn { color: red }. Rule B is .page .card .btn.primary { color: blue }. Which wins, and why?"
+  accept={["a", "rule a", "red", "id"]}
+  hint="Count ids first."
+  solution="Rule A, so the text is red. A scores 1-1-0 and B scores 0-4-0. Comparison is left to right, so A's single id beats B's four classes outright — the class count is never even reached."
+/>
+
+<Exercise
+  prompt="In the Styles panel your rule appears with color struck through. What does that tell you, and what does it rule out?"
+  accept={["matched", "overridden", "lost", "specificity", "beaten"]}
+  hint="It is in the list, which is itself information."
+  solution="The rule matched this element — your selector is correct — but lost the contest for that property to something above it. It rules out a selector mistake, so the fix is specificity or source order, not the selector."
+/>
+
+<Terms items={[
+  { term: "Pseudo-class", meaning: "A selector for a state: :hover, :focus, :disabled." },
+  { term: "Cascade", meaning: "The order deciding which rule wins: importance, then specificity, then source order." },
+  { term: "Specificity", meaning: "A score of ids, classes and elements, compared left to right." },
+  { term: "!important", meaning: "Overrides everything. Wins, and makes future overrides harder." },
+  { term: "Struck through", meaning: "In the Styles panel: this declaration matched but was beaten." },
+  { term: "Force state", meaning: "Making DevTools hold an element in :hover or :focus so you can inspect it." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Does .a .b .c .d .e (five classes) beat #one (one id)?",
+    options: ["Yes, five beats one", "No, any id beats any number of classes", "They tie", "It depends on source order"],
+    answer: 1,
+    why: "Specificity is compared left to right as ids, then classes, then elements. The id column is decided first and never revisited."
+  },
+  {
+    q: "Your rule is not in the Styles panel at all. What is wrong?",
+    options: [
+      "It was overridden",
+      "The selector does not match this element",
+      "The stylesheet is cached",
+      "It needs !important"
+    ],
+    answer: 1,
+    why: "DevTools lists every rule that matched, winners and losers. Absent means it never matched, so the selector is the problem."
+  },
+  {
+    q: "A button's text disappears on hover. How do you capture it for a bug report?",
+    options: [
+      "Take a very fast screenshot",
+      "Force the :hover state in DevTools, then capture it",
+      "Describe it in words only",
+      "It cannot be captured"
+    ],
+    answer: 1,
+    why: "Forcing the state holds it so you can inspect and screenshot it calmly, which turns an awkward bug into a straightforward report."
+  },
+  {
+    q: "What is the first step of the cascade?",
+    options: ["Source order", "Specificity", "Importance", "Inheritance"],
+    answer: 2,
+    why: "An !important declaration is resolved before specificity is even considered."
+  }
+]} />
+
+## Tomorrow
+
+The box model: why an element is the wrong size, and why your 50% columns do not fit side by side.

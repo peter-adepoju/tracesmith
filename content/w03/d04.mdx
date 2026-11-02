@@ -1,0 +1,169 @@
+You have been told twice that the Elements panel is the truth and the source file is only an intention. Today is why.
+
+This is the most important conceptual day of the week, because it decides something practical: **whose bug is this?**
+
+## Two different things
+
+**HTML** is a text file. The server sends it. You can see it with View Source, or by opening the document request in the Network tab.
+
+**The DOM** is the live tree of objects the browser builds from that file — and then keeps changing while the page runs.
+
+They start out similar. They do not stay that way.
+
+<Video id="html-vs-dom" />
+
+## Three reasons they diverge
+
+**1. The browser repairs broken markup.** You met this in week 2. Bad nesting, a block inside a paragraph, a missing closing tag — the browser fixes it on the way in. What you wrote is not what exists.
+
+**2. JavaScript changes the page.** A script adds rows to a table, removes an error message, toggles a class, injects a whole modal. None of that is in the source file.
+
+**3. Most modern sites barely send HTML at all.** A React or Vue app often sends a nearly empty document plus a large script, and the script builds everything. View Source shows you `<div id="root"></div>` and nothing else. Every single thing on screen was created afterwards.
+
+<Callout kind="key">
+This is why **View Source is almost useless for testing a modern app** and the Elements panel is essential. They answer different questions: View Source shows what the server sent, Elements shows what currently exists.
+
+Comparing the two is itself a diagnostic. Content in the DOM but not the source was added by script. Content in neither was never created. Content in the source but not the DOM was removed by script.
+</Callout>
+
+<Video id="dom" />
+
+## The tree
+
+The DOM is a tree of **nodes**, each with a parent, children and siblings.
+
+```
+document
+└── html
+    ├── head
+    │   └── title
+    └── body
+        ├── header
+        │   └── nav
+        └── main
+            └── h1
+```
+
+The Elements panel *is* this tree, drawn. Expanding a triangle walks down it.
+
+Everything you can do by hand — inspect, expand, search — a test script does with code. Which is why the next bit matters even though you are not a developer.
+
+## Finding things from the console
+
+Open the Console and type these against any page. This is the bridge between manual testing and automation, and it is a genuinely useful skill on its own.
+
+```js
+// One element, by CSS selector.
+document.querySelector('.btn-primary')
+
+// All of them, as a list.
+document.querySelectorAll('input')
+
+// How many?
+document.querySelectorAll('img').length
+
+// Read something.
+document.querySelector('h1').textContent
+
+// Is it actually visible, or just present?
+getComputedStyle(document.querySelector('.modal')).display
+```
+
+Three things worth knowing immediately:
+
+- `$0` in the console refers to **whatever you last selected in the Elements panel**. Click an element, type `$0`, and you have it. This saves an enormous amount of selector fiddling.
+- `$$('selector')` is shorthand for `querySelectorAll` and returns a real array.
+- `getComputedStyle(el)` gives the **final** value of every property after the whole cascade — the actual truth about an element's appearance.
+
+<Callout kind="job">
+`getComputedStyle` settles arguments. "The button is grey" versus "no, the CSS says blue" is resolved in one line, because computed style is what the browser actually decided after every rule, inline style and inherited value was accounted for.
+</Callout>
+
+## Why this decides ownership
+
+Go back to the question from week 1: is this the front end or the back end?
+
+The DOM is where you answer it precisely.
+
+| What you see | What it means | Who owns it |
+| --- | --- | --- |
+| Data is in the response but not in the DOM | The server sent it; the page failed to render it | Front end |
+| Data is in neither | The server never sent it | Back end |
+| Element is in the DOM but invisible | It rendered; CSS is hiding or mispositioning it | Front end, styling |
+| Element is in the DOM with the wrong text | It rendered with bad data, or the wrong field | Depends on the response — check it |
+
+<Callout kind="watch">
+A specific trap: **the DOM updates after the response arrives, not at the same time.** A test or a person checking too quickly sees the old state and reports a bug that does not exist.
+
+If something "sometimes" fails, suspect timing before you suspect the feature. This is the root of most flaky automated tests, and you will meet it properly in week 15.
+</Callout>
+
+<Exercise
+  prompt="View Source shows almost nothing but a script tag, yet the page is full of content. What kind of application is this, and which tool do you use to inspect it?"
+  accept={["javascript", "spa", "single page", "react", "client-side", "elements"]}
+  hint="Something built the page after it arrived."
+  solution="A client-rendered application — React, Vue or similar. The server sends a shell and the script builds everything. You inspect it in the Elements panel, which shows the live DOM; View Source only shows the empty shell."
+/>
+
+<Exercise
+  prompt={'A customer\'s order total shows as blank. In the Network tab the response clearly contains "total": 48500. Front end or back end?'}
+  accept={["front", "frontend", "front end", "front-end"]}
+  hint="Did the data arrive?"
+  solution="Front end. The server did its job: the value is in the response. Something in the page failed to read or render it. Attaching the response to the bug report is what makes this unarguable."
+/>
+
+<Terms items={[
+  { term: "DOM", meaning: "The live tree of objects the browser builds and keeps changing." },
+  { term: "View Source", meaning: "The original text the server sent. Not the current page." },
+  { term: "Node", meaning: "One item in the DOM tree." },
+  { term: "querySelector", meaning: "Find the first element matching a CSS selector." },
+  { term: "$0", meaning: "Console shorthand for the element last selected in Elements." },
+  { term: "getComputedStyle", meaning: "The final value of a property after the whole cascade." },
+  { term: "Client-rendered", meaning: "A page built by JavaScript after load, so View Source shows a shell." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Why is View Source unhelpful on a React application?",
+    options: [
+      "React encrypts its HTML",
+      "The server sends a near-empty shell; the script builds the page afterwards",
+      "View Source is disabled",
+      "React does not use HTML"
+    ],
+    answer: 1,
+    why: "Everything you see was created by JavaScript after load, so it exists only in the DOM and never in the delivered document."
+  },
+  {
+    q: "A field is empty on screen. The API response contains the value. Who owns the bug?",
+    options: ["Back end", "Front end", "The database team", "Nobody, it is a cache"],
+    answer: 1,
+    why: "The data arrived, so the server did its part. The failure is in rendering it, which is the front end's."
+  },
+  {
+    q: "What does getComputedStyle give you that the Styles panel's rule list does not?",
+    options: [
+      "The original stylesheet",
+      "The final value after the whole cascade, inheritance included",
+      "The file name of the rule",
+      "Faster results"
+    ],
+    answer: 1,
+    why: "It is the browser's final answer for a property, which settles any disagreement about what is actually applied."
+  },
+  {
+    q: "A test intermittently reports missing data that is clearly there when you look. Most likely cause?",
+    options: [
+      "The server is intermittently down",
+      "The check ran before the DOM updated",
+      "The selector is wrong",
+      "The browser is too old"
+    ],
+    answer: 1,
+    why: "The DOM is updated after the response arrives. Checking too early sees the previous state, and intermittency is the signature of a timing problem."
+  }
+]} />
+
+## Tomorrow
+
+Responsive layout, and why so many bugs exist only on a phone.

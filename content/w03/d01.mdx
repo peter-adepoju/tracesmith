@@ -1,0 +1,141 @@
+HTML says what things are. CSS says what they look like. This week is about the second one, and about the gap between them — which is where a surprising share of UI bugs live.
+
+You will not be writing much CSS on the job. You will be reading it, constantly, to answer one question: *why does this look wrong?*
+
+## Three ways styles reach a page
+
+```html
+<!-- 1. A linked stylesheet. How real sites do it. -->
+<link rel="stylesheet" href="/styles.css" />
+
+<!-- 2. A style block in the document. -->
+<style>
+  h1 { color: navy; }
+</style>
+
+<!-- 3. An inline style attribute. -->
+<h1 style="color: navy;">Orders</h1>
+```
+
+The third one matters to you for a specific reason: **inline styles beat almost everything else**. When a rule in the stylesheet refuses to apply, an inline style is the first thing to check. You will see this in the Styles panel as a rule at the very top of the list, winning.
+
+## The anatomy of a rule
+
+```css
+h1 {
+  color: navy;
+  font-size: 2rem;
+}
+```
+
+- **`h1`** is the **selector** — which elements this applies to.
+- The braces hold the **declaration block**.
+- **`color: navy;`** is a **declaration**: a **property** and a **value**, separated by a colon, ended with a semicolon.
+
+That is the whole syntax. CSS is not a difficult language. What makes it hard is that many rules can target the same element, and working out which one wins is a genuine skill — tomorrow's lesson.
+
+<Video id="css" />
+
+<Callout kind="note">
+That video is an hour and covers all of this week's CSS. Watch the first twenty minutes today; the rest maps onto days 2 and 3. You do not need to be able to write CSS fluently — you need to read it and predict what it does.
+</Callout>
+
+## Properties you will meet constantly
+
+| Property | What it controls |
+| --- | --- |
+| `color` | Text colour |
+| `background` | Background colour or image |
+| `font-size`, `font-weight` | Text size and boldness |
+| `margin` | Space outside the element |
+| `padding` | Space inside the element |
+| `border` | The line around it |
+| `width`, `height` | Size |
+| `display` | How it behaves in layout, and whether it appears at all |
+| `position` | How it is placed |
+| `color` on a parent | Inherited by children unless overridden |
+
+## The one that causes the most confusion
+
+```css
+display: none;
+visibility: hidden;
+opacity: 0;
+```
+
+All three make something invisible. They are completely different, and knowing which you are looking at turns a vague bug into a precise one.
+
+- **`display: none`** — the element is removed from the layout entirely. It takes no space. It is still in the DOM, so your test can find it, but a user cannot see or click it.
+- **`visibility: hidden`** — invisible, but **still takes up its space**. You get a mysterious gap.
+- **`opacity: 0`** — fully transparent, takes up space, and is **still clickable**. An invisible button that intercepts clicks is a genuinely nasty bug, and this is how it happens.
+
+<Callout kind="key">
+"The element is missing" and "the element is invisible" are different findings with different causes and different fixes. The Elements panel tells you which: if you can find it in the tree, it is not missing. Search the DOM before you report something absent.
+</Callout>
+
+## Why the same element can be styled many times
+
+A page loads one or more stylesheets, each with hundreds of rules. A single `<button>` might be targeted by six of them — a framework default, a site-wide rule, a component rule, a state rule, and an inline style.
+
+They all apply. Where they set *different* properties, they stack. Where they set the *same* property, one wins.
+
+That contest is what tomorrow is about, and it is the single most useful CSS idea for a tester.
+
+<Exercise
+  prompt="A button is invisible but users report that clicking where it used to be does nothing else on the page — their click is being swallowed. Which of the three hiding methods is most likely?"
+  accept={["opacity", "opacity 0", "opacity: 0"]}
+  hint="Which one leaves the element in the layout and still able to receive a click?"
+  solution="opacity: 0. The element is fully transparent but still occupies its space and still receives clicks, so it sits invisibly on top and intercepts them. display: none would remove it entirely and the click would pass through to whatever is behind."
+/>
+
+<Exercise
+  prompt="A CSS rule in the stylesheet clearly says color: red, but the heading is blue. Name two things to check first in the Styles panel."
+  accept={["inline", "inline style", "specificity", "overridden", "another rule"]}
+  hint="Either something is beating it, or it never applied at all."
+  solution="An inline style attribute on the element, which beats stylesheet rules; or another rule with higher specificity overriding it. In the Styles panel both show up the same way: your rule appears with the property struck through, and the winning rule is above it."
+/>
+
+<Terms items={[
+  { term: "Selector", meaning: "The part of a CSS rule saying which elements it applies to." },
+  { term: "Declaration", meaning: "A property and value pair, such as color: navy." },
+  { term: "Inline style", meaning: "CSS in a style attribute on the element. Beats almost everything." },
+  { term: "display: none", meaning: "Removed from layout; takes no space; still in the DOM." },
+  { term: "visibility: hidden", meaning: "Invisible but still occupying its space." },
+  { term: "opacity: 0", meaning: "Transparent, still in the layout, and still clickable." },
+  { term: "Inheritance", meaning: "Some properties, such as color, pass down to children automatically." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "An element is invisible but leaves a gap where it should be. Which is it?",
+    options: ["display: none", "visibility: hidden", "It was removed from the DOM", "width: 0"],
+    answer: 1,
+    why: "visibility: hidden hides the element while keeping its space in the layout, which is exactly what produces an unexplained gap."
+  },
+  {
+    q: "A user says a button is missing. You find it in the Elements panel. What have you learned?",
+    options: [
+      "Nothing useful",
+      "It is a styling problem, not a missing-element problem",
+      "The page failed to load",
+      "The button is broken"
+    ],
+    answer: 1,
+    why: "If it is in the DOM it was rendered. Something is hiding or mispositioning it, which is CSS, and that is a different team and a different fix."
+  },
+  {
+    q: "Why do inline styles matter to a tester specifically?",
+    options: [
+      "They load faster",
+      "They are the first suspect when a stylesheet rule mysteriously does not apply",
+      "They are invalid HTML",
+      "They cannot be inspected"
+    ],
+    answer: 1,
+    why: "Inline styles beat nearly everything, so they are the usual explanation for 'the CSS says red but it is blue'."
+  }
+]} />
+
+## Tomorrow
+
+Which rule wins, and why. Specificity is the part of CSS that looks arbitrary until someone explains it, and then never does again.

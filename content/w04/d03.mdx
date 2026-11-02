@@ -1,0 +1,178 @@
+The Console does two jobs. It shows you what the page is complaining about, and it lets you ask the page questions.
+
+Most testers use the first and ignore the second. The second is where the leverage is.
+
+<Video id="devtools-console" />
+
+## Reading what is there
+
+Messages come in levels, and the filter at the top lets you show only what you need:
+
+- **Error** — red. Something failed.
+- **Warning** — yellow. Something is deprecated or risky.
+- **Info** and **Log** — deliberate messages from the developers.
+- **Verbose** — hidden by default, and usually should stay that way.
+
+Set the filter to **Errors only** when you start investigating. A busy site logs hundreds of lines and the signal is lost in them.
+
+## Reading an error properly
+
+```
+Uncaught TypeError: Cannot read properties of null (reading 'total')
+    at renderOrder (app.js:482)
+    at onOrderLoaded (app.js:455)
+```
+
+Four pieces of information, and each one matters:
+
+- **Uncaught** — nobody handled it, so whatever was happening stopped there.
+- **TypeError: Cannot read properties of null** — the code expected an object and got nothing. In practice this nearly always means **data that was expected to be present was absent**.
+- **`reading 'total'`** — the specific field. This is gold: it tells you *which* piece of data was missing.
+- **The stack** — the function and line, innermost first.
+
+<Callout kind="key">
+`Cannot read properties of null (reading 'x')` is the most common error you will ever see on a web page, and it almost always means the same thing: something expected `x` to exist and it did not.
+
+So your very next move is the Network tab. Find the response that should have contained `x`. Either it is absent — a back-end problem — or it is present and the page failed to read it — a front-end problem. You have gone from a red line to an owner in about forty seconds.
+</Callout>
+
+## The errors worth recognising
+
+| Error | Usually means |
+| --- | --- |
+| `Cannot read properties of null/undefined` | Expected data was missing |
+| `x is not a function` | Something was called that is not there — often a failed script |
+| `Failed to load resource: 404` | A file or endpoint is missing |
+| `Failed to load resource: 500` | Server error; go to Network |
+| `Uncaught (in promise)` | An async failure nobody handled; often a failed request |
+| CORS errors | The browser blocked a cross-origin request. Server configuration |
+| `Mixed Content` | An HTTPS page loading something over HTTP. A real finding |
+| Content Security Policy violation | The page's own policy blocked something |
+
+<Callout kind="watch">
+**Not every red line is your bug.** Third-party scripts — chat widgets, analytics, ad tags — produce errors constantly and most are harmless noise.
+
+Before you report one, check the file it came from. If it is `tawk.to` or `googletagmanager`, it belongs to a third party. It may still be worth mentioning, but it is not the cause of the thing you were testing. Reporting third-party noise as a defect is a quick way to be taken less seriously.
+</Callout>
+
+## Asking the page questions
+
+This is the half most testers skip, and it is worth more than the first half.
+
+```js
+// Count things
+document.querySelectorAll('[role="button"]').length
+
+// Every image missing alt text
+[...document.images].filter(i => !i.hasAttribute('alt'))
+
+// The heading outline, as a list
+$$('h1,h2,h3,h4,h5,h6').map(h => h.tagName + ' ' + h.textContent.trim())
+
+// Every link that opens a new tab without rel=noopener
+$$('a[target="_blank"]:not([rel*="noopener"])')
+
+// Every form field with no name, so its value is never submitted
+$$('input, select, textarea').filter(f => !f.name)
+
+// Anything wider than the screen, the horizontal-scroll culprit
+$$('*').filter(e => e.scrollWidth > document.documentElement.clientWidth)
+
+// Read the computed value of anything
+getComputedStyle($0).color
+```
+
+Each of those replaces five minutes of clicking with one second, and each produces a precise, countable finding rather than an impression.
+
+<Callout kind="job">
+Keep these in a file. Over a year you will build a personal set of twenty checks you can run on any page in under a minute, and that collection becomes genuinely valuable — it is the difference between "the page looks fine" and "six images are missing alt text, two links open without noopener, and one input has no name attribute."
+
+This is also exactly the habit that leads into automated testing in week 15. An automated test is just a check like these, run by a machine on a schedule.
+</Callout>
+
+## Preserve log
+
+Tick **Preserve log** before testing anything that redirects — a login, a payment, an OAuth flow.
+
+Without it the console clears on navigation and the error that caused the redirect is gone. With it, you keep the whole sequence. This is the single most common reason people say "there was an error but it disappeared".
+
+## Copying evidence
+
+Right-click in the console → **Save as…** writes the whole log to a file. For a single error, right-click → Copy message, or take a screenshot with the stack expanded.
+
+Redact first, as always. Console output can contain tokens, email addresses and customer data.
+
+<Exercise
+  prompt="You see: Uncaught TypeError: Cannot read properties of undefined (reading 'email'). What is your very next action, and why?"
+  accept={["network", "network tab", "check the response", "response"]}
+  hint="Something expected a field and did not get it."
+  solution="Open the Network tab and find the response that should have contained email. If the field is missing from the response it is a back-end problem; if it is present, the page failed to read it and the problem is front-end. That one check assigns the bug."
+/>
+
+<Exercise
+  prompt="A page logs eleven console errors. Eight come from a chat widget's domain. How does that change your report?"
+  accept={["third party", "third-party", "exclude", "separate", "not ours"]}
+  hint="Who owns those eight?"
+  solution="Report the three that come from the site's own code as the finding, and mention the eight third-party errors separately as noise from the chat widget. Mixing them together buries your real finding and suggests you did not check the source."
+/>
+
+<Terms items={[
+  { term: "Uncaught", meaning: "No code handled the error, so execution stopped there." },
+  { term: "TypeError: null/undefined", meaning: "Expected data was missing. The commonest web error." },
+  { term: "Stack trace", meaning: "The chain of function calls, innermost first." },
+  { term: "CORS", meaning: "The browser blocking a cross-origin request. Server configuration." },
+  { term: "Mixed content", meaning: "An HTTPS page loading something over HTTP. A real finding." },
+  { term: "Preserve log", meaning: "Keeps console output across navigation. Essential for login flows." },
+  { term: "$$()", meaning: "Console shorthand for querySelectorAll, returning a real array." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Cannot read properties of null (reading 'total') most often means what?",
+    options: [
+      "The CSS failed to load",
+      "Expected data was missing when the code tried to use it",
+      "The user is offline",
+      "The page needs a refresh"
+    ],
+    answer: 1,
+    why: "Something assumed an object was there and it was not. The named field tells you exactly which data to go looking for."
+  },
+  {
+    q: "Why tick Preserve log before testing a login?",
+    options: [
+      "It makes login faster",
+      "The console clears on navigation, so the error causing the redirect would be lost",
+      "It is required for screenshots",
+      "It disables caching"
+    ],
+    answer: 1,
+    why: "A login redirects, and without Preserve log everything logged before the redirect disappears."
+  },
+  {
+    q: "Which console one-liner finds inputs whose values will never be submitted?",
+    options: [
+      "$$('input').length",
+      "$$('input, select, textarea').filter(f => !f.name)",
+      "getComputedStyle($0)",
+      "document.images"
+    ],
+    answer: 1,
+    why: "A field with no name attribute is omitted from the submission entirely, and this finds every one in a second."
+  },
+  {
+    q: "Eight of eleven console errors come from a third-party chat widget. What do you do?",
+    options: [
+      "Report all eleven as defects",
+      "Report none, the page works",
+      "Report the three from the site's own code, and note the rest separately",
+      "Ask the user to disable the widget"
+    ],
+    answer: 2,
+    why: "Separating your findings from third-party noise keeps the report credible and puts the real issue in front of the reader."
+  }
+]} />
+
+## Tomorrow
+
+The Network panel in depth: the panel you will live in.

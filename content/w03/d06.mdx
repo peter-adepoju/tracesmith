@@ -1,0 +1,127 @@
+A working day. Five layout bugs, found and written up properly.
+
+You have a real product to test: Meridian, the shop from the labs. Today you look at it only through the lens of this week — CSS, the DOM, and width.
+
+<Callout kind="practice">
+Open the lab in another tab: **Labs → Meridian: first contact**, and choose **stage 1**, where nothing is deliberately broken. You are not hunting planted defects today. You are practising the three skills from this week on a real interface.
+</Callout>
+
+## The five passes
+
+Work them in order. Write a finding for anything real, in the week 1 format: what you did, what you saw, what it means.
+
+### 1. The present-but-invisible pass
+
+For three elements on the page, establish whether they are genuinely absent or merely hidden. For each, use the console:
+
+```js
+document.querySelectorAll('button').length
+getComputedStyle(document.querySelector('button')).display
+```
+
+Then answer in writing: if something were missing from the screen, how would you *prove* which of these it is — absent from the DOM, `display: none`, `visibility: hidden`, or `opacity: 0`? Write the exact check for each case.
+
+### 2. The specificity pass
+
+Pick any styled element. In the Styles panel, find a declaration that is struck through.
+
+- Which rule won?
+- Why — importance, specificity, or source order?
+- Score both selectors as ids-classes-elements and confirm your answer.
+
+If nothing is struck through anywhere, add a rule yourself: select an element, add `color: red` in the element.style box, and watch what it overrides.
+
+### 3. The box pass
+
+Hover elements in the Elements panel and read the blue, green and orange highlights.
+
+- Find one element where the gap you see is **margin**, and one where it is **padding**.
+- Find the value of `box-sizing` in the Computed tab. Is it `border-box`?
+- Pick one element and predict its on-screen width from its CSS, then check it against the Computed tab.
+
+### 4. The width pass
+
+Open the device toolbar and drag from 320 pixels up to full width, slowly.
+
+- Note every width where the layout jumps. Those are the breakpoints.
+- At 375 pixels, scroll the whole page. Any horizontal movement is a bug — and if there is, run the one-liner from yesterday to find the culprit.
+- Check three tap targets. Are they comfortably thumb-sized?
+- Open the cart or checkout at phone width. Is everything reachable?
+
+### 5. The DOM pass
+
+- Open View Source on the Meridian page. Compare it with the Elements panel.
+- How much of what you see on screen is in the source file? Why?
+- Add something to the cart, then watch the Elements panel as you do it. Which nodes changed?
+
+<Callout kind="key">
+Pass 5 is the one to sit with. Meridian is client-rendered, so View Source shows you almost nothing. Everything on screen was built by JavaScript after the page loaded.
+
+That is not an unusual case. It is how most applications you will ever test are built, and it is the single best argument for why a tester needs DevTools rather than a browser alone.
+</Callout>
+
+## Write them up
+
+Produce **five findings**. They do not all have to be defects — a finding can be an observation with a consequence. These are all legitimate:
+
+- "At 375px the catalogue grid drops to one column at 480px rather than 640px, so cards are very wide between those widths."
+- "The View button's tap target is 32px tall, below the 44px guideline, and the cards are closely spaced."
+- "box-sizing is border-box globally, so width values behave as expected."
+
+For each, state what you did, what you observed, and who it affects. Rank them by user impact, not by how easy they were to spot.
+
+<Exercise
+  prompt="You want to prove an element is in the DOM but hidden, rather than absent. Write the two console lines that settle it."
+  accept={["queryselector", "getcomputedstyle", "display"]}
+  hint="One line proves existence, one proves visibility."
+  solution="document.querySelector('.thing') — if that returns an element rather than null, it exists. Then getComputedStyle(document.querySelector('.thing')).display — if that returns 'none' it is hidden by CSS rather than missing. Together they distinguish a rendering bug from a data bug."
+/>
+
+<Exercise
+  prompt="Rank these three by user impact: a 2px misalignment on desktop; horizontal scroll on mobile; a hover-only menu."
+  accept={["hover", "hover menu", "menu", "hover-only"]}
+  hint="Which one makes something impossible rather than ugly?"
+  solution="The hover-only menu is worst: on a touch device the navigation may be unreachable entirely, which blocks the user. Horizontal scroll is next — the site works but feels broken and is awkward on every page. The 2px misalignment is last; it is cosmetic and affects nobody's ability to do anything."
+/>
+
+<Quiz questions={[
+  {
+    q: "On Meridian, View Source shows almost no content. What does that tell you?",
+    options: [
+      "The page failed to load",
+      "It is client-rendered: JavaScript builds the page after load",
+      "The content is hidden with CSS",
+      "The server is misconfigured"
+    ],
+    answer: 1,
+    why: "The server sends a shell and a script, and the script creates everything. This is how most modern applications work."
+  },
+  {
+    q: "A declaration is struck through in the Styles panel. What is the first thing to check?",
+    options: [
+      "Whether the stylesheet loaded",
+      "Which rule above it won, and why",
+      "Whether the selector is valid",
+      "The browser version"
+    ],
+    answer: 1,
+    why: "Struck through means it matched and lost. The winner is listed above, so the cause is right there."
+  },
+  {
+    q: "What is the single most impactful thing on this week's list to check at phone width?",
+    options: [
+      "Font smoothing",
+      "Horizontal scroll and whether key actions are reachable",
+      "Border radius",
+      "Hover colours"
+    ],
+    answer: 1,
+    why: "Those two decide whether the user can complete the task at all. Everything else is comfort by comparison."
+  }
+]} />
+
+## Week 3 done
+
+You can read CSS and predict which rule wins. You know the box model well enough to explain why an element is the wrong size, and margin collapse well enough not to be surprised by a gap. You understand the DOM as a live tree distinct from the file the server sent — and you can use that distinction to decide whether a bug belongs to the front end or the back end. You can run a responsive pass and name the bugs that only exist on a phone.
+
+Next week is the payoff for all of it: every DevTools panel, in depth. After that, the Meridian lab is yours properly.

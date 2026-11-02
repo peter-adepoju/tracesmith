@@ -1,0 +1,151 @@
+Three smaller topics that together close out DevTools: where the browser keeps things, whether the connection is sound, and how to test at other sizes.
+
+## Application: where state lives
+
+<Video id="devtools-storage" />
+
+The Application panel shows everything the site has stored in your browser. Four places matter.
+
+**Cookies.** Small values sent automatically with every request to that domain. Usually where a session lives. Each has flags worth reading:
+
+- **HttpOnly** — JavaScript cannot read it. A session cookie without this can be stolen by any script on the page, which is a real security finding.
+- **Secure** — only sent over HTTPS. Missing is a finding.
+- **SameSite** — controls whether it is sent on cross-site requests.
+- **Expires** — when it dies. A session cookie with a one-year expiry is worth questioning.
+
+**Local Storage.** Key-value pairs that persist until cleared. Often holds a login token, user preferences, a cached basket. **Readable by any JavaScript on the page**, so a token here is less safe than one in an HttpOnly cookie.
+
+**Session Storage.** The same, but cleared when the tab closes.
+
+**IndexedDB.** A larger database for offline data. You will rarely need it.
+
+<Callout kind="watch">
+Look at what is actually stored. Finding a password, a full card number, a national identity number or another customer's details in Local Storage is a serious, reportable finding — and it happens more often than you would expect, because developers reach for it as a convenient place to park things.
+
+Report it as a security issue, and redact the value in your evidence. You are proving the field exists, not republishing it.
+</Callout>
+
+## Clear site data
+
+Bottom of the Application panel's Storage section: **Clear site data**.
+
+It wipes cookies, storage and caches for that origin, giving you a genuinely fresh browser without a new profile or an incognito window.
+
+This matters more than it sounds. A huge proportion of "I cannot reproduce it" comes from the tester being logged in, having a populated basket, or holding a cached file the real user does not have. **First-visit behaviour is a different test from returning-visit behaviour**, and most bugs in onboarding, consent banners and empty states only appear on a true first visit.
+
+<Callout kind="job">
+Build the habit: before testing any first-run experience — signup, onboarding, an empty dashboard, a cookie banner — clear site data first. Otherwise you are testing the returning-user path and calling it the new-user path.
+</Callout>
+
+## Security
+
+Click the Security panel and reload. It tells you whether the connection is sound and the certificate valid.
+
+For anything handling money or personal data, confirm:
+
+- The connection is HTTPS with a valid, in-date certificate.
+- There is no **mixed content** — HTTP resources on an HTTPS page. The browser may block them silently, so a page can be subtly broken with no visible error.
+
+A padlock in the address bar covers most of this, but the Security panel tells you *why* when something is wrong.
+
+## The device toolbar, properly
+
+You used this in week 3. Three things worth adding.
+
+**The preset list** covers common phones and tablets. The dropdown also offers **Responsive**, which lets you drag to any width — better for finding breakpoints.
+
+**Throttling is here too**, combined with the size. A phone preset plus Slow 4G is much closer to a real user in Lagos on a patchy connection than a desktop on office wifi.
+
+**The three-dot menu** adds:
+- **Show device frame** — a phone outline, which is nicer for screenshots in reports.
+- **Capture screenshot** — the emulated viewport only.
+- **Show rulers** — pixel measurement, useful for checking tap target sizes.
+
+<Callout kind="watch">
+Emulation changes the viewport and the user-agent string. It does **not** reproduce real touch behaviour, the on-screen keyboard, device performance, or OS-level quirks.
+
+Reload after switching sizes, too — anything that ran at load time, like a device check, will not re-run on resize, so you can get a misleading result.
+</Callout>
+
+## Lighthouse, briefly
+
+The Lighthouse panel runs an automated audit and scores performance, accessibility, best practices and SEO.
+
+It is a useful baseline and a poor substitute for thinking. It catches missing alt text and contrast failures; it cannot tell you the tab order is nonsense, or that the error message is misleading, or that the checkout charges twice. **A perfect Lighthouse score on an unusable page is entirely possible.**
+
+Run it for a starting point. Never report its score as a conclusion.
+
+<Exercise
+  prompt="You cannot reproduce a bug that several users report on first visit. What is the most likely reason, and what do you do?"
+  accept={["clear site data", "cached", "logged in", "clear storage", "first visit"]}
+  hint="What is different about your browser compared to theirs?"
+  solution="Your browser is not in a first-visit state: you have cookies, storage and cache from previous testing. Use Clear site data in the Application panel, then reload. That reproduces the genuine new-user path, which is where first-run bugs live."
+/>
+
+<Exercise
+  prompt="You find an auth token in Local Storage. Is that automatically a defect?"
+  accept={["no", "depends", "not automatically", "common"]}
+  hint="Common practice is not the same as best practice."
+  solution="Not automatically — it is extremely common. The finding is that Local Storage is readable by any script on the page, so a token there is exposed to any cross-site scripting flaw, where an HttpOnly cookie would not be. Report it as a risk observation with that reasoning, not as an outright defect, and let the team weigh it."
+/>
+
+<Terms items={[
+  { term: "Cookie", meaning: "A small value sent automatically with each request to a domain." },
+  { term: "HttpOnly", meaning: "A cookie flag stopping JavaScript from reading it. Missing on a session cookie is a finding." },
+  { term: "Local Storage", meaning: "Persistent key-value storage, readable by any script on the page." },
+  { term: "Session Storage", meaning: "The same, cleared when the tab closes." },
+  { term: "Clear site data", meaning: "Wipes storage for one origin, giving a genuine first-visit state." },
+  { term: "Mixed content", meaning: "HTTP resources on an HTTPS page. May be blocked silently." },
+  { term: "Lighthouse", meaning: "An automated audit. A baseline, never a conclusion." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Why does a session cookie without HttpOnly matter?",
+    options: [
+      "It loads more slowly",
+      "Any JavaScript on the page can read it, so a script flaw can steal the session",
+      "It will not be sent to the server",
+      "It expires too quickly"
+    ],
+    answer: 1,
+    why: "HttpOnly is what keeps a session token out of reach of page scripts. Without it, one cross-site scripting flaw becomes a full account takeover."
+  },
+  {
+    q: "You must test the signup flow as a brand-new user. What do you do first?",
+    options: [
+      "Restart the browser",
+      "Clear site data in the Application panel",
+      "Disable JavaScript",
+      "Switch to mobile emulation"
+    ],
+    answer: 1,
+    why: "It wipes cookies, storage and caches for that origin, which is what actually produces a first-visit state."
+  },
+  {
+    q: "A page scores 100 in Lighthouse. What does that prove?",
+    options: [
+      "The page has no bugs",
+      "It passes a set of automated checks; it says nothing about whether the page works",
+      "It is accessible to all users",
+      "It is fast for every user"
+    ],
+    answer: 1,
+    why: "Automated audits catch mechanical problems. They cannot judge whether the flow makes sense or the totals are right."
+  },
+  {
+    q: "After switching to a phone preset, why reload the page?",
+    options: [
+      "To clear the cache",
+      "Because anything that ran at load time will not re-run on resize",
+      "To apply the new user-agent to the stylesheet",
+      "It is not necessary"
+    ],
+    answer: 1,
+    why: "Load-time logic, including device checks, only runs once. Without a reload you may be testing the desktop code path at phone width."
+  }
+]} />
+
+## Tomorrow
+
+A scavenger hunt. Twelve questions, DevTools only, timed.

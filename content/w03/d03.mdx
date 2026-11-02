@@ -1,0 +1,158 @@
+Every element is a box. Understanding those boxes explains most "why is this the wrong size" and "why is there a gap here" bugs you will ever file.
+
+## The four layers
+
+From the inside out:
+
+1. **Content** — the text or image.
+2. **Padding** — space *inside* the border, pushing content away from the edge. Takes the background colour.
+3. **Border** — the line around it.
+4. **Margin** — space *outside* the border, pushing other elements away. Always transparent.
+
+<Video id="css-box-model" />
+
+The practical distinction: **padding is inside and coloured, margin is outside and invisible.** When something has an unexpected gap, the question is which one it is — and the Elements panel shows you directly. Hover an element and the browser highlights content in blue, padding in green, margin in orange.
+
+## The question that trips everyone
+
+```css
+.card {
+  width: 200px;
+  padding: 20px;
+  border: 2px solid black;
+}
+```
+
+How wide is that card on screen?
+
+With the browser's original rules: **244 pixels.** The `width` applies to the *content* only, then padding and border are added on top. 200 + 20 + 20 + 2 + 2.
+
+This is why two elements set to `width: 50%` with any padding do not fit side by side. They are each wider than half.
+
+The fix, which almost every modern site applies globally:
+
+```css
+* { box-sizing: border-box; }
+```
+
+Now `width: 200px` means the whole box is 200px, with padding and border fitting *inside* it. Far more intuitive, and what people assume is happening anyway.
+
+<Callout kind="job">
+When an element is mysteriously too wide, check `box-sizing` in the Computed tab. A component written assuming `border-box`, dropped into a page that does not set it, overflows its container — and that single missing line explains a whole family of layout bugs.
+</Callout>
+
+## Margin collapse
+
+Two block elements stacked vertically, one with `margin-bottom: 30px`, the next with `margin-top: 20px`. The gap between them is **30px**, not 50.
+
+Vertical margins between block elements **collapse** to the larger of the two. It is deliberate, it is only vertical, and it surprises everyone the first time.
+
+Report the symptom, not a theory: "the gap between the heading and the paragraph is 30px, the design says 50px." Let the developer decide whether collapse is the cause.
+
+## Laying things out
+
+**Normal flow** is the default: block elements stack down the page, inline elements sit in a line.
+
+**Flexbox** arranges children along one axis and is what most modern layouts use.
+
+```css
+.row {
+  display: flex;
+  justify-content: space-between;  /* along the main axis */
+  align-items: center;             /* across the other axis */
+  gap: 1rem;
+}
+```
+
+Those four lines cover the majority of flexbox you will meet. `gap` is worth knowing because it replaced a decade of margin hacks.
+
+<Video id="flexbox" />
+
+**Grid** is for two dimensions at once — rows and columns together. You will recognise `display: grid` and `grid-template-columns`. You do not need to write it yet.
+
+**Position** moves an element out of the normal flow:
+
+- `static` — the default, in the flow.
+- `relative` — nudged from where it would have been; its original space is kept.
+- `absolute` — removed from the flow, placed relative to the nearest positioned ancestor.
+- `fixed` — pinned to the viewport; stays put when you scroll.
+- `sticky` — normal until it reaches a scroll threshold, then it sticks.
+
+<Callout kind="watch">
+Two position bugs you will meet repeatedly.
+
+**A fixed header covering content.** The header leaves the flow, so the page scrolls underneath it and the first lines hide behind it. Very common, and worse on phones where the header is proportionally taller.
+
+**`z-index` wars.** When two elements overlap, `z-index` decides which is on top — but only within a stacking context, which is why a modal sometimes appears *behind* an overlay no matter how high you set it. If you find this, report the symptom and the two elements involved; the cause is a genuinely subtle corner of CSS.
+</Callout>
+
+## Overflow
+
+When content is bigger than its box:
+
+- `overflow: visible` — it spills out, the default.
+- `overflow: hidden` — it is clipped, and the hidden part is **unreachable**.
+- `overflow: auto` / `scroll` — a scrollbar appears.
+
+`overflow: hidden` is behind a specific and nasty bug: a long value, a translated string, or a long customer name gets silently cut off with no indication anything is missing. Always test with longer content than the design shows.
+
+<Exercise
+  prompt="An element has width: 300px, padding: 25px and a 5px border, with the browser's original box-sizing. How wide is it on screen?"
+  accept={["360", "360px"]}
+  hint="width applies to content only; add padding and border on both sides."
+  solution="360px. 300 content, plus 25 padding each side, plus 5 border each side: 300 + 50 + 10. With box-sizing: border-box it would be exactly 300px, with the padding and border fitting inside."
+/>
+
+<Exercise
+  prompt="A customer with a long name sees it cut off mid-word in their account header, with no ellipsis and no tooltip. Which CSS property is the likely cause, and why is this worth reporting?"
+  accept={["overflow", "overflow hidden", "overflow: hidden"]}
+  hint="The content is bigger than its box and something is clipping it."
+  solution="overflow: hidden on the container. It is worth reporting because the information is not just visually truncated, it is unreachable — the user cannot scroll, select or hover to see the rest. It will affect every customer whose name is longer than the designer's test data."
+/>
+
+<Terms items={[
+  { term: "Padding", meaning: "Space inside the border. Takes the background colour." },
+  { term: "Margin", meaning: "Space outside the border. Always transparent." },
+  { term: "box-sizing: border-box", meaning: "Makes width include padding and border. What most people assume." },
+  { term: "Margin collapse", meaning: "Adjacent vertical margins become the larger of the two, not their sum." },
+  { term: "Flexbox", meaning: "One-dimensional layout along a main axis." },
+  { term: "position: fixed", meaning: "Pinned to the viewport; a classic cause of content hidden under a header." },
+  { term: "z-index", meaning: "Which overlapping element is on top, within a stacking context." },
+  { term: "overflow: hidden", meaning: "Clips content that does not fit, making it unreachable." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Two stacked blocks have margin-bottom: 40px and margin-top: 25px. What is the gap?",
+    options: ["65px", "40px", "25px", "32.5px"],
+    answer: 1,
+    why: "Vertical margins between block elements collapse to the larger value rather than adding."
+  },
+  {
+    q: "Which property makes width include padding and border?",
+    options: ["box-model: inner", "box-sizing: border-box", "width: total", "overflow: hidden"],
+    answer: 1,
+    why: "border-box changes width to mean the whole box, which is why nearly every modern stylesheet sets it globally."
+  },
+  {
+    q: "Content is cut off with no scrollbar and no way to reach it. Most likely cause?",
+    options: ["margin collapse", "overflow: hidden", "display: none", "position: fixed"],
+    answer: 1,
+    why: "hidden clips the overflow and gives the user no way to scroll to it, so the content is genuinely inaccessible."
+  },
+  {
+    q: "Why does a fixed header often hide the top of a page's content?",
+    options: [
+      "It loads too slowly",
+      "It is removed from the normal flow, so content scrolls underneath it",
+      "It has a high z-index",
+      "It uses flexbox"
+    ],
+    answer: 1,
+    why: "Fixed positioning takes the header out of the flow, so the page lays out as though it were not there and the content slides beneath."
+  }
+]} />
+
+## Tomorrow
+
+The DOM: why the page in the Elements panel is not the file the server sent, and why that distinction decides who owns a bug.

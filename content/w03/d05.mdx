@@ -1,0 +1,149 @@
+Most people will use the thing you are testing on a phone. Most people building it are looking at a wide monitor. That gap is why a whole category of bugs exists, and why testing at several widths is not optional.
+
+## How a page adapts
+
+Three mechanisms do nearly all of it.
+
+**The viewport meta tag**, from week 2 day 1. Without it a phone pretends to be a desktop and scales everything down. Missing viewport tag is still the single most common cause of "the site is tiny on mobile".
+
+**Relative units.** Fixed pixels do not adapt; relative units do.
+
+- `%` — relative to the parent.
+- `rem` — relative to the root font size. Respects the user's browser font setting, which matters for accessibility.
+- `vw` / `vh` — a percentage of the viewport width or height.
+
+**Media queries** — different rules at different widths.
+
+```css
+.sidebar { display: none; }
+
+@media (min-width: 768px) {
+  .sidebar { display: block; }
+}
+```
+
+Read that as: hidden by default, shown from 768 pixels up. The default is the narrow case and the wider layout is added on top — which is **mobile first**, and it is how most modern CSS is written.
+
+<Video id="media-queries" />
+
+## Breakpoints
+
+The widths where the layout changes are **breakpoints**. Common ones cluster around 480, 768, 1024 and 1280 pixels, but they are chosen per project, not fixed by any standard.
+
+Bugs cluster at breakpoints, so test deliberately:
+
+- **Just below and just above each one.** 767 and 769, not 400 and 1200.
+- **At the breakpoint exactly.** Overlapping or gapped queries — one rule ending at `max-width: 768px` and the next starting at `min-width: 769px` — leave 768.5 unstyled on a device with fractional pixels.
+
+<Callout kind="job">
+Find the breakpoints rather than guessing them. In DevTools, open the device toolbar and drag the handle slowly: the layout jumps at each one, and the pixel width is shown as you drag. Thirty seconds of dragging tells you exactly where to test.
+</Callout>
+
+## The bugs that only exist on a phone
+
+Learn this list. It is most of what you will find.
+
+**Horizontal scroll.** The page scrolls sideways, which looks broken and feels worse. Usually one element wider than the viewport — a fixed-width image, a long unbroken string, a table. To find the culprit:
+
+```js
+[...document.querySelectorAll('*')].filter(e => e.scrollWidth > document.documentElement.clientWidth)
+```
+
+**Tap targets too small.** A link or button comfortable with a mouse is fiddly with a thumb. Around 44 by 44 pixels is the usual minimum. Adjacent small targets are worse: people hit the wrong one.
+
+**Content hidden behind a fixed header.** Worse on a phone, where the header takes a larger share of a shorter screen.
+
+**Hover-only interactions.** A menu that opens on hover has no equivalent on a touch screen. Sometimes it is unreachable entirely; sometimes the first tap opens it and the second follows the link, which is confusing.
+
+**Text too small, or forced zoom.** If a user has to pinch to read, that is a finding.
+
+**Forms that are painful.** The wrong keyboard, because `type` was not set. Fields obscured by the on-screen keyboard. A submit button you cannot reach without dismissing the keyboard first.
+
+**Tables.** They do not shrink. Either they overflow, or someone has hidden columns — and hiding columns means mobile users cannot see data desktop users can, which is a real finding and not merely cosmetic.
+
+<Callout kind="watch">
+The device toolbar is an **emulation**, not a device. It gets layout and most behaviour right, and it does not fully reproduce touch handling, real on-screen keyboards, device performance or OS-level quirks.
+
+Use it for the fast pass. Say in your report that it was emulated. Where something matters — a payment flow, a signup — check on a real phone before you sign it off.
+</Callout>
+
+<Video id="responsive-practical" />
+
+## A five-minute responsive pass
+
+1. Open the device toolbar and choose a small phone preset, around 375 pixels.
+2. Scroll the whole page. Any sideways movement at all is a bug.
+3. Drag the width slowly from narrow to wide. Note where the layout jumps; those are your breakpoints.
+4. Test just either side of each one.
+5. Tab through the page at phone width — focus order often changes when a layout reflows.
+6. Open any form. Check the keyboard type for each field, and whether the submit button is reachable.
+
+<Exercise
+  prompt="A page scrolls sideways on a phone. What is the general cause, and what is the one-line way to find the culprit?"
+  accept={["wider than", "element wider", "scrollwidth", "too wide", "overflow"]}
+  hint="Something is wider than the screen."
+  solution="Some element is wider than the viewport. Find it in the console by filtering every element for scrollWidth greater than documentElement.clientWidth. It is usually a fixed-width image, a table, or a long unbroken string such as a URL."
+/>
+
+<Exercise
+  prompt="A site shows eight table columns on desktop and three on mobile, with five hidden by CSS. Is this acceptable?"
+  accept={["no", "finding", "report", "not acceptable", "depends"]}
+  hint="Who can see the data, and who cannot?"
+  solution="It is a finding. Hiding columns means mobile users cannot reach information desktop users can, and that is a functional gap rather than a cosmetic one. Acceptable solutions let the data be reached: a horizontal scroll, a card layout per row, or an expandable detail view. Report it and let the team decide."
+/>
+
+<Terms items={[
+  { term: "Breakpoint", meaning: "A width at which the layout changes." },
+  { term: "Media query", meaning: "A CSS rule that only applies within a width range." },
+  { term: "Mobile first", meaning: "Writing the narrow layout as the default and adding wider ones on top." },
+  { term: "rem", meaning: "A unit relative to the root font size; respects the user's font setting." },
+  { term: "Tap target", meaning: "The area a finger must hit. Around 44 by 44 pixels minimum." },
+  { term: "Horizontal scroll", meaning: "Sideways scrolling caused by an element wider than the viewport. Always a bug." },
+  { term: "Device emulation", meaning: "DevTools simulating a phone. Good for layout, not a substitute for a real device." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Where should you test around a 768px breakpoint?",
+    options: ["At 400 and 1200", "At 767, 768 and 769", "Only at 768", "Anywhere under 1000"],
+    answer: 1,
+    why: "Bugs live at the edges. Testing either side and exactly on it catches overlapping or gapped media queries."
+  },
+  {
+    q: "What does 'mobile first' mean in CSS?",
+    options: [
+      "Building the phone app before the website",
+      "The narrow layout is the default and wider layouts are added with min-width queries",
+      "Testing on phones first",
+      "Using only relative units"
+    ],
+    answer: 1,
+    why: "The base styles serve the smallest screen and media queries add complexity as space allows."
+  },
+  {
+    q: "A dropdown opens on hover. What is the problem on a touch device?",
+    options: [
+      "It opens too slowly",
+      "There is no hover, so it may be unreachable or need a confusing double tap",
+      "It will look wrong",
+      "Nothing, touch devices simulate hover"
+    ],
+    answer: 1,
+    why: "Hover does not exist on touch. The interaction either fails or becomes a two-tap behaviour users do not expect."
+  },
+  {
+    q: "You found a mobile bug using the device toolbar. What should your report say?",
+    options: [
+      "Nothing extra",
+      "That it was found using emulation, not a real device",
+      "That it only affects Chrome",
+      "That it cannot be reproduced"
+    ],
+    answer: 1,
+    why: "Emulation is accurate for layout but not for touch, keyboards or performance. Saying so is honest and tells the reader how much weight to give it."
+  }
+]} />
+
+## Tomorrow
+
+A working day: five layout bugs, found and written up.

@@ -1,0 +1,125 @@
+This is the most useful week in the first phase. DevTools is the tool you will have open all day, every day, in all three of the jobs this course leads to.
+
+You have already used pieces of it. This week you learn the whole thing properly.
+
+## Opening it
+
+Three ways, and you will use all three:
+
+- **F12**, or **Ctrl+Shift+I**.
+- **Right-click anything → Inspect**, which opens Elements with that element already selected. This is the fastest route when you have a specific thing in mind.
+- **Ctrl+Shift+J** opens straight to the Console.
+
+It docks to the right, the bottom, or in its own window. Use the three-dot menu to change it. On a laptop, docking to the bottom gives Network the horizontal room it needs; on a wide monitor, docking right lets you see the page and the tools together.
+
+<Video id="devtools-intro" />
+
+## The panels, and when each earns its place
+
+| Panel | Shows | You reach for it when |
+| --- | --- | --- |
+| **Elements** | The live DOM and the CSS applied | Something looks wrong, is missing, or is hidden |
+| **Console** | Messages, warnings, errors | Something failed, or you want to query the page |
+| **Sources** | The page's code files | Rarely. Mostly a developer's panel |
+| **Network** | Every request the page makes | Almost always. The main QA panel |
+| **Performance** | A recording of speed | Someone says it is slow |
+| **Memory** | Memory use over time | It gets slower the longer it is open |
+| **Application** | Storage, cookies, tokens | Login and session bugs; clearing state to retest |
+| **Security** | The connection and certificate | Confirming HTTPS is valid |
+| **Lighthouse** | An automated audit | A quick baseline on performance and accessibility |
+
+Two controls sit outside the panel list and matter more than most panels:
+
+- **The device toolbar**, the phone icon at the top left. Week 3, day 5.
+- **The inspect arrow**, to its left. Click it, then click anything on the page to jump to it in Elements.
+
+<Callout kind="key">
+Four panels do ninety-five per cent of testing work: **Elements, Console, Network, Application.** Learn those properly and treat the rest as things you know exist.
+
+This week gives one day each to the first three plus Application, then a practice day.
+</Callout>
+
+## The command menu
+
+The single best shortcut in DevTools. Press **Ctrl+Shift+P** with DevTools focused and type what you want.
+
+- `screenshot` — capture a full-page screenshot, or just one node. Far better than a cropped OS screenshot for a bug report.
+- `coverage` — show which CSS and JavaScript is unused.
+- `disable javascript` — see what happens without it, which is a genuine accessibility and resilience check.
+- `dark` or `light` — force a colour scheme and test both.
+- `show rendering` — emulate colour-vision deficiencies, which turns an accessibility concern into something you can see.
+
+<Callout kind="job">
+Learn `Ctrl+Shift+P` → `capture full size screenshot` today. Bug reports built from full-page captures are noticeably better than ones built from a window grab, because the reader sees the context and the scroll position rather than a floating rectangle.
+</Callout>
+
+## Settings worth changing now
+
+Press **F1** inside DevTools, or the gear icon.
+
+- **Preferences → Network → Disable cache (while DevTools is open).** Stops a stale cached file hiding a bug or faking a fix. Turn this on and leave it on.
+- **Preferences → Console → Preserve log.** Keeps console output across page loads, so an error that happens during a redirect is not lost.
+- **Preferences → Appearance → Theme.** Whichever you can read for eight hours.
+
+## Docking it in your routine
+
+A habit worth building this week: **open DevTools before you start testing, not after something goes wrong.**
+
+Both Console and Network only record while they are open. If you reproduce a bug and *then* open DevTools, you have the symptom and none of the evidence, and you have to do it all again.
+
+<Exercise
+  prompt="You reproduce a bug, then open DevTools to investigate, and the Network tab is empty. Why, and what do you do differently next time?"
+  accept={["only records", "while open", "open first", "not recording", "before"]}
+  hint="When does Network start recording?"
+  solution="Network and Console only capture while DevTools is open, so everything that happened before you opened it is gone. Reproduce it again with DevTools already open — and make opening it first your default before any testing session."
+/>
+
+<Exercise
+  prompt="Which single setting most often prevents a false result when retesting a fix?"
+  accept={["disable cache", "cache", "disable cache while devtools is open"]}
+  hint="Why might you still see the old behaviour after a fix was deployed?"
+  solution="Disable cache while DevTools is open. Without it the browser may serve the old CSS or JavaScript, so you either see a bug that is already fixed, or a fix that is not actually working for real users."
+/>
+
+<Terms items={[
+  { term: "Inspect", meaning: "Right-click an element to open it in Elements, already selected." },
+  { term: "Command menu", meaning: "Ctrl+Shift+P inside DevTools. The fastest route to most features." },
+  { term: "Disable cache", meaning: "A setting that stops stale files hiding a bug or faking a fix." },
+  { term: "Preserve log", meaning: "Keeps console and network records across navigation." },
+  { term: "Device toolbar", meaning: "The phone icon; emulates narrow screens." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which four panels cover most testing work?",
+    options: [
+      "Sources, Memory, Security, Lighthouse",
+      "Elements, Console, Network, Application",
+      "Performance, Memory, Network, Sources",
+      "Elements, Lighthouse, Security, Memory"
+    ],
+    answer: 1,
+    why: "Those four answer what is on the page, what failed, what was requested, and what is stored. The rest are specialist."
+  },
+  {
+    q: "Why open DevTools before reproducing a bug?",
+    options: [
+      "It makes the page load faster",
+      "Console and Network only record while it is open",
+      "It changes the page's behaviour",
+      "It is required for screenshots"
+    ],
+    answer: 1,
+    why: "Anything that happened before you opened it was never captured, so you lose exactly the evidence you needed."
+  },
+  {
+    q: "What does Ctrl+Shift+P open?",
+    options: ["The print dialog", "The command menu", "A new panel", "The page source"],
+    answer: 1,
+    why: "The command menu, which reaches most DevTools features by name without hunting through menus."
+  }
+]} />
+
+## Tomorrow
+
+Elements in depth: editing live, finding what is hidden, and testing a fix before anyone writes it.

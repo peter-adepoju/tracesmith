@@ -1,0 +1,140 @@
+The Elements panel is the live DOM, drawn. You have used it since week 2. Today you learn what it can actually do.
+
+## The layout
+
+**Left**: the DOM tree. **Right**: everything about whatever is selected, across several tabs.
+
+- **Styles** — every rule matching this element, winners at the top, losers struck through. Where you spend most of your time.
+- **Computed** — the final value of every property, after the whole cascade. The truth.
+- **Layout** — grid and flexbox overlays.
+- **Event Listeners** — what is listening on this element. Useful for "clicking does nothing".
+- **Accessibility** — the computed accessible name and role. Underrated.
+
+## Finding things
+
+**Ctrl+F inside the panel** searches the DOM. It accepts plain text, a CSS selector, or an XPath, which makes it quietly powerful: type `button[disabled]` and it finds every disabled button on the page.
+
+**`$0`** in the Console refers to whatever is selected here. Click an element, switch to Console, type `$0` — no selector needed.
+
+**Scroll into view**: right-click a node in the tree and the browser scrolls the page to it. Useful when you found something by searching and have no idea where it lives.
+
+## Editing live
+
+You can change anything. None of it persists past a reload, which is exactly what makes it safe.
+
+- **Double-click a tag name, attribute or text** to edit it.
+- **Right-click → Edit as HTML** to rewrite a whole chunk.
+- **In Styles**, click any value and type a new one. Arrow keys nudge numbers, which is the fastest way to find the right spacing.
+- **Click the checkbox** beside a declaration to toggle it off and on.
+- **`element.style`** at the top of Styles is an empty box for adding your own declarations.
+
+<Callout kind="job">
+This turns a complaint into a proposal. Instead of "the button is hard to read", you can write: "contrast is 2.1:1; changing the text colour to `#1b1a17` takes it to 11.4:1 — screenshot attached, tested in DevTools."
+
+A developer can act on the second one immediately. It costs you two minutes and it is the difference between a reporter and a colleague.
+</Callout>
+
+## Forcing a state
+
+The `:hov` button in the Styles panel, or right-click → **Force state**. Tick `:hover`, `:focus`, `:active`, `:visited`.
+
+This makes state bugs capturable. A focus outline that is invisible, a hover colour that disappears, a disabled style that looks identical to the enabled one — all of these are awkward to photograph and trivial once the state is pinned.
+
+## The Computed tab
+
+Scroll to the bottom of Styles, or open Computed. It lists the final value of every property.
+
+Three things it is best at:
+
+1. **Settling arguments.** The stylesheet says one thing, the screen shows another; Computed says what the browser actually decided.
+2. **Finding the source.** Expand any property and it shows which rule set it, with a link to the file and line.
+3. **Checking inheritance.** When a colour comes from three levels up, Computed is where you see it.
+
+## The Accessibility tab
+
+Select an element and open it. It shows the **computed accessible name** — what a screen reader will announce.
+
+This is the fastest possible accessibility check. A button whose accessible name is empty, or is "button", is a finding. An icon-only button with no `aria-label` shows up here immediately, and you have the evidence in one screenshot.
+
+## Breaking on change
+
+Right-click a node → **Break on** → *subtree modifications*, *attribute modifications*, or *node removal*.
+
+The page pauses the moment something changes that node, and the Sources panel shows the code that did it.
+
+You will not use this often. When you do, it is the only way to answer "what keeps resetting this field?" or "why does this element disappear a second after it loads?" — questions that are otherwise nearly unanswerable from the outside.
+
+<Callout kind="watch">
+Everything you change here is temporary and local. It does not touch the server, the repository or any other user.
+
+That cuts both ways. It is completely safe to experiment, and it means **a fix tested in DevTools is not a fix**. Be precise in reports: "changing X to Y resolves it locally" is a suggestion, not a resolution.
+</Callout>
+
+<Exercise
+  prompt="An icon-only button has no visible text. Which tab tells you in one glance whether a screen-reader user can identify it?"
+  accept={["accessibility", "accessibility tab", "accessible name"]}
+  hint="Something computes what will be announced."
+  solution="The Accessibility tab, which shows the computed accessible name. If it is empty, the button is unidentifiable to a screen-reader user and needs an aria-label or visually hidden text. That is a finding with a one-screenshot proof."
+/>
+
+<Exercise
+  prompt="A form field keeps clearing itself about a second after you type in it. Which DevTools feature would you reach for?"
+  accept={["break on", "break on attribute", "subtree", "dom breakpoint"]}
+  hint="You want to catch the code in the act."
+  solution="A DOM breakpoint: right-click the node, Break on, attribute modifications. The page pauses the instant something changes it and Sources shows you the responsible code, which turns an invisible problem into a specific one."
+/>
+
+<Terms items={[
+  { term: "Styles tab", meaning: "Every matching rule, winners first, losers struck through." },
+  { term: "Computed tab", meaning: "The final value of every property, and which rule set it." },
+  { term: "Force state", meaning: "Pinning :hover or :focus so a state bug can be inspected." },
+  { term: "Accessible name", meaning: "What a screen reader announces for an element." },
+  { term: "DOM breakpoint", meaning: "Pauses the page when a node is changed or removed." },
+  { term: "element.style", meaning: "The box at the top of Styles for adding your own declarations." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What does the Computed tab give you that the Styles rule list does not?",
+    options: [
+      "The original CSS file",
+      "The final value after the whole cascade, plus which rule set it",
+      "A faster page",
+      "The HTML source"
+    ],
+    answer: 1,
+    why: "It is the browser's final answer per property, which is what actually governs what you see."
+  },
+  {
+    q: "You change a colour in DevTools and the contrast problem goes away. What can you claim?",
+    options: [
+      "The bug is fixed",
+      "That the change resolves it locally, as a suggested fix",
+      "Nothing useful",
+      "That the developer made a mistake"
+    ],
+    answer: 1,
+    why: "DevTools changes are temporary and local. Offering a tested suggestion is valuable; calling it fixed is wrong."
+  },
+  {
+    q: "Which lets you capture a bug that only appears while the pointer is over an element?",
+    options: ["Preserve log", "Force state", "Disable cache", "Break on removal"],
+    answer: 1,
+    why: "Forcing :hover pins the state so you can inspect and screenshot it without the pointer."
+  },
+  {
+    q: "What does typing $0 in the Console refer to?",
+    options: [
+      "The first element on the page",
+      "The element currently selected in Elements",
+      "The document root",
+      "The last console result"
+    ],
+    answer: 1,
+    why: "It is a reference to the current Elements selection, which saves writing a selector."
+  }
+]} />
+
+## Tomorrow
+
+The Console. Red lines are evidence, and a few lines of JavaScript will save you hours of clicking.

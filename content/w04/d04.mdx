@@ -1,0 +1,155 @@
+You met the Network panel in week 1. Today you learn the rest of it — the parts that turn it from a list of requests into the most powerful diagnostic tool you own.
+
+<Video id="devtools-network" />
+
+## The toolbar, control by control
+
+**Record** (the red dot) is on by default. **Clear** (⊘) empties the list — press it immediately before the action you want to study, so the list contains only that action.
+
+**Preserve log.** Keeps requests across navigation. Turn it on before any flow that redirects: login, checkout, OAuth. Without it the request that caused the redirect vanishes.
+
+**Disable cache.** While DevTools is open, everything is fetched fresh. Leave this on permanently.
+
+**Throttling.** Simulate a slow connection. Choose *Slow 4G* and retest a flow — you will find race conditions, missing loading states and double-submits that never appear on a fast office connection. This is one of the highest-value, least-used features in DevTools.
+
+**Offline.** Check what happens when the connection drops mid-flow. Most applications handle this badly, and it is a legitimate finding.
+
+## Filters
+
+The row beneath: **All, Fetch/XHR, Doc, CSS, JS, Font, Img, Media, Manifest, WS, Wasm, Other.**
+
+**Fetch/XHR is the one you want**, nearly always. It hides images, fonts and stylesheets and shows only the application's data calls.
+
+The text box filters by URL, and it takes more than plain text:
+
+- `status-code:500` — only server errors.
+- `method:POST` — only POSTs.
+- `larger-than:1M` — only big responses.
+- `-.png` — a leading minus excludes.
+- **Invert** flips the whole filter.
+
+<Callout kind="job">
+`status-code:500` typed into that box is the fastest triage move in existence. On a page misbehaving in some vague way, it answers "is anything actually failing?" in one second, and if something is, you have the exact endpoint.
+</Callout>
+
+## The columns
+
+Right-click the header row to add columns. Three worth adding permanently:
+
+- **Method** — so you can see GET versus POST without clicking.
+- **Type** — xhr, fetch, document, script.
+- **Priority** — how the browser ranked it.
+
+**Status** is the one your eye should go to first. **Time** finds the slow one. **Size** shows whether something came `(from disk cache)` or over the wire — which matters when a fix seems not to have taken effect.
+
+## Inside one request
+
+Click any request for its tabs. You know these from week 1; here is what each is actually best for.
+
+**Headers** — the URL, method, status, and both sets of headers. Where you find the request id to quote in an escalation.
+
+**Payload** — what you sent. This is where you catch a wrong amount, a missing field, or a form value that never left the browser because the input had no `name`.
+
+**Preview** — the response as an expandable tree. Easier for finding a value.
+
+**Response** — the raw body. Use this one for reading error messages exactly, and for spotting things that should not be there at all.
+
+**Initiator** — what caused the request. Use it to trace a mystery call, or a duplicate.
+
+**Timing** — where the time went. **Waiting for server response** is the number that matters: high means the server is slow, low with a high total means the network or the payload size is the problem.
+
+<Callout kind="key">
+The Response tab is where security findings live. You are reading it for **things that should not be there**: password fields, full card numbers, other customers' records, internal flags, stack traces.
+
+The screen will not show you any of this. The response will. In week 14 this becomes one of the five security checks; for now, build the habit of actually reading the raw response rather than glancing at Preview.
+</Callout>
+
+## Copy as cURL, and HAR files
+
+**Right-click a request → Copy → Copy as cURL** gives you the complete command to reproduce that exact request from a terminal or Postman. This is how you hand a developer something they can run, and how you take a request out of the browser to experiment with — week 8.
+
+**Right-click → Save all as HAR** exports the whole session.
+
+<Callout kind="watch">
+Both of these contain **everything**: your `Authorization` header, cookies, session tokens, and any personal data in the bodies.
+
+A cURL command pasted into a ticket is a live credential pasted into a ticket. A HAR attached to a public tracker is a full session handed to anyone reading it.
+
+Redact before sharing, every time. Replace the token with `REDACTED`. If you cannot sanitise a HAR properly, do not attach it — describe the requests instead.
+</Callout>
+
+## Reading a waterfall
+
+The bars on the right show when each request started and how long it took.
+
+- **Long bars** — slow individually.
+- **Staircases** — requests waiting on each other. Often a chain that could have run in parallel.
+- **A gap before everything** — the page was busy doing something else first.
+- **Many tiny bars** — lots of small requests, which can be slower than one big one.
+
+You do not need to optimise anything. You need to describe it: "the dashboard makes 34 requests and the last finishes 4.2 seconds after load; `/api/summary` alone waits 2.8 seconds for the server."
+
+<Exercise
+  prompt="A merchant says a payment succeeded but their system never recorded it. Which tab of which request would you open first, and what are you looking for?"
+  accept={["response", "network", "status", "webhook"]}
+  hint="You need to know what the server actually said, and whether anything was sent onward."
+  solution="In Network, find the payment call and read its Response, plus the status. If it returned success, the payment is genuine and the failure is downstream — the webhook or the merchant's own recording. If it did not, the payment never completed. That distinction decides whether this is their bug or yours."
+/>
+
+<Exercise
+  prompt="Name two things you must remove from a 'Copy as cURL' command before pasting it into a ticket."
+  accept={["authorization", "cookie", "token", "credentials"]}
+  hint="What proves who you are?"
+  solution="The Authorization header and any Cookie header. Both are live credentials: anyone with that command can act as you. Replace the values with REDACTED, and strip any personal data in the body too."
+/>
+
+<Terms items={[
+  { term: "Preserve log", meaning: "Keeps requests across navigation. Essential for login and checkout." },
+  { term: "Throttling", meaning: "Simulating a slow connection. Finds race conditions and missing loading states." },
+  { term: "Fetch/XHR", meaning: "The filter showing only the application's data calls." },
+  { term: "status-code:500", meaning: "A filter showing only server errors. The fastest triage move there is." },
+  { term: "Copy as cURL", meaning: "The exact request as a runnable command. Contains live credentials." },
+  { term: "HAR", meaning: "A full export of the session. Contains everything; sanitise or do not share." },
+  { term: "Waiting for server response", meaning: "The timing figure that distinguishes a slow server from a slow network." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "A flow redirects and you lose the failing request. Which setting fixes that?",
+    options: ["Disable cache", "Preserve log", "Throttling", "Invert filter"],
+    answer: 1,
+    why: "Preserve log keeps the record across navigation instead of clearing it on each page load."
+  },
+  {
+    q: "What is throttling best at finding?",
+    options: [
+      "Spelling mistakes",
+      "Race conditions, missing loading states and double-submits",
+      "Accessibility problems",
+      "Broken images"
+    ],
+    answer: 1,
+    why: "Slowing the connection widens the windows where timing bugs live, so they become reproducible instead of intermittent."
+  },
+  {
+    q: "Where would you notice that a response contains another customer's data?",
+    options: ["The Headers tab", "The Response tab", "The Timing tab", "The page itself"],
+    answer: 1,
+    why: "The screen only renders what it was designed to show. The raw response is where you see everything the server actually sent."
+  },
+  {
+    q: "Timing shows 2.9 seconds in 'Waiting for server response' and 40ms elsewhere. What do you conclude?",
+    options: [
+      "The user's connection is slow",
+      "The server is slow to respond; the network is fine",
+      "The response is too large",
+      "The browser is the problem"
+    ],
+    answer: 1,
+    why: "Nearly all the time was spent waiting on the server to produce an answer, which points at the back end rather than the connection."
+  }
+]} />
+
+## Tomorrow
+
+Application, Security and the device toolbar — where login bugs live, and how to retest from a genuinely clean state.
