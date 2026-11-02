@@ -47,6 +47,18 @@ Every line earns its place:
 - **`<title>`** — the browser tab, and the heading in search results.
 - **`<body>`** — everything a person actually sees.
 
+Edit the HTML below and watch the preview update as you type. Then look at the tree underneath: that is read back from the rendered page, not from your text.
+
+<LivePlayground
+  task="Try breaking it on purpose: remove a closing tag, or put a <div> inside the <p>. The preview survives — and the tree shows you what the browser built instead."
+  html={`<h1>Your orders</h1>
+<p>You have no orders yet.</p>
+<ul>
+  <li>First</li>
+  <li>Second</li>
+</ul>`}
+/>
+
 <Callout kind="job">
 Three bugs are already in reach: quirks mode from a missing doctype, mojibake from a wrong charset, and a broken mobile layout from a missing viewport tag. Each has an obvious symptom and a one-line cause. Testers who know them diagnose in seconds what others spend an afternoon on.
 </Callout>

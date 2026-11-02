@@ -5,6 +5,9 @@ import { Quiz } from "@/components/Quiz";
 import { RequestInspector } from "@/components/RequestInspector";
 import { Terms } from "@/components/Terms";
 import { Video } from "@/components/Video";
+import { LivePlayground } from "@/components/interactive/LivePlayground";
+import { RequestJourney } from "@/components/interactive/RequestJourney";
+import { StatusExplorer } from "@/components/interactive/StatusExplorer";
 
 /**
  * Components every lesson can use without importing anything.
@@ -15,8 +18,11 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
     Callout,
     Exercise,
+    LivePlayground,
     Quiz,
     RequestInspector,
+    RequestJourney,
+    StatusExplorer,
     Terms,
     Video,
     ...components,
