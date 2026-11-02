@@ -1,0 +1,135 @@
+Every request starts with a verb. It tells the server what kind of thing you are trying to do, before it even looks at the path.
+
+There are five you will meet in practice. The whole set takes about ten minutes to learn, and getting one wrong is a genuine defect, not a matter of taste.
+
+<Video id="http-methods" />
+
+## The five
+
+**GET — read something.**
+`GET /v1/customers` means "give me the customers". A GET asks and nothing more. It has no body.
+
+**POST — create something, or make something happen.**
+`POST /v1/payments/initiate` means "start a payment". A POST carries a body with the details. It is the method behind most forms and most actions.
+
+**PUT — replace something entirely.**
+`PUT /v1/customers/cus_01` means "here is the complete new version of this customer; overwrite what you have". Anything you leave out of the body is gone.
+
+**PATCH — change part of something.**
+`PATCH /v1/customers/cus_01` with a body of `{"email": "new@example.com"}` means "change only the email, leave everything else". The careful cousin of PUT.
+
+**DELETE — remove something.**
+`DELETE /v1/customers/cus_01`. Exactly what it says.
+
+## The rule that matters: safe and idempotent
+
+Two words that sound academic and are not. They are the reason a customer gets charged twice.
+
+**Safe** means the request changes nothing. GET is safe. You can send it a thousand times and the system is exactly as it was.
+
+**Idempotent** means doing it twice has the same effect as doing it once. GET, PUT and DELETE are all idempotent. Deleting a customer twice leaves you with the same result as deleting it once: no customer.
+
+**POST is neither.** POST creates. Two POSTs create two things. Two payment POSTs are two payments.
+
+<Callout kind="key">
+This is why a retried payment can charge twice, and why "run it twice and check nothing duplicates" is a test you will write over and over. In week 13 you will test for it deliberately; in week 22 you will design automations that survive it.
+</Callout>
+
+## Why a wrong method is a defect
+
+It is tempting to think the method is a label and the path does the real work. It is not.
+
+A GET that changes data is a real bug, because the whole system assumes GET is safe:
+
+- Browsers pre-fetch links to make pages feel fast. A pre-fetched "delete" link deletes.
+- Caches store GET responses and replay them. A cached action is an action that happens twice, or not at all.
+- Search engine crawlers follow every link they find. A crawler can walk through an admin panel and empty it.
+
+These are not hypothetical. "A crawler deleted our content because delete was a GET link" is a classic incident.
+
+<Callout kind="watch">
+If you ever see a URL like `/admin/delete?id=42` that works by being visited, you have found a serious bug. Report it. The method is wrong and the consequences are not small.
+</Callout>
+
+## What a wrong method looks like in practice
+
+Send the right path with the wrong verb and a well-built server answers **405 Method Not Allowed**. Tomorrow you will meet that code properly, but you can produce one right now.
+
+<RequestInspector preset="Wrong method" />
+
+Press Send. The path `/v1/payments/initiate` is correct and the key is correct, but a payment must be created with POST, and this is a GET. Read the response: a good API tells you which methods it does allow.
+
+<Exercise
+  prompt="Change the method to POST and send again. You will now get a different error. What is it, and why did it only appear once you fixed the method?"
+  accept={["422", "validation", "missing fields", "422 validation"]}
+  hint="The server can only check the body once it has agreed to look at the body."
+  solution="A 422, because the body is empty and amount, currency and reference are required. The server checks things in order: is this method allowed, then is the body valid, then are the fields right. You only see the next problem once the previous one is solved."
+/>
+
+<Callout kind="job">
+That ordering is worth internalising. Errors come one at a time, in the server's order, not in order of importance. A customer who fixes one thing and hits a new error has not necessarily made things worse — they have usually made progress.
+</Callout>
+
+## Choosing the right one
+
+A quick way to decide:
+
+| You want to | Method |
+| --- | --- |
+| Fetch a list or a single item | GET |
+| Create something new | POST |
+| Trigger an action (send, charge, start) | POST |
+| Replace a whole record | PUT |
+| Change one or two fields | PATCH |
+| Remove a record | DELETE |
+
+<Terms items={[
+  { term: "GET", meaning: "Read something. Safe: it changes nothing." },
+  { term: "POST", meaning: "Create something or trigger an action. Not idempotent: twice means twice." },
+  { term: "PUT", meaning: "Replace a whole resource with the version you send." },
+  { term: "PATCH", meaning: "Change part of a resource, leaving the rest alone." },
+  { term: "DELETE", meaning: "Remove a resource." },
+  { term: "Safe", meaning: "A request that changes nothing on the server." },
+  { term: "Idempotent", meaning: "Doing it twice has the same effect as doing it once." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Why is a GET that deletes data a serious bug?",
+    options: [
+      "It is slower than DELETE",
+      "Browsers, caches and crawlers all assume GET is safe and may repeat it",
+      "It uses more bandwidth",
+      "GET requests cannot be logged"
+    ],
+    answer: 1,
+    why: "The whole web is built on the assumption that GET changes nothing. Break it and pre-fetching, caching and crawling all become destructive."
+  },
+  {
+    q: "Which method is NOT idempotent?",
+    options: ["GET", "PUT", "POST", "DELETE"],
+    answer: 2,
+    why: "POST creates. Two POSTs create two things, which is exactly how a double-click becomes a double charge."
+  },
+  {
+    q: "You want to change only a customer's phone number, leaving everything else. Which method?",
+    options: ["PUT", "PATCH", "POST", "GET"],
+    answer: 1,
+    why: "PATCH changes part of a resource. PUT would replace the whole record, and anything you left out of the body would be wiped."
+  },
+  {
+    q: "A request returns 405. What does that tell you?",
+    options: [
+      "The endpoint does not exist",
+      "Your key is wrong",
+      "The endpoint exists but not for that method",
+      "The server crashed"
+    ],
+    answer: 2,
+    why: "405 is specifically 'right address, wrong verb'. If the address were wrong you would get a 404 instead, which is a useful distinction when diagnosing."
+  }
+]} />
+
+## Tomorrow
+
+The server's answer begins with a number. Tomorrow you learn to read it, and it is the highest-value hour in this phase of the course.

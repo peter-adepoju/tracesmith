@@ -1,0 +1,174 @@
+If you learn one thing in this phase, learn this.
+
+Every response starts with a three-digit number. That number tells you what happened and, more usefully, **whose problem it is**. In a support queue or a bug report, it is the fastest route from "it's broken" to a specific, actionable statement.
+
+<Video id="status-codes" />
+
+## The five families
+
+You do not memorise all the codes. You memorise five groups, by first digit.
+
+| Family | Means | In plain words |
+| --- | --- | --- |
+| **1xx** | Informational | Rare. Ignore for now. |
+| **2xx** | Success | It worked. |
+| **3xx** | Redirect | Look somewhere else. |
+| **4xx** | Client error | **You** got the request wrong. |
+| **5xx** | Server error | **They** failed. |
+
+<Callout kind="key">
+The jump from 4xx to 5xx is the jump from your problem to their problem. That one boundary is the most valuable thing on this page. A 4xx means change your request. A 5xx means stop changing your request and escalate.
+</Callout>
+
+## The codes you will actually meet
+
+**200 OK** — it worked, here is the answer.
+
+**201 Created** — it worked and something new now exists. Usually the answer to a POST.
+
+**204 No Content** — it worked and there is deliberately nothing to send back. Common after a DELETE.
+
+**301 / 302 Moved** — the thing is at a different address now. Your browser follows these automatically, which is why you rarely notice them.
+
+**400 Bad Request** — the request itself was malformed. Very often this means the body was not valid JSON, so the server could not even begin to read it.
+
+**401 Unauthorized** — we do not know who you are. No credential, or one we do not recognise. Badly named: it is about *identity*, not permission.
+
+**403 Forbidden** — we know exactly who you are, and you are not allowed to do this.
+
+**404 Not Found** — there is nothing at that address. Check the path, including the version prefix.
+
+**405 Method Not Allowed** — the address is right, the verb is wrong. Yesterday's lesson.
+
+**422 Unprocessable Content** — the request was well-formed and parsed fine, but the content broke a rule. A missing required field, a negative amount, an invalid email.
+
+**429 Too Many Requests** — you are going too fast. Slow down and try again later.
+
+**500 Internal Server Error** — something broke on their side. Nothing you send will fix it.
+
+**502 / 503 / 504** — the server is up but something behind it is not, or it is overloaded, or something timed out. Still their side.
+
+## The four distinctions people get wrong
+
+These four pairs come up in interviews, in tickets, and in real diagnosis. Learn them as pairs.
+
+### 401 versus 403
+
+**401 is identity. 403 is permission.**
+
+A 401 means: you have not told us who you are, or the credential you sent is not one we recognise. Fix: send a valid credential.
+
+A 403 means: your credential is fine, we know precisely who you are, and this account may not do this. Fix: get different permissions, or stop trying.
+
+The difference matters because the actions are completely different. A 401 might be an expired token the customer can refresh themselves. A 403 is a conversation with whoever controls access.
+
+### 404 versus 405
+
+**404 is "no such address". 405 is "wrong verb for this address".**
+
+A 405 is quietly good news: it proves the endpoint exists. You are closer than a 404 suggests.
+
+### 400 versus 422
+
+**400 usually means it did not parse. 422 means it parsed and then failed the rules.**
+
+A 400 from a JSON API is very often a trailing comma or a missing quote. The server never got as far as your fields. A 422 means your JSON was perfect and the *content* was wrong: a field missing, a value out of range.
+
+Knowing which you have tells you where to look: at the shape of the body, or at its values.
+
+### 4xx versus 5xx
+
+**4xx: change the request. 5xx: escalate.**
+
+This is the one that saves hours. If a customer is getting a 500, nothing they type will help. Trying different inputs is wasted effort. Collect the time, the path and the request id, and send it to the people who own the server.
+
+<Callout kind="job">
+A support reply that says "this is a 500, which is a fault on our side, not something you've done wrong — I've escalated it with your request id and will update you by 4pm" is worth ten replies that ask the customer to clear their cache.
+</Callout>
+
+## See all of them
+
+The inspector below can produce every code discussed above. Work through the scenario list one at a time and read each response body as well as the code — a well-built API explains itself.
+
+<RequestInspector preset="No key at all" />
+
+Try, in this order:
+
+1. **No key at all** → 401. You did not say who you are.
+2. **Right call, wrong key** → 403. We know you; this key is not permitted here.
+3. **Typo in the path** → 404. No such address.
+4. **Wrong method** → 405. Right address, wrong verb.
+5. **Missing a required field** → 422. Parsed fine, failed the rules.
+6. **Broken JSON** → 400. Never parsed at all.
+7. **Server failure** → 500. Not your problem.
+
+<Exercise
+  prompt="Send 'Right call, wrong key'. The key is valid and recognised. So why is the answer 403 rather than 401?"
+  accept={["403", "permission", "not allowed", "known but not allowed", "wrong key type"]}
+  hint="Ask which of the two questions the server got past."
+  solution="Because the server recognised the key, so identity is settled — that rules out 401. The public key simply is not permitted to read customer data, which is a permission problem, and permission problems are 403."
+/>
+
+<Exercise
+  prompt="A customer says a page has been showing an error all morning. You reproduce it and see a 503. What is your next action, and what is NOT worth doing?"
+  accept={["escalate", "escalate it", "raise it", "escalate to backend"]}
+  hint="Which family is 5xx?"
+  solution="Escalate, with the time, path and request id. What is not worth doing is asking them to clear their cache, try another browser, or re-enter their details: a 5xx is a server-side failure and no change to the request will fix it."
+/>
+
+<Terms items={[
+  { term: "2xx", meaning: "Success." },
+  { term: "3xx", meaning: "Redirect: the thing is somewhere else." },
+  { term: "4xx", meaning: "Client error: the request was wrong." },
+  { term: "5xx", meaning: "Server error: their side failed." },
+  { term: "401", meaning: "Unauthorized. We do not know who you are." },
+  { term: "403", meaning: "Forbidden. We know who you are; you may not do this." },
+  { term: "422", meaning: "The body parsed but broke a rule, such as a missing field." },
+  { term: "429", meaning: "Too many requests. Slow down." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "A request returns 403. What do you know for certain?",
+    options: [
+      "The credential was missing",
+      "The credential was recognised, but is not allowed to do this",
+      "The endpoint does not exist",
+      "The server crashed"
+    ],
+    answer: 1,
+    why: "403 is permission, which means identity was already settled. A missing or unrecognised credential would be 401."
+  },
+  {
+    q: "A POST returns 400 from a JSON API. What is the most likely cause?",
+    options: [
+      "A required field is missing",
+      "The body is not valid JSON",
+      "The key has expired",
+      "The server is overloaded"
+    ],
+    answer: 1,
+    why: "A missing field is usually 422, because that means the body parsed. A 400 typically means parsing failed, so look for a trailing comma or an unclosed quote."
+  },
+  {
+    q: "Which pair tells you to stop changing the request and escalate?",
+    options: ["401 and 403", "404 and 405", "500 and 503", "200 and 201"],
+    answer: 2,
+    why: "Both are 5xx, which means the failure is on the server side. No change to your request will help."
+  },
+  {
+    q: "You get a 405 instead of a 404. Why is that mildly encouraging?",
+    options: [
+      "It means the server is fast",
+      "It proves the endpoint exists; only the method is wrong",
+      "It means you are authenticated",
+      "It means the data was saved anyway"
+    ],
+    answer: 1,
+    why: "A server can only say 'method not allowed' about an address it actually has. You are one small fix away rather than looking in the wrong place."
+  }
+]} />
+
+## Tomorrow
+
+You have the status line. Tomorrow: the headers around it, including the one that carries your credential and the one you must never paste into a ticket.

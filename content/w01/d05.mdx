@@ -1,0 +1,153 @@
+A request has a body — sometimes. It always has headers.
+
+Headers are the information *about* the message rather than the message itself. If the body is the letter, the headers are everything written on the envelope: who it is from, what language it is in, how to handle it.
+
+<Video id="http-headers" />
+
+## The shape
+
+A header is a name, a colon, and a value. One per line.
+
+```http
+Content-Type: application/json
+Authorization: sk_test_trace_93ba07
+Accept: application/json
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+```
+
+Header names are case-insensitive: `Content-Type` and `content-type` are the same header. You will see both styles and neither is wrong.
+
+Both requests and responses have them. They are not the same set.
+
+## Request headers worth knowing
+
+**Authorization** — your credential. A key, or a token. This is the single most sensitive thing in a request and we will come back to it.
+
+**Content-Type** — what format the body is in. `application/json` for JSON, `application/x-www-form-urlencoded` for a plain HTML form, `multipart/form-data` for a file upload.
+
+**Accept** — what format you would *like* back. A server may offer JSON and HTML for the same endpoint and use this to choose.
+
+**User-Agent** — what software is making the request. This is how analytics knows your browser, and how a server can behave differently for a bot.
+
+**Cookie** — small values the browser stores and sends back automatically. Usually how a logged-in session is carried.
+
+<Callout kind="watch">
+`Content-Type` and `Accept` are easy to confuse. **Content-Type describes what you are sending. Accept describes what you want back.** Sending JSON while declaring `Content-Type: text/plain` is a classic cause of a 400 that looks inexplicable, because the server refuses to parse a body you did not label as JSON.
+</Callout>
+
+## Response headers worth knowing
+
+**Content-Type** — what format the body you are receiving is in.
+
+**Content-Length** — how big it is.
+
+**Set-Cookie** — the server asking your browser to store something and send it back next time. This is how logging in works.
+
+**Cache-Control** — how long this answer may be reused before asking again.
+
+**x-request-id** (and similar) — an identifier for this exact request in the server's logs. Not a standard header, but almost every serious API has one under some name.
+
+<Callout kind="job">
+That request id is the most useful thing you can put in an escalation. "It's failing" makes an engineer search. "Request id req_8fa0c21b at 14:32 UTC returned 500 on POST /v1/payments/initiate" lets them pull up the exact failure in one query. Always look for it, and always include it.
+</Callout>
+
+## The part that gets people fired
+
+The `Authorization` header is a password. Treat it exactly as you would treat one.
+
+It will appear, in full, in:
+
+- A DevTools screenshot of the Headers tab.
+- A "Copy as cURL" command pasted into a ticket.
+- A HAR file exported from the Network tab.
+- A screen recording where you scrolled past it.
+
+Every one of those is a normal thing a tester or support engineer does every day, and every one of them leaks a live credential if you are not deliberate.
+
+<Callout kind="watch">
+**Redact before you share. Every time.**
+
+Black out the value in screenshots. Replace it with `REDACTED` in any pasted command. Before attaching a HAR file, strip it, or do not attach it at all.
+
+The same goes for anything in the body: card numbers, bank details, national identity numbers, one-time codes. Your evidence must prove the bug, not become a second incident.
+</Callout>
+
+And the other direction: **never ask a customer to send you their key, password, or one-time code.** If they volunteer one, stop them, tell them plainly that the value is now compromised, and help them rotate it. A customer handing you a secret is a customer trying to be helpful; protecting them from it is part of the job.
+
+## Reading headers in the inspector
+
+<RequestInspector preset="Verify a payment" />
+
+Press Send, then open the **Headers** tab. You are looking at the same three blocks a real browser shows: the General section with the URL, method and status; the request headers; and the response headers.
+
+Notice `x-request-id` in the response. That is the value you would quote.
+
+<Exercise
+  prompt="In the Headers tab of any request you send, which single header value would you have to black out before putting a screenshot in a bug report?"
+  accept={["authorization", "the authorization header", "auth"]}
+  hint="Only one of them is a credential."
+  solution="Authorization. It carries the key, so a screenshot of it is a screenshot of a live password. Everything else on that panel is safe to share."
+/>
+
+<Exercise
+  prompt="A developer sends a JSON body but the server answers 400 and says it could not read the body. The JSON is definitely valid. Which header would you check first?"
+  accept={["content-type", "content type", "the content-type header"]}
+  hint="The server has to be told what it is receiving before it will try to parse it."
+  solution="Content-Type. If it does not say application/json, many servers will not attempt to parse the body as JSON at all, no matter how valid it is."
+/>
+
+<Terms items={[
+  { term: "Header", meaning: "A name-and-value pair carrying information about a request or response." },
+  { term: "Authorization", meaning: "The header carrying your credential. Redact it before sharing, always." },
+  { term: "Content-Type", meaning: "What format the body being sent is in." },
+  { term: "Accept", meaning: "What format the sender would like back." },
+  { term: "Set-Cookie", meaning: "The server asking the browser to store a value and return it next time." },
+  { term: "Request id", meaning: "An identifier for one request in the server's logs. Quote it in every escalation." },
+  { term: "Redaction", meaning: "Removing secrets from evidence before sharing it." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What is the difference between Content-Type and Accept?",
+    options: [
+      "They are the same thing",
+      "Content-Type describes what you are sending; Accept describes what you want back",
+      "Content-Type is for responses only",
+      "Accept sets the character encoding"
+    ],
+    answer: 1,
+    why: "One describes the body in hand, the other states a preference for the reply. Mixing them up produces confusing 400s."
+  },
+  {
+    q: "A customer messages you their secret API key so you can test. What do you do?",
+    options: [
+      "Use it to reproduce the problem, then delete the message",
+      "Tell them to stop, treat the key as compromised, and help them rotate it",
+      "Forward it to engineering so they can check",
+      "Save it in the ticket for future reference"
+    ],
+    answer: 1,
+    why: "Once a secret has been sent over chat it must be considered exposed. Using it or forwarding it spreads the exposure; rotating it ends it."
+  },
+  {
+    q: "Which header would you most want to include in an escalation to engineering?",
+    options: ["User-Agent", "Accept", "The request id", "Content-Length"],
+    answer: 2,
+    why: "It lets an engineer find that exact failure in the logs immediately, instead of searching by time and guessing."
+  },
+  {
+    q: "You are about to attach a HAR export from the Network tab to a public bug tracker. What is the risk?",
+    options: [
+      "HAR files are very large",
+      "It contains every header, including live credentials and personal data",
+      "HAR files cannot be opened by engineers",
+      "There is no risk"
+    ],
+    answer: 1,
+    why: "A HAR is a complete record of the traffic, headers and bodies included. Strip it or do not attach it."
+  }
+]} />
+
+## Tomorrow
+
+That is the whole request-response model: method, path, headers, body, status. Tomorrow you put all five to work on ten real requests and write your first piece of evidence.

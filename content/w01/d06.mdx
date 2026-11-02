@@ -1,0 +1,157 @@
+No new ideas today. Today you use the five you have.
+
+This is a working session. Keep a notes file open: you are going to write ten short findings, and the writing is as much of the practice as the reading.
+
+<Callout kind="key">
+The skill being built today is not "sending requests". It is **saying what happened in one defensible sentence**. That sentence is the atom of a bug report, a support reply and an escalation. Everything later in this course is built out of it.
+</Callout>
+
+## How to write a finding
+
+A finding has three parts and fits on one line:
+
+> **What you did** → **what came back** → **what that means**.
+
+For example:
+
+> `GET /v1/customers` with no Authorization header returned **401 invalid key**, so the request never got as far as permissions — it was rejected on identity.
+
+That is a finding. Note what it does not do: it does not guess at causes, it does not blame anyone, and every claim in it is something the response actually showed.
+
+Compare with a non-finding:
+
+> Customers endpoint is broken.
+
+Nobody can act on that.
+
+## The ten
+
+Work through these in order in the inspector. For each, write your one-line finding **before** you read the explanation you can reveal underneath.
+
+<RequestInspector />
+
+### 1. The baseline
+
+`GET /v1/ping`, no key. What status, and why does this one need no credential?
+
+### 2. Identity missing
+
+`GET /v1/customers`, no key. Which family is the code in, and whose problem is it?
+
+### 3. Identity present, permission absent
+
+`GET /v1/customers` with the **public** key. The code changed from the last one. Explain the change in terms of identity versus permission.
+
+### 4. Right idea, wrong verb
+
+`GET /v1/payments/initiate` with the public key. Why is this code slightly encouraging compared to a 404?
+
+### 5. Wrong address
+
+`GET /v1/customer` with the secret key — note the missing `s`. What is the one-character difference worth, in status terms?
+
+### 6. A body that never parsed
+
+Use the **Broken JSON** scenario. Look carefully at the body: there is a trailing comma. What code, and what did the server *not* get as far as doing?
+
+### 7. A body that parsed and failed
+
+Use **Missing a required field**. Compare this code with the previous one. Which fields does the response name?
+
+### 8. Success with a payload
+
+Use **Start a payment**. Read the Payload tab and the Response tab, and say what the server gave you that you did not send.
+
+### 9. Success that is not good news
+
+`GET /v1/payments/verify/ORDER-1002` with the secret key. The status is 200. Is the customer's money taken? Where exactly does the answer live?
+
+### 10. Not your problem
+
+`GET /v1/boom`. What code, and write the escalation sentence you would send, including what you would quote from the response.
+
+<Callout kind="watch">
+Number 9 is the one that catches people. **A 200 means the request succeeded, not that the outcome was good.** The request worked perfectly; the payment it describes is pending. Confusing "the call worked" with "the thing happened" is behind a large share of real support mistakes, and you will meet it again in week 19.
+</Callout>
+
+## Check yourself against these
+
+<Exercise
+  prompt="Number 9 again, in your own words: the status is 200 but the customer has not paid. How is that not a contradiction?"
+  accept={["request succeeded", "the request worked", "status is about the request", "200 is about the request"]}
+  hint="What is the status code actually describing?"
+  solution="The status code describes the request, not the subject of the request. The server was asked 'what is the state of ORDER-1002' and answered that question perfectly, which is a 200. The answer it gave happens to be 'pending, not paid', which lives in the body. Status for the call, body for the outcome."
+/>
+
+<Exercise
+  prompt="Write the escalation sentence for number 10. What two things from the response must it contain?"
+  accept={["request id", "request_id", "the request id and the time", "request id and path"]}
+  hint="One identifies the exact failure in their logs."
+  solution="The request id and the endpoint, plus the time. Something like: 'GET /v1/boom returned 500 at 14:32 UTC, request id req_8fa0c21b. Reproducible every time. No customer-side change affects it.' The request id is what turns a search into a lookup."
+/>
+
+## The pattern underneath
+
+Look back at your ten findings. Every one of them answered the same two questions:
+
+1. **Did the request reach the server, and what did it say back?**
+2. **Is this my side or their side?**
+
+That is the diagnostic loop for all three jobs in this course. A tester runs it to write a bug report. A support engineer runs it to route a ticket. An automation engineer builds it into the error handling of a workflow.
+
+You will get faster. You will not need a new method.
+
+<Quiz questions={[
+  {
+    q: "Which of these is a usable finding?",
+    options: [
+      "The payments endpoint is broken.",
+      "POST /v1/payments/initiate with a valid public key and an empty body returned 422, naming amount, currency and reference as missing.",
+      "I think the server is down.",
+      "Payments do not work when I try them."
+    ],
+    answer: 1,
+    why: "It states the exact request, the exact response, and nothing it cannot show. The others are conclusions without evidence, and none of them can be acted on."
+  },
+  {
+    q: "A verify call returns 200 with a body saying status pending, paid false. What do you tell the customer?",
+    options: [
+      "The payment succeeded",
+      "The system is broken",
+      "The lookup worked and shows the payment has not completed yet",
+      "They should try paying again immediately"
+    ],
+    answer: 2,
+    why: "The 200 is about the lookup. The body is about the payment. Telling them to pay again on this evidence risks charging them twice."
+  },
+  {
+    q: "In the ten exercises, which two produced errors you could NOT fix by changing your request?",
+    options: [
+      "The 401 and the 403",
+      "The 404 and the 405",
+      "The 500 only",
+      "The 400 and the 422"
+    ],
+    answer: 2,
+    why: "Only the 5xx is a server-side failure. Every 4xx in the set was fixable by sending something different: a key, a method, a path, a valid body."
+  },
+  {
+    q: "What are the two questions the diagnostic loop always answers?",
+    options: [
+      "Who wrote the code, and when",
+      "What came back, and is it my side or theirs",
+      "How fast was it, and how big",
+      "Which browser, and which version"
+    ],
+    answer: 1,
+    why: "Those two split any problem into something specific and route it to the right owner. Everything else is detail on top."
+  }
+]} />
+
+## Week 1 done
+
+You can follow a request from a URL to a response and back. You know the five methods and why the wrong one is a defect. You can read a status code and say whose problem it is. You know what headers carry and which one to redact. And you can write a finding someone else can act on.
+
+That is the foundation all three roles stand on.
+
+Next week you look at the thing the response usually contains when a human is the audience: the page itself, and the HTML it is made of.

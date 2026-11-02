@@ -1,0 +1,137 @@
+You are about to learn three jobs. Before any of them makes sense, you need one picture in your head: what actually happens between pressing Enter and seeing a page.
+
+Almost every problem you will ever be handed is a problem with one step of that journey. A tester asks "which step broke?". A support engineer asks "whose step was it?". An automation engineer builds something that walks the journey on its own. Same journey, three jobs.
+
+## The journey, in eight steps
+
+You type `example.com/orders` and press Enter.
+
+1. **The browser reads the URL.** It splits it into a scheme (`https`), a host (`example.com`) and a path (`/orders`). The scheme says which language to speak, the host says who to speak to, the path says what to ask for.
+
+2. **It looks up the address.** Computers do not know what `example.com` means. They need a number, an IP address, something like `93.184.216.34`. The system that turns the name into the number is **DNS**, the Domain Name System. Think of it as the phone book.
+
+3. **It opens a connection.** Your computer and the server agree to talk. Over `https` they also agree on encryption, so nobody in between can read what passes.
+
+4. **It sends a request.** This is the important one. The browser sends a short, structured message that says: I would like `GET /orders`, I am this kind of browser, and here is my proof of who I am.
+
+5. **The server does some work.** It checks who you are, reads a database, decides what you are allowed to see.
+
+6. **It sends a response.** Another structured message: a status code saying how it went, some headers, and usually a body — the HTML of the page, or data.
+
+7. **The browser builds the page.** It reads the HTML, and when the HTML mentions a stylesheet, an image or a script, it goes back to step 4 and asks for each of those too. One page is dozens of requests.
+
+8. **The page runs.** Scripts execute, and they make their own requests in the background for data. This is why a page can look finished and still be loading things.
+
+<Callout kind="key">
+Steps 4 and 6 are the whole course. A request goes out, a response comes back. Everything else — testing, supporting, automating — is reading those two messages carefully and deciding what they tell you.
+</Callout>
+
+<Video id="url-journey" />
+
+## Why this matters for each job
+
+Say a customer reports: "I click Orders and nothing happens."
+
+A person without this picture can only say "it's broken". A person with it can ask a much better question: **did a request even go out?**
+
+- If no request was sent, the problem is in the browser. Something in step 8 failed before it could ask. That is a front-end problem.
+- If a request went out and came back with an error, the problem is on the server. That is a back-end problem.
+- If a request went out, came back fine, and the page still shows nothing, the problem is what the page did with a perfectly good answer. Front-end again, but a different kind.
+
+Three different teams, three different fixes. You decided between them in about fifteen seconds, without reading any code, because you knew the journey.
+
+<Callout kind="job">
+This is the single most useful habit in technical support: before you form any theory, find out whether the request happened and what came back. In week 4 you will learn to see this directly in the browser. For now, learn the shape.
+</Callout>
+
+## One page is many requests
+
+A detail that surprises people: loading one page is not one request. It is often sixty.
+
+The HTML arrives first. It is a document that references other things — a stylesheet, fonts, images, scripts. Each of those is its own request, with its own status code, its own timing, and its own way of failing.
+
+This is why a page can be half-broken. The HTML arrived (status 200, fine) but the stylesheet did not (status 404, missing), so the page renders with no styling. Everything is there, nothing looks right. Once you know a page is many requests, that stops being mysterious.
+
+<Exercise
+  prompt="A page loads with all its text but no images, and the layout is correct. How many requests failed, roughly, and which kind?"
+  accept={["images", "image requests", "the image requests"]}
+  hint="The layout is correct, so the stylesheet arrived. Only one kind of thing is missing."
+  solution="The image requests failed — one per missing image. The HTML and the CSS both succeeded, which is why the text and the layout are fine. The fault is isolated to those image requests, so you would look at their status codes next."
+/>
+
+## The vocabulary you now own
+
+You have met the words that run through the next twenty-six weeks. They are worth getting right now, because every later idea is built on them.
+
+<Terms items={[
+  { term: "URL", meaning: "The full address of something on the web: scheme, host and path." },
+  { term: "DNS", meaning: "The system that turns a name like example.com into an IP address." },
+  { term: "Client", meaning: "The thing making the request. Usually a browser, sometimes an app or a script." },
+  { term: "Server", meaning: "The thing answering the request." },
+  { term: "Request", meaning: "The message a client sends asking for something." },
+  { term: "Response", meaning: "The message the server sends back." },
+  { term: "HTTPS", meaning: "HTTP with encryption, so nobody in between can read the messages." },
+]} />
+
+## Try it for real
+
+You do not need any tools for this one. You need a browser and sixty seconds.
+
+<Callout kind="practice">
+Open any website. Press **F12** to open the browser's developer tools, click the **Network** tab, then reload the page.
+
+You will see a list fill up. That list is every request the page made. You are looking directly at steps 4 to 7, happening live.
+
+Do not try to understand the columns yet — that is week 4. Just count the rows. On most sites it is dozens. Sit with the fact that one page is that many conversations.
+</Callout>
+
+<Quiz questions={[
+  {
+    q: "A user says a page is completely blank. You check and find no requests were sent at all. Where is the problem?",
+    options: [
+      "The server is down",
+      "In the browser, before a request could be made",
+      "The database is empty",
+      "The network connection failed"
+    ],
+    answer: 1,
+    why: "No request was sent, so nothing ever reached the server. Whatever failed, failed in the browser first. A down server would still show a failed request."
+  },
+  {
+    q: "What does DNS do?",
+    options: [
+      "Encrypts the connection",
+      "Decides which page to show",
+      "Turns a domain name into an IP address",
+      "Stores the website's files"
+    ],
+    answer: 2,
+    why: "DNS is the lookup from a human-readable name to the number a computer can connect to. Encryption is the job of HTTPS."
+  },
+  {
+    q: "A page shows all its content but with no styling at all. What most likely happened?",
+    options: [
+      "The HTML request failed",
+      "The stylesheet request failed",
+      "DNS failed",
+      "The server returned a 500"
+    ],
+    answer: 1,
+    why: "The content arrived, so the HTML was fine. Styling is a separate request; when it fails you get a readable but unstyled page."
+  },
+  {
+    q: "Why is 'did a request even go out?' such a useful first question?",
+    options: [
+      "It tells you whether the problem is in the browser or on the server",
+      "It tells you the user's internet speed",
+      "It proves the user is wrong",
+      "It identifies the exact line of broken code"
+    ],
+    answer: 0,
+    why: "It splits every problem into two halves straight away, and those halves belong to different teams. It is the cheapest useful question you can ask."
+  }
+]} />
+
+## Tomorrow
+
+You now know the journey. Tomorrow you look closely at the two messages in the middle of it — the request and the response — and learn why the server can never speak first.

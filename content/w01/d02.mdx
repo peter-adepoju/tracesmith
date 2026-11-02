@@ -1,0 +1,161 @@
+Yesterday you followed one page load end to end. Today you zoom in on the two messages at the heart of it, and on a rule that explains a surprising amount of how the web behaves.
+
+## Client and server are roles, not machines
+
+A **client** is whatever is asking. A **server** is whatever is answering.
+
+These are roles in a conversation, not types of computer. Your laptop is a client when your browser loads a page. The same laptop is a server if you run a development server on it and something connects. A payment company's computer is a server when a shop calls it, and a client when it calls a bank.
+
+Keep them as roles and a lot of confusion disappears. When someone says "is this a client-side or server-side problem?", they are asking which end of that conversation went wrong.
+
+## The rule: the server never speaks first
+
+HTTP is a **request-response** protocol. One side asks, the other answers, and that is the only shape a conversation can take.
+
+The server cannot decide, on its own, to send you something. It has no way to start. It sits there until someone asks.
+
+This sounds like a small technical detail. It is not. It explains things you will meet constantly:
+
+- **Why pages poll.** If a page needs to know when something changes, and the server cannot tell it, the page has to keep asking: "any news? any news? any news?" That is called polling, and it is wasteful.
+- **Why webhooks exist.** The fix is to flip the roles. Instead of your server asking theirs, theirs becomes a client and calls yours. It is still request-response; the arrow just points the other way. You will build these in week 8.
+- **Why nothing "pushes" to you for free.** Live chat, notifications and live dashboards all need extra machinery, because the plain protocol cannot do it.
+
+<Callout kind="key">
+A webhook is not an exception to the rule. It is the same rule with the roles swapped. Whoever sends the request is the client, for that one message.
+</Callout>
+
+<Video id="http-requests" />
+
+## What a request actually looks like
+
+Strip away the browser and a request is just text in a known shape. Here is a real one, simplified:
+
+```http
+GET /v1/customers HTTP/1.1
+Host: api.example.com
+Authorization: sk_test_trace_93ba07
+Accept: application/json
+User-Agent: Mozilla/5.0
+```
+
+Four parts, and you can name all of them:
+
+1. **The method** — `GET`. What kind of action this is. Tomorrow's lesson.
+2. **The path** — `/v1/customers`. What you are asking about.
+3. **The headers** — everything after the first line. Information *about* the request: who you are, what format you want back, what software you are. Day 5.
+4. **The body** — nothing here. A GET usually has none. A POST would carry one.
+
+That is the whole thing. A request is a method, a path, some headers, and sometimes a body.
+
+## And a response
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+x-request-id: req_8fa0c21b
+
+{
+  "data": [
+    { "id": "cus_01", "name": "Ada Obi" }
+  ],
+  "count": 1
+}
+```
+
+Three parts:
+
+1. **The status code** — `200 OK`. How it went. Day 4, and it is the single most useful field in this entire course.
+2. **The headers** — information about the response.
+3. **The body** — the actual content. Here it is JSON data; for a web page it would be HTML.
+
+<Callout kind="note">
+Notice the request and the response have the same shape: a first line, some headers, an optional body. Once you can read one, you can read the other.
+</Callout>
+
+## Stateless, and why you log in constantly
+
+One more property, and it causes real bugs.
+
+HTTP is **stateless**. Each request is independent. The server does not remember your last one. As far as it is concerned, every request arrives from a stranger.
+
+So how does a site know you are logged in? It does not, on its own. You have to prove it *every single time*. Your browser quietly attaches a cookie or a token to each request, and the server checks it afresh each time.
+
+This is why:
+
+- A request can succeed and the next one fail, if a token expired in between.
+- Copying a URL and sending it to a colleague often shows them a login page, not what you saw.
+- "It works for me" is so common: your request carried your credential, theirs carried a different one.
+
+<Callout kind="job">
+When a customer says "it worked a minute ago and now it doesn't", statelessness is your first suspect. Nothing about the page changed; the credential attached to the request did.
+</Callout>
+
+## See it yourself
+
+The sandbox below is a fake API running inside this page. No network, nothing to install, nothing that can break.
+
+Press **Send** and watch a request go out and a response come back. Then change the path to something that does not exist and send again.
+
+<RequestInspector preset="Health check" />
+
+<Exercise
+  prompt="In the inspector, send the health check. Then look at the detail panel. Which tab shows the server's actual answer, and which shows what you sent?"
+  accept={["response", "response and payload", "response tab"]}
+  hint="Four tabs: Headers, Payload, Response, Timing."
+  solution="Response shows what came back. Payload shows what you sent in the body — and for a GET there is none, which is why real DevTools hides that tab for GETs. Headers shows both sets of headers and the status line."
+/>
+
+<Terms items={[
+  { term: "Request-response", meaning: "The shape of every HTTP conversation: one side asks, the other answers." },
+  { term: "Stateless", meaning: "Each request is independent; the server remembers nothing between them." },
+  { term: "Method", meaning: "The kind of action a request is asking for, such as GET or POST." },
+  { term: "Path", meaning: "The part of the URL after the host, saying what you are asking about." },
+  { term: "Body", meaning: "The content carried by a request or response. JSON, HTML, a file." },
+  { term: "Polling", meaning: "Repeatedly asking whether something changed, because the server cannot tell you." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Why can a server not simply notify a browser when something changes?",
+    options: [
+      "Because of firewalls",
+      "Because HTTP is request-response: the server can only answer, never start",
+      "Because browsers block notifications",
+      "Because it would be too slow"
+    ],
+    answer: 1,
+    why: "The protocol has only one shape. Anything that looks like a push is built on top of it, usually by flipping who plays the client."
+  },
+  {
+    q: "What does it mean that HTTP is stateless?",
+    options: [
+      "Data is never stored anywhere",
+      "The connection drops after each request",
+      "Each request is independent and must prove who it is again",
+      "The server cannot use a database"
+    ],
+    answer: 2,
+    why: "Servers store plenty of data. What they do not do is remember your previous request, which is why a credential is attached to every one."
+  },
+  {
+    q: "A colleague opens a URL you sent and sees a login page instead of your data. Why?",
+    options: [
+      "The page is broken",
+      "Their request carried a different credential, or none",
+      "The URL expired",
+      "They need a faster connection"
+    ],
+    answer: 1,
+    why: "The URL is only the path. What made your request work was the credential attached to it, and that does not travel in a pasted link."
+  },
+  {
+    q: "Which of these is NOT one of the parts of an HTTP request?",
+    options: ["Method", "Path", "Status code", "Headers"],
+    answer: 2,
+    why: "The status code belongs to the response. It is how the server reports the outcome, so it cannot be in the question."
+  }
+]} />
+
+## Tomorrow
+
+The first line of every request starts with a method. Tomorrow you learn all five you will meet, and why using the wrong one is a real defect rather than a style choice.

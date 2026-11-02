@@ -1,0 +1,159 @@
+Last week you watched responses come back. Most of them carried a body, and when the audience is a human that body is HTML.
+
+HTML is the document a web page is made of. You will read far more of it than you write, and reading it is what finds bugs.
+
+<Video id="html" />
+
+<Callout kind="note">
+That video is an hour. You do not need all of it today. Watch the first fifteen minutes now and let the rest run alongside the next few days — this week is built so the lessons and the video cover the same ground from two directions.
+</Callout>
+
+## HTML is structure, not appearance
+
+This is the idea people get wrong, and getting it right early saves a lot of confusion.
+
+HTML says **what something is**. CSS says **what it looks like**. JavaScript says **what it does**.
+
+An `<h1>` is not "big bold text". It is "the main heading of this page". It happens to render large and bold by default, but that is a default, not its meaning. You can make an `<h1>` look like anything. What you cannot do is change the fact that screen readers announce it as the main heading, search engines weight it, and keyboard navigation uses it.
+
+<Callout kind="key">
+When you choose a tag, you are describing meaning. Choosing `<div>` for everything produces a page that looks right and is meaningless to anything that is not a pair of human eyes. In week 12 that becomes an accessibility finding you will know how to write.
+</Callout>
+
+## The smallest real page
+
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Orders</title>
+  </head>
+  <body>
+    <h1>Your orders</h1>
+    <p>You have no orders yet.</p>
+  </body>
+</html>
+```
+
+Every line earns its place:
+
+- **`<!doctype html>`** — tells the browser to use modern standards. Leave it out and the browser switches to "quirks mode", emulating a browser from 1998, and your layout breaks in ways that are very hard to diagnose. This is a real bug you may meet.
+- **`<html lang="en">`** — the whole document, and what language it is in. Screen readers use `lang` to choose a pronunciation.
+- **`<head>`** — information *about* the page. None of it is displayed.
+- **`<meta charset="utf-8">`** — which character encoding. Get this wrong and accented characters and emoji turn into mojibake like `â€™`. Another real bug with a very specific cause.
+- **`<meta name="viewport" ...>`** — tells a phone to use its real width instead of pretending to be a desktop. Missing viewport tag is the single most common cause of "the site is tiny and zoomed out on mobile".
+- **`<title>`** — the browser tab, and the heading in search results.
+- **`<body>`** — everything a person actually sees.
+
+<Callout kind="job">
+Three bugs are already in reach: quirks mode from a missing doctype, mojibake from a wrong charset, and a broken mobile layout from a missing viewport tag. Each has an obvious symptom and a one-line cause. Testers who know them diagnose in seconds what others spend an afternoon on.
+</Callout>
+
+## What the browser does with a tag it does not know
+
+Try this thought experiment: what happens if you write `<banana>hello</banana>`?
+
+Nothing dramatic. The browser does not error. It does not refuse the page. It creates an element it has no styling or behaviour for, and displays the text inside it.
+
+HTML is deliberately forgiving. It will render a broken page rather than show nothing, because a half-readable page is better than a blank one for a reader.
+
+That forgiveness is a double-edged thing for you:
+
+- **Good**: one typo does not take a site down.
+- **Bad**: mistakes are silent. A misspelled tag, a missing closing tag or a mistyped attribute produces no error message at all, just subtly wrong output.
+
+<Callout kind="watch">
+This is why "it looks fine" is not a test result. HTML has no compiler to tell you it is wrong. The browser's Elements panel, which you meet in week 4, shows you what the browser actually built — which can differ from what you wrote.
+</Callout>
+
+## Write one yourself
+
+You do not need an editor or an account. You need Notepad or TextEdit.
+
+<Callout kind="practice">
+1. Open a plain text editor.
+2. Type the page above, by hand. Do not copy and paste: typing it is the point.
+3. Save it as `test.html` — making sure your editor does not append `.txt`.
+4. Double-click the file. It opens in your browser.
+5. Change the `<title>`, save, and refresh.
+
+You have now served yourself a page. No server, no internet. The browser read a file and built a document from it.
+</Callout>
+
+<Exercise
+  prompt="You open a page on your phone and it appears as a tiny, zoomed-out version of the desktop site. Which single line is most likely missing from the head?"
+  accept={["viewport", "meta viewport", "the viewport meta tag"]}
+  hint="Something has to tell the phone to use its real width."
+  solution={'The viewport meta tag: <meta name="viewport" content="width=device-width, initial-scale=1" />. Without it a phone assumes a desktop-width page and scales the whole thing down to fit.'}
+/>
+
+<Exercise
+  prompt="A page shows 'Itâ€™s here' where it should say 'It's here'. What is the cause?"
+  accept={["charset", "encoding", "character encoding", "wrong charset", "utf-8"]}
+  hint="The letters are right, but the browser is reading the bytes with the wrong key."
+  solution={'A character-encoding mismatch: the file is UTF-8 but the browser was told something else, or told nothing and guessed. Fix with <meta charset="utf-8" /> in the head, and make sure the file is genuinely saved as UTF-8.'}
+/>
+
+<Terms items={[
+  { term: "HTML", meaning: "The language that describes the structure and meaning of a page." },
+  { term: "Tag", meaning: "A marker like <p> that opens or closes an element." },
+  { term: "Element", meaning: "An opening tag, its content, and its closing tag, taken together." },
+  { term: "doctype", meaning: "The first line of a page, telling the browser to use modern standards." },
+  { term: "head", meaning: "Information about the page that is not displayed." },
+  { term: "body", meaning: "The visible content of the page." },
+  { term: "Quirks mode", meaning: "A compatibility mode a browser falls into when the doctype is missing, which breaks layouts." },
+  { term: "Viewport", meaning: "The meta tag that tells a phone to render at its real width." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What is the difference between HTML and CSS?",
+    options: [
+      "HTML is for text, CSS is for images",
+      "HTML describes structure and meaning, CSS describes appearance",
+      "HTML is newer than CSS",
+      "They do the same thing in different syntax"
+    ],
+    answer: 1,
+    why: "An h1 means 'main heading' regardless of how it is styled. CSS changes how it looks without changing what it is."
+  },
+  {
+    q: "You write <banana>hello</banana>. What happens?",
+    options: [
+      "The page fails to load",
+      "The browser shows an error",
+      "The browser renders 'hello' in an unknown element",
+      "The rest of the page is ignored"
+    ],
+    answer: 2,
+    why: "HTML is forgiving by design. It renders what it can rather than refusing, which is helpful for readers and unhelpful for catching your own mistakes."
+  },
+  {
+    q: "A layout is subtly broken in ways that look like a very old browser. What would you check first?",
+    options: [
+      "The charset",
+      "The doctype",
+      "The title",
+      "The lang attribute"
+    ],
+    answer: 1,
+    why: "A missing or malformed doctype drops the browser into quirks mode, which changes box sizing and layout rules to match 1990s behaviour."
+  },
+  {
+    q: "Why is 'it looks fine' not a sufficient test result for HTML?",
+    options: [
+      "Because HTML always has errors",
+      "Because the browser silently renders broken markup rather than reporting it",
+      "Because HTML cannot be tested",
+      "Because appearance is controlled by CSS"
+    ],
+    answer: 1,
+    why: "There is no compiler and no error message. Broken structure can look perfect to a sighted user while being wrong for screen readers, search engines and scripts."
+  }
+]} />
+
+## Tomorrow
+
+Elements, attributes and nesting — the grammar of HTML, and how to spot broken nesting in someone else's markup.
