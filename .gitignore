@@ -18,3 +18,13 @@ projects/**/.env
 # Python build output
 __pycache__/
 *.pyc
+
+# Carried over from GitHub's Node template on merge. Deliberately NOT taking
+# its bare `out` and `.env.*` lines: `out` unanchored is the same trap that
+# swallowed src/app/build, and `.env.*` would hide .env.example, which is
+# meant to be tracked.
+logs
+*.log
+/coverage/
+.turbo/
+.cache/
