@@ -1,0 +1,194 @@
+If you test software, you will spend more time on forms than on anything else. Forms are where users type, which is where assumptions break.
+
+This is the longest day of the week. It earns it.
+
+<Video id="html-forms" />
+
+## What a form actually is
+
+```html
+<form action="/orders" method="post">
+  <label for="email">Email</label>
+  <input type="email" id="email" name="email" required />
+
+  <button type="submit">Place order</button>
+</form>
+```
+
+A form is a container that collects values and sends them somewhere.
+
+- **`action`** — the URL the values go to.
+- **`method`** — `get` or `post`. You know what those mean from week 1.
+- **`name`** — the key each value is sent under. **An input with no `name` is not submitted at all.** It will look perfectly normal on screen and its value will silently never arrive.
+
+<Callout kind="watch">
+A missing `name` attribute is one of the sneakiest bugs in web development. The field renders, accepts typing, passes visual inspection, and vanishes on submit. You find it in the Network tab's Payload, not on the screen — which is exactly why week 1 came first.
+</Callout>
+
+## Labels, and why they are not decoration
+
+```html
+<label for="email">Email</label>
+<input type="email" id="email" name="email" />
+```
+
+The `for` attribute must match the input's `id`. When it does, three things happen:
+
+1. A screen reader announces "Email" when the field gets focus.
+2. Clicking the label focuses the input — a noticeably larger tap target on a phone.
+3. Automated tests can find the field by its visible label instead of a brittle CSS path.
+
+A field with a visual label that is not a real `<label>`, or whose `for` does not match, is a genuine accessibility finding. Checking it takes seconds: click the label text. If focus does not move to the field, it is not wired up.
+
+## Input types
+
+The `type` attribute changes behaviour, validation and the keyboard a phone shows.
+
+| Type | What it gives you |
+| --- | --- |
+| `text` | Anything |
+| `email` | Basic format check, email keyboard on mobile |
+| `password` | Characters masked |
+| `number` | Numeric keyboard, `min`, `max`, `step` |
+| `tel` | Phone keypad on mobile, no validation |
+| `date` | A date picker |
+| `checkbox` | On or off, independently |
+| `radio` | One of a group, sharing one `name` |
+| `file` | A file picker, with `accept` |
+| `hidden` | Sent but not shown |
+
+<Callout kind="key">
+Three things worth remembering from that table.
+
+**`type="number"` still accepts pasted text** in several browsers, and `min` is trivially bypassed by typing. Never trust it.
+
+**Radios are grouped by `name`, not by position.** Two radio groups accidentally sharing a `name` means selecting one clears the other — a real and very confusing bug.
+
+**`type="hidden"` is not secret.** It is visible in the Elements panel and editable by anyone. A price in a hidden field is a serious defect, and one worth looking for.
+</Callout>
+
+## Client validation is a convenience, never a control
+
+```html
+<input type="email" name="email" required minlength="3" maxlength="64" />
+```
+
+These attributes make the browser refuse to submit. That is good for users and worth nothing for security.
+
+Anyone can bypass every one of them: edit the attribute in the Elements panel, disable JavaScript, or skip the page entirely and send the request directly with Postman — which you will do in week 8.
+
+<Callout kind="job">
+**The server must validate everything the client validates.** Testing only through the form tests only the polite path.
+
+The real test is: strip the constraint in DevTools, submit, and see whether the server catches it. If a form refuses a 500-character name but the API accepts one happily, you have found a real defect that no amount of clicking would reveal. This is one of the highest-value things a tester can do, and most do not do it.
+</Callout>
+
+## Select, textarea, and the rest
+
+```html
+<select name="country">
+  <option value="">Choose…</option>
+  <option value="NG">Nigeria</option>
+  <option value="GH">Ghana</option>
+</select>
+
+<textarea name="notes" rows="4"></textarea>
+```
+
+Watch the gap between an option's **value** and its **label**. `<option value="A">Section A</option>` submits `A`, not `Section A`. When those two drift apart, a form can silently save something other than what the user picked — a defect that is invisible on screen and obvious in the Payload tab.
+
+## How to break a form, systematically
+
+Do not poke at random. Work the list.
+
+1. **Empty** — submit everything blank. Are required fields enforced, on the server as well?
+2. **Boundaries** — the shortest and longest allowed value, then one past each.
+3. **Wrong type** — letters in a number field, `notanemail` in an email field.
+4. **Negative and zero** — in any numeric field, especially quantities and amounts.
+5. **Whitespace** — a single space. Is it trimmed, or accepted as a name?
+6. **Special characters** — apostrophes in names, accents, emoji. `O'Brien` breaks more systems than you would believe.
+7. **Very long input** — paste 10,000 characters. Does it truncate, reject, or fall over?
+8. **Double submit** — click the button twice, fast. You met this in the Meridian lab.
+9. **Back and resubmit** — submit, press back, submit again.
+10. **Bypass the client** — remove `required` in DevTools and submit anyway.
+
+<Callout kind="practice">
+Pick any signup form on a site you do not mind poking, and work items 1 to 7 of that list. Keep the Network tab open and read the Payload for each attempt.
+
+Write one finding per real problem, in the format from week 1 day 6: what you did, what came back, what it means.
+</Callout>
+
+<Exercise
+  prompt="A field renders correctly, accepts typing, and the form submits with no error. But the value never reaches the server. What is the most likely cause, and which DevTools tab proves it?"
+  accept={["name", "name attribute", "missing name", "payload"]}
+  hint="What does the browser use as the key when it packages up the form?"
+  solution="The input is missing its name attribute, so the browser has no key to send it under and omits it entirely. The Payload tab proves it: the field simply is not in the submitted body."
+/>
+
+<Exercise
+  prompt="A checkout form refuses a quantity of -1 with a clear message. Have you finished testing it?"
+  accept={["no", "server", "api", "bypass", "postman"]}
+  hint="Where did that refusal happen?"
+  solution="No. That was the browser refusing, which anyone can bypass. Remove the min attribute in DevTools, or send the request directly, and see whether the server also refuses. If it accepts -1 you have found a money defect that clicking would never reveal."
+/>
+
+<Terms items={[
+  { term: "action / method", meaning: "Where a form sends its values, and with which HTTP method." },
+  { term: "name", meaning: "The key a value is submitted under. No name, no submission." },
+  { term: "label for", meaning: "Ties a label to an input by id. Click the label; focus should move." },
+  { term: "Client validation", meaning: "Browser-side checks. A convenience, trivially bypassed." },
+  { term: "Server validation", meaning: "The only validation that counts." },
+  { term: "option value", meaning: "What is submitted, which may differ from the text shown." },
+  { term: "Boundary value", meaning: "The edge of what is allowed, and one step past it." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "An input has an id and a type but no name. What happens on submit?",
+    options: [
+      "The form fails with an error",
+      "The value is submitted under its id",
+      "The value is not submitted at all",
+      "The browser generates a name"
+    ],
+    answer: 2,
+    why: "The name is the key. Without one the browser has nothing to send the value under, so it is silently dropped."
+  },
+  {
+    q: "A price is stored in <input type=\"hidden\" name=\"price\" value=\"4999\">. Why is that a defect?",
+    options: [
+      "Hidden inputs are deprecated",
+      "It is visible and editable by anyone in DevTools",
+      "It will not be submitted",
+      "Hidden inputs cannot hold numbers"
+    ],
+    answer: 1,
+    why: "Hidden means not displayed, not secret. Anyone can change the value before submitting, so the price must be determined on the server."
+  },
+  {
+    q: "Two radio groups on one page both use name=\"option\". What goes wrong?",
+    options: [
+      "Nothing, ids keep them separate",
+      "Selecting one clears the selection in the other",
+      "Neither group can be selected",
+      "The form will not submit"
+    ],
+    answer: 1,
+    why: "Radios are grouped by name. Sharing one makes them a single group, so the two sets fight each other."
+  },
+  {
+    q: "What is the highest-value thing to try after a form rejects bad input?",
+    options: [
+      "Try the same input again",
+      "Try it in another browser",
+      "Bypass the client check and see whether the server also rejects it",
+      "Report it as working"
+    ],
+    answer: 2,
+    why: "Client validation is a convenience anyone can remove. Only the server's answer tells you whether the system is actually protected."
+  }
+]} />
+
+## Tomorrow
+
+Tables, semantic elements, and your first accessibility pass — which you can run on any site in about five minutes.

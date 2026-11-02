@@ -1,0 +1,193 @@
+Two related ideas today: choosing elements that mean something, and the accessibility pass that choice makes possible.
+
+By the end you will be able to run a real accessibility check on any page in about five minutes, using nothing but your keyboard and DevTools.
+
+## Tables, properly
+
+Tables are for **tabular data**: rows and columns where the position of a cell carries meaning. An order list, a settlement report, a price comparison.
+
+```html
+<table>
+  <caption>Orders placed this week</caption>
+  <thead>
+    <tr>
+      <th scope="col">Reference</th>
+      <th scope="col">Customer</th>
+      <th scope="col">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row">ORD-4T2KQ9</th>
+      <td>Ada Obi</td>
+      <td>₦48,500.00</td>
+    </tr>
+  </tbody>
+</table>
+```
+
+What makes it a good table rather than a grid of text:
+
+- **`<caption>`** says what the table is. Announced first by a screen reader.
+- **`<th>` not `<td>`** for headers, with **`scope`** saying whether it heads a column or a row.
+- **`<thead>` and `<tbody>`** separate the headers from the data.
+
+Without `scope`, a screen-reader user hearing "₦48,500.00" has no way to know which column that was. With it, they hear "Total, ₦48,500.00". A table of `<div>`s styled to look like a table gives them nothing at all.
+
+<Video id="html-tables" />
+
+## Semantic elements
+
+Compare these two:
+
+```html
+<div class="header">
+  <div class="nav">…</div>
+</div>
+<div class="main">
+  <div class="article">…</div>
+</div>
+<div class="footer">…</div>
+```
+
+```html
+<header>
+  <nav>…</nav>
+</header>
+<main>
+  <article>…</article>
+</main>
+<footer>…</footer>
+```
+
+They can look identical. Only the second one *means* anything.
+
+`<header>`, `<nav>`, `<main>`, `<article>`, `<section>`, `<aside>`, `<footer>`, `<figure>` — these are **landmarks**. A screen-reader user can jump straight to `<main>` and skip the navigation, the way you skip a website's header with your eyes without noticing you did it. On a page built from `<div>`s, there is nothing to jump to: they must listen through the menu on every single page.
+
+<Video id="semantic-html" />
+
+<Callout kind="key">
+The test for whether to use a `<div>`: **is there an element that describes what this is?** If yes, use it. `<div>` is the element you choose when nothing describes it — which is less often than most code suggests.
+
+A particular one worth watching: a `<div>` with a click handler is not a button. It cannot be focused with Tab, does not respond to Enter or Space, and is not announced as a button. `<button>` gives you all three for free.
+</Callout>
+
+## Your first accessibility pass
+
+<Video id="accessibility-intro" />
+
+Five checks. No tools beyond a browser. About five minutes.
+
+**1. Tab through the whole page.** Put your hands off the mouse and press Tab repeatedly from the top.
+
+- Can you reach every interactive thing?
+- Can you *see* where you are, at every step?
+- Does the order follow the visual layout, or jump around?
+- Can you get stuck somewhere you cannot Tab out of?
+
+A **keyboard trap** — usually a modal you can enter but not leave — is a serious finding. So is an invisible focus indicator, because a keyboard user has then lost their place entirely.
+
+**2. Check the images.** Every `<img>` needs `alt`. Decorative ones take `alt=""`. In the console:
+
+```js
+[...document.images].filter(i => !i.hasAttribute('alt'))
+```
+
+Anything that returns is a finding.
+
+**3. Check the labels.** Click each form label. Focus should jump to its field. If it does not, the label is not connected.
+
+**4. Check the headings.** One `h1`, no skipped levels:
+
+```js
+[...document.querySelectorAll('h1,h2,h3,h4,h5,h6')].map(h => h.tagName + ' ' + h.textContent.trim().slice(0,40))
+```
+
+Read the list. It should work as a table of contents.
+
+**5. Check contrast.** In DevTools, inspect text and hover the colour swatch in the Styles panel: Chrome shows the contrast ratio and whether it passes. Below 4.5:1 for body text is a finding.
+
+<Callout kind="job">
+This pass finds real defects on most sites, including large ones, and it takes five minutes. It is unusually good value for a tester's time, and it is the kind of finding that makes people notice you — because almost nobody checks.
+
+Write them like any other bug: what you did, what happened, who it affects. "Keyboard users cannot dismiss the delivery modal; Tab cycles inside it indefinitely" is a finding anyone can act on.
+</Callout>
+
+If accessibility becomes a regular part of your reports, the longer video below is the best single resource on it.
+
+<Video id="accessibility-full" />
+
+<Exercise
+  prompt="You Tab into a dialog and find you cannot Tab back out to the page behind it. Is this a bug, and how bad?"
+  accept={["keyboard trap", "yes", "trap", "serious", "high"]}
+  hint="What can a keyboard-only user do next?"
+  solution="Yes, a keyboard trap, and a serious one. A keyboard-only user is stuck: they can neither complete nor escape the dialog, so the page is unusable from that point. High severity, and the fix is to return focus to the trigger on Escape and close."
+/>
+
+<Exercise
+  prompt={'A page uses <div class="btn" onclick="submit()">Submit</div>. Name two things a real <button> would have given for free.'}
+  accept={["focus", "keyboard", "tab", "enter", "announced", "screen reader"]}
+  hint="Think keyboard, and think screen reader."
+  solution="It would be reachable with Tab and operable with Enter or Space, and a screen reader would announce it as a button. As a div it is invisible to keyboard users and meaningless to assistive technology, even though it looks identical."
+/>
+
+<Terms items={[
+  { term: "Semantic element", meaning: "One that describes what its content is: header, nav, main, article." },
+  { term: "Landmark", meaning: "A semantic region assistive technology can jump to." },
+  { term: "scope", meaning: "On a th, says whether it heads a column or a row." },
+  { term: "caption", meaning: "The table's description, announced first." },
+  { term: "Keyboard trap", meaning: "Focus that can be entered but not escaped. Always a serious finding." },
+  { term: "Focus indicator", meaning: "The visible outline showing where the keyboard is. Removing it strands keyboard users." },
+  { term: "Contrast ratio", meaning: "Text against background. Body text should reach 4.5:1." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Why does a th need a scope attribute?",
+    options: [
+      "To make it bold",
+      "So assistive technology knows whether it heads a column or a row",
+      "To sort the table",
+      "It is required by HTML"
+    ],
+    answer: 1,
+    why: "Without scope, a value read aloud has no header attached to it, so the user cannot tell what the number means."
+  },
+  {
+    q: "What does a screen-reader user lose on a page built entirely from divs?",
+    options: [
+      "Nothing, it looks the same",
+      "Colour information",
+      "Landmarks to jump to, so they must listen through everything",
+      "The ability to zoom"
+    ],
+    answer: 2,
+    why: "Semantic regions are what let someone skip to the main content. Without them every page starts with the whole menu."
+  },
+  {
+    q: "Which is the fastest check that a form label is properly connected?",
+    options: [
+      "Read the source",
+      "Click the label and see whether focus moves to the field",
+      "Check the field has an id",
+      "Submit the form"
+    ],
+    answer: 1,
+    why: "A correctly wired label focuses its input when clicked. One click, instant answer, no source reading."
+  },
+  {
+    q: "You find body text at a contrast ratio of 3.2:1. What is that?",
+    options: [
+      "Fine, it is above 3",
+      "A finding; body text should reach 4.5:1",
+      "Only a problem in dark mode",
+      "Not measurable"
+    ],
+    answer: 1,
+    why: "4.5:1 is the standard threshold for normal body text. Below it, the text is hard to read for a substantial number of people."
+  }
+]} />
+
+## Tomorrow
+
+You build a page, break it on purpose, and find your own bugs in the Elements panel.

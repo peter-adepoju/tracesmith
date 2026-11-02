@@ -8,6 +8,11 @@ import w01d04 from "./w01/d04.mdx";
 import w01d05 from "./w01/d05.mdx";
 import w01d06 from "./w01/d06.mdx";
 import w02d01 from "./w02/d01.mdx";
+import w02d02 from "./w02/d02.mdx";
+import w02d03 from "./w02/d03.mdx";
+import w02d04 from "./w02/d04.mdx";
+import w02d05 from "./w02/d05.mdx";
+import w02d06 from "./w02/d06.mdx";
 
 export const LESSONS: Record<string, ComponentType> = {
   w01d01,
@@ -17,6 +22,11 @@ export const LESSONS: Record<string, ComponentType> = {
   w01d05,
   w01d06,
   w02d01,
+  w02d02,
+  w02d03,
+  w02d04,
+  w02d05,
+  w02d06,
 };
 
 export function hasLesson(key: string): boolean {

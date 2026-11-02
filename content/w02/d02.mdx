@@ -1,0 +1,165 @@
+Yesterday you wrote a page. Today you learn its grammar properly, because reading HTML accurately is what lets you say "the element is there, it is just hidden" instead of "the button is missing".
+
+## The parts of an element
+
+```html
+<a href="/orders" class="nav-link">Your orders</a>
+```
+
+Five things are happening:
+
+- **`<a ...>`** — the opening tag. `a` is the **tag name**, which says what kind of element this is.
+- **`href="/orders"`** — an **attribute**. A name, an equals sign, a quoted value.
+- **`class="nav-link"`** — a second attribute. Attributes are separated by spaces, in any order.
+- **`Your orders`** — the **content**.
+- **`</a>`** — the closing tag.
+
+All of it together is the **element**. People use "tag" and "element" interchangeably and mostly get away with it, but the distinction is useful: a tag is a marker in the text, an element is the thing the browser builds.
+
+<Video id="html-attributes" />
+
+## Attributes worth knowing now
+
+**`id`** — a unique name for one element. Only one element on a page may have a given id. Testers use ids constantly, because an id is the most stable thing to point an automated test at.
+
+**`class`** — a label that any number of elements can share. This is what CSS targets. An element can carry several, space-separated: `class="btn btn-danger is-loading"`.
+
+**`href`** and **`src`** — where a link goes, and where an image or script is loaded from.
+
+**`alt`** — the text alternative for an image. Not optional, and you will learn why on day 5.
+
+**`disabled`**, **`required`**, **`checked`** — **boolean attributes**. Their presence is the value. `disabled="false"` does *not* enable a control; it disables it, because the attribute is there at all.
+
+<Callout kind="watch">
+That last one catches people out, and it is a real bug you will find. `<button disabled="false">` is a disabled button. If a developer has written that, the control is dead and no amount of clicking will help. Look at the Elements panel, not at the value.
+</Callout>
+
+## Nesting, and how it goes wrong
+
+Elements live inside other elements, and they must close in the reverse order they opened. Like brackets.
+
+```html
+<p>This is <strong>correctly</strong> nested.</p>
+
+<p>This is <strong>not.</p></strong>
+```
+
+The second one is wrong. `<strong>` opened inside `<p>`, so it must close before `<p>` does.
+
+The browser will not complain. It will quietly repair the document into *something*, and what it builds may not be what you meant. Styling leaks into the wrong place, a click target covers more than it should, and a script that walks the tree finds a shape it did not expect.
+
+<Callout kind="key">
+This is why the **Elements panel is the truth and your source file is only an intention**. The browser's repaired version is what is actually on screen. When markup behaves oddly, compare the two.
+</Callout>
+
+## Self-closing elements
+
+Some elements have no content, so they have no closing tag:
+
+```html
+<img src="/jacket.jpg" alt="A waxed cotton field jacket" />
+<br />
+<input type="email" name="email" required />
+<meta charset="utf-8" />
+```
+
+The trailing slash is optional in HTML — `<br>` is just as valid as `<br />`. You will see both.
+
+## Block and inline
+
+Every element has a default behaviour about space.
+
+**Block** elements start on a new line and take the full width available: `<div>`, `<p>`, `<h1>`, `<section>`, `<ul>`.
+
+**Inline** elements sit within a line of text and take only the width of their content: `<span>`, `<a>`, `<strong>`, `<em>`, `<img>`.
+
+The practical rule: **a block element inside a paragraph is invalid**. `<p><div>hello</div></p>` is broken markup, and the browser will silently split your paragraph in two to repair it. If a paragraph mysteriously becomes three paragraphs with odd gaps, this is usually why.
+
+<Callout kind="job">
+You will be asked "is this a CSS bug or an HTML bug?" more often than you expect. If the structure in the Elements panel is not the structure you wrote, it is HTML. If the structure is right and it still looks wrong, it is CSS. That one question splits the problem in half.
+</Callout>
+
+## Comments
+
+```html
+<!-- This is a comment. The browser ignores it. -->
+```
+
+Worth knowing for one reason: comments are **not private**. Anyone can read the page source. Credentials, internal notes and "TODO: remove before launch" in a comment are all visible to every visitor, and finding one is a legitimate security finding.
+
+<Exercise
+  prompt="A tester reports that a Submit button cannot be clicked. In the Elements panel the button reads: <button type=&quot;submit&quot; disabled=&quot;false&quot;>Submit</button>. What is wrong?"
+  accept={["disabled", "boolean attribute", "disabled is present", "presence"]}
+  hint="What kind of attribute is disabled?"
+  solution={'disabled is a boolean attribute: its presence is what counts, and the value is ignored. Writing disabled="false" still disables the button. The fix is to remove the attribute entirely when the button should be active.'}
+/>
+
+<Exercise
+  prompt="You wrote one paragraph, but the rendered page shows three, with strange gaps. What would you suspect, and where would you check?"
+  accept={["block inside", "block element inside a paragraph", "nesting", "div inside p"]}
+  hint="Paragraphs are fussy about what may live inside them."
+  solution="A block element such as a div nested inside the p. That is invalid, so the browser repairs it by closing the paragraph early, inserting the block, and opening a new paragraph afterwards. Check the Elements panel and compare it with your source."
+/>
+
+<Terms items={[
+  { term: "Tag", meaning: "A marker in the source, like <p> or </p>." },
+  { term: "Element", meaning: "The thing the browser builds from an opening tag, its content and its closing tag." },
+  { term: "Attribute", meaning: "A name and value on an opening tag that configures the element." },
+  { term: "id", meaning: "A unique name for one element on the page." },
+  { term: "class", meaning: "A shared label, used by CSS and often by tests." },
+  { term: "Boolean attribute", meaning: "One where presence is the value: disabled, required, checked." },
+  { term: "Block", meaning: "An element that starts a new line and fills the width." },
+  { term: "Inline", meaning: "An element that sits inside a line of text." },
+  { term: "Nesting", meaning: "Elements inside elements; they must close in reverse order." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What does disabled=\"false\" do to a button?",
+    options: [
+      "Enables it",
+      "Disables it",
+      "Nothing at all",
+      "Causes a syntax error"
+    ],
+    answer: 1,
+    why: "disabled is a boolean attribute. Its presence disables the element regardless of the value, so this button is dead."
+  },
+  {
+    q: "Which pair is correctly nested?",
+    options: [
+      "<p>text <em>here</p></em>",
+      "<p>text <em>here</em></p>",
+      "<em><p>text here</em></p>",
+      "<p><div>text here</div></p>"
+    ],
+    answer: 1,
+    why: "Elements close in the reverse order they opened. The last option is also wrong for a different reason: a div is a block element and cannot live inside a paragraph."
+  },
+  {
+    q: "Why is the Elements panel more trustworthy than the page source?",
+    options: [
+      "It is always more recent",
+      "It shows what the browser actually built, including its repairs",
+      "It hides errors",
+      "It is written by the developer"
+    ],
+    answer: 1,
+    why: "Browsers silently repair broken markup. The Elements panel shows the repaired result, which is what is actually on screen."
+  },
+  {
+    q: "You find a comment in the page source containing an internal admin URL. Is this a finding?",
+    options: [
+      "No, comments are invisible to users",
+      "No, it is only a comment",
+      "Yes, anyone can read the page source",
+      "Only if the URL works"
+    ],
+    answer: 2,
+    why: "Comments are stripped by nothing. Every visitor can read them, so anything sensitive in one is exposed."
+  }
+]} />
+
+## Tomorrow
+
+The elements you will meet most: text, links, images and lists. Short, and it makes the next three days possible.

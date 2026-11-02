@@ -1,0 +1,113 @@
+A working session. You build a real page by hand, then you turn on yourself and find your own mistakes.
+
+Writing HTML is not the job. But a tester who has written a form knows exactly where forms break, and that is why this day exists.
+
+## Part one: build it
+
+Open a plain text editor. Create `orders.html`. Build a page for a fictional shop's order history, containing all of this:
+
+- A proper document skeleton: doctype, `lang`, charset, viewport, title.
+- A `<header>` with a `<nav>` of three links.
+- A `<main>` with an `<h1>`.
+- A table of five orders: reference, date, customer, status, total. With a `<caption>`, a `<thead>`, and `scope` on every header cell.
+- A `<form>` to filter the table: a text input for reference, a `<select>` for status, a date input, and a submit button. Every field with a real `<label>`.
+- An `<img>` with meaningful `alt` text.
+- A `<footer>`.
+
+Do not copy from the earlier lessons. Write it from memory and look things up only when stuck — being stuck and resolving it is what makes it stick.
+
+<Callout kind="practice">
+Save, then open it by double-clicking. No server needed.
+
+Then do the thing that matters: open DevTools, and compare the **Elements panel** against the file you wrote. They should match exactly. Anywhere they differ, the browser repaired something — find out what.
+</Callout>
+
+## Part two: break it on purpose
+
+Now introduce these six defects, one at a time. After each, **predict** what will happen, then look, then explain the difference.
+
+1. Delete the `<!doctype html>` line.
+2. Remove the `name` attribute from the reference input.
+3. Change one `<th scope="col">` to a plain `<td>`.
+4. Change a `<label for="status">` to `for="statuss"`.
+5. Put a `<div>` inside one of your `<p>` elements.
+6. Remove `alt` from the image.
+
+For each one, write down:
+
+- What the page looks like now — often, nothing changes.
+- What the Elements panel shows.
+- Who is affected, and how badly.
+
+<Callout kind="key">
+Notice how many of the six are **invisible**. Four of them change nothing you can see. They are still real defects, affecting real users, and they are exactly the class of bug that "it looks fine" misses entirely.
+
+That is the lesson of the whole week: looking at a page is not testing a page.
+</Callout>
+
+## Part three: find them in someone else's work
+
+Open any website you use regularly. Spend fifteen minutes running the pass from yesterday plus what you learned today.
+
+- Tab through the whole page. Can you reach everything? Can you always see where you are?
+- Run the image check in the console.
+- Run the heading check and read the outline aloud.
+- Click three form labels. Does focus move?
+- Inspect one form field. Does it have a `name`?
+- Check the page for a `<main>`.
+
+You will find something. On most sites you will find several things. That is not a reflection of the site's quality so much as a reflection of how rarely anyone looks.
+
+<Exercise
+  prompt="Of the six defects you introduced, which produce no visible change at all on screen?"
+  accept={["name", "scope", "label", "alt", "four", "2 3 4 6"]}
+  hint="Which ones would a screenshot catch?"
+  solution="Four of the six: the missing name, the th changed to td, the mismatched label for, and the missing alt. Only the missing doctype and the div inside the p change the rendering. A screenshot would catch two and miss four."
+/>
+
+<Exercise
+  prompt="Write a one-line finding for defect 4, the mismatched label, in the week 1 format: what you did, what happened, what it means."
+  solution={'Something close to: Clicked the Status label on the filter form; focus did not move to the select, because the label\'s for value "statuss" does not match the field id "status". The field is unlabelled for assistive technology and has a smaller tap target on mobile. The shape matters more than the wording: an action, an observation, and a consequence.'}
+/>
+
+<Quiz questions={[
+  {
+    q: "You removed the doctype and the layout shifted. Why?",
+    options: [
+      "The HTML became invalid",
+      "The browser fell back to quirks mode and changed its layout rules",
+      "The CSS file stopped loading",
+      "The charset changed"
+    ],
+    answer: 1,
+    why: "Without a doctype the browser emulates a 1990s engine, which sizes boxes differently. The markup is unchanged; the rules applied to it are not."
+  },
+  {
+    q: "Which of these would a screenshot-based review definitely miss?",
+    options: [
+      "A div inside a paragraph",
+      "A missing doctype",
+      "A label whose for attribute does not match",
+      "A broken image"
+    ],
+    answer: 2,
+    why: "A mismatched label looks completely normal. You find it by clicking the label, or by reading the markup, never by looking at a picture."
+  },
+  {
+    q: "What is the single most useful habit from this week?",
+    options: [
+      "Memorising every HTML tag",
+      "Comparing the Elements panel against what was written",
+      "Writing CSS from scratch",
+      "Avoiding tables"
+    ],
+    answer: 1,
+    why: "The browser silently repairs broken markup, so the rendered tree is the truth. That comparison is where structural bugs become visible."
+  }
+]} />
+
+## Week 2 done
+
+You can read HTML and say what it means, not just what it looks like. You know the parts of an element, how nesting fails, and why the Elements panel outranks the source. You can test a form systematically, and you know that client validation is a convenience rather than a control. You can run an accessibility pass in five minutes and write the findings up.
+
+Next week: CSS and the DOM — why an element can be present and invisible, and why half of all UI bugs live in the gap between the two.

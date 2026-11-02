@@ -1,0 +1,162 @@
+A short day. These are the elements that make up most of the HTML you will ever read, and each carries one or two things worth testing.
+
+## Headings
+
+```html
+<h1>Your orders</h1>
+<h2>This month</h2>
+<h3>Pending</h3>
+```
+
+Six levels, `h1` to `h6`. They are an **outline**, not a set of font sizes.
+
+Three rules that turn into findings:
+
+- **One `h1` per page**, describing what the page is.
+- **Do not skip levels.** An `h2` followed by an `h4` means a missing section to anything reading the structure.
+- **Never choose a heading level for its size.** That is CSS's job.
+
+Screen-reader users navigate by jumping between headings, the way a sighted reader skims. A page whose headings are chosen for appearance is a page they cannot skim.
+
+## Paragraphs and line breaks
+
+```html
+<p>A paragraph of text.</p>
+<p>Another one.</p>
+```
+
+Use `<p>` for prose. Use `<br />` only where the line break is part of the content, such as an address or a verse — never to create spacing. Spacing is CSS.
+
+## Links
+
+```html
+<a href="/orders">Your orders</a>
+<a href="https://example.com">Another site</a>
+<a href="mailto:support@example.com">Email support</a>
+<a href="#delivery">Jump to delivery</a>
+```
+
+**Relative versus absolute.** `/orders` is relative to the current site; `https://example.com/orders` names the site explicitly. Relative links survive moving between environments — the same link works on staging and production. An absolute link hard-coded to production is a genuine bug when it appears on staging, and you will find it.
+
+<Callout kind="watch">
+Two link bugs to carry with you.
+
+**Link text that says nothing.** Five links on a page all reading "click here" are useless to anyone navigating by link list, and useless in a report. Link text should make sense read on its own.
+
+**`target="_blank"` without `rel="noopener"`.** Opening a link in a new tab without that attribute hands the new page a reference back to yours. It is a small security hole with a one-attribute fix, and it is a legitimate finding.
+</Callout>
+
+## Images
+
+```html
+<img src="/jacket.jpg" alt="A waxed cotton field jacket, olive green" />
+```
+
+**`alt` is required.** Not by the browser — by you. It is what a screen reader announces, what shows when the image fails to load, and what a search engine reads.
+
+The rule most people get wrong: **a decorative image takes `alt=""`**, an empty value, which tells assistive technology to skip it. Omitting `alt` entirely is different and worse: the screen reader falls back to reading the filename, so a user hears "jacket dash final dash v2 dash compressed dot jpg".
+
+Good alt text describes what matters about the image in context. For a product photo, the product. For a chart, the finding the chart shows, not "chart".
+
+<Callout kind="job">
+"Images have no alt text" is one of the easiest real findings to produce on any site, and one of the most common. You can check an entire page in about a minute, which makes it excellent value for a tester's time.
+</Callout>
+
+## Lists
+
+```html
+<ul>
+  <li>Unordered: the order carries no meaning</li>
+  <li>Rendered with bullets by default</li>
+</ul>
+
+<ol>
+  <li>Ordered: the order is the point</li>
+  <li>Steps, rankings, instructions</li>
+</ol>
+```
+
+Choose by meaning, not by whether you want bullets or numbers. Steps in a process are an `<ol>` even if the design shows no numbers.
+
+A third kind you will meet in admin screens:
+
+```html
+<dl>
+  <dt>Order reference</dt>
+  <dd>ORD-4T2KQ9</dd>
+  <dt>Status</dt>
+  <dd>Pending</dd>
+</dl>
+```
+
+A **description list**: pairs of term and description. Exactly right for the label-and-value rows that fill every detail page you will ever test.
+
+<Exercise
+  prompt="On a staging site you find a link whose href is https://shop.example.com/checkout. Why is that a bug, and what should it be?"
+  accept={["relative", "relative link", "/checkout", "hard-coded", "absolute"]}
+  hint="What happens when a tester on staging clicks it?"
+  solution="It is hard-coded to production. A tester on staging who clicks it is silently moved to the live site and may place a real order against real money. It should be the relative link /checkout, which resolves correctly in whichever environment it is served from."
+/>
+
+<Exercise
+  prompt={'What is the difference between an image with alt="" and an image with no alt attribute at all?'}
+  accept={["skip", "skipped", "decorative", "filename", "reads the filename"]}
+  hint="Think about what a screen reader does in each case."
+  solution={'An empty alt tells assistive technology the image is decorative and should be skipped, which is correct for a divider or a background flourish. A missing alt gives it nothing to announce, so it falls back to reading the filename aloud. The empty value is a decision; the missing attribute is an oversight.'}
+/>
+
+<Terms items={[
+  { term: "Heading levels", meaning: "h1 to h6, forming the page outline. Not font sizes." },
+  { term: "Relative link", meaning: "A path like /orders, resolved against the current site." },
+  { term: "Absolute link", meaning: "A full URL naming the site. Hard-coding one breaks across environments." },
+  { term: "alt text", meaning: "The text alternative for an image. Empty means decorative; missing is a bug." },
+  { term: "ul / ol", meaning: "Unordered and ordered lists. Choose by meaning, not appearance." },
+  { term: "dl", meaning: "A description list: term and value pairs, ideal for detail screens." },
+  { term: "rel=noopener", meaning: "Needed alongside target=_blank, or the new page gets a reference back to yours." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "A page has one h1, then an h2, then an h4. What is the finding?",
+    options: [
+      "Nothing, levels are a style choice",
+      "A heading level was skipped, so the outline has a hole",
+      "There should be no h1",
+      "h4 is deprecated"
+    ],
+    answer: 1,
+    why: "Headings are an outline. Jumping from h2 to h4 implies a missing h3 section to anyone navigating by structure."
+  },
+  {
+    q: "When is alt=\"\" the correct choice?",
+    options: [
+      "Never, alt must always describe the image",
+      "When the image is decorative and adds no information",
+      "When the image is large",
+      "When the image might fail to load"
+    ],
+    answer: 1,
+    why: "An empty alt deliberately tells assistive technology to skip a decorative image. That is a decision, unlike omitting the attribute."
+  },
+  {
+    q: "Which is the right element for the label-and-value rows on an order detail page?",
+    options: ["ul", "ol", "dl", "p"],
+    answer: 2,
+    why: "A description list pairs a term with its value, which is exactly that structure."
+  },
+  {
+    q: "Why does target=\"_blank\" need rel=\"noopener\"?",
+    options: [
+      "To make the link open faster",
+      "To stop the new page getting a reference back to yours",
+      "To keep the styling consistent",
+      "It is purely decorative"
+    ],
+    answer: 1,
+    why: "Without it the opened page can reach back through window.opener. It is a small hole with a one-attribute fix, and worth reporting."
+  }
+]} />
+
+## Tomorrow
+
+Forms. The single richest source of bugs in any application, and the part of HTML a tester spends the most time on.
