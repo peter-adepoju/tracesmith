@@ -64,6 +64,10 @@ The Response tab is where security findings live. You are reading it for **thing
 The screen will not show you any of this. The response will. In week 14 this becomes one of the five security checks; for now, build the habit of actually reading the raw response rather than glancing at Preview.
 </Callout>
 
+Three things are wrong in the load below. Start with `status-code:500`, then find the one that waits far too long and the one that is far too large — and use the Timing breakdown to say whose problem each is.
+
+<WaterfallExplorer />
+
 ## Copy as cURL, and HAR files
 
 **Right-click a request → Copy → Copy as cURL** gives you the complete command to reproduce that exact request from a terminal or Postman. This is how you hand a developer something they can run, and how you take a request out of the browser to experiment with — week 8.
