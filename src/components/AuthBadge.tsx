@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient, isConfigured } from "@/lib/supabase/client";
+import { syncLocalToAccount } from "@/lib/sync";
 
 /** Shows who is signed in, or a way in. Hidden until Supabase is set up. */
 export function AuthBadge() {
@@ -12,6 +13,7 @@ export function AuthBadge() {
   const [email, setEmail] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [synced, setSynced] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -21,14 +23,29 @@ export function AuthBadge() {
     }
     let active = true;
 
+    /** Lift any guest progress into the account, and say so if there was some. */
+    const lift = async () => {
+      const result = await syncLocalToAccount();
+      if (!active || !result) return;
+      if (result.progress === 0 && result.cards === 0) return;
+      const parts = [
+        result.progress ? `${result.progress} day${result.progress > 1 ? "s" : ""}` : null,
+        result.cards ? `${result.cards} card${result.cards > 1 ? "s" : ""}` : null,
+      ].filter(Boolean);
+      setSynced(`Moved ${parts.join(" and ")} into your account.`);
+      setTimeout(() => active && setSynced(null), 6000);
+    };
+
     supabase.auth.getUser().then(({ data }) => {
       if (!active) return;
       setEmail(data.user?.email ?? null);
       setReady(true);
+      if (data.user) void lift();
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       setEmail(session?.user?.email ?? null);
+      if (event === "SIGNED_IN") void lift();
     });
 
     return () => {
@@ -67,6 +84,14 @@ export function AuthBadge() {
 
   return (
     <div className="relative ml-2">
+      {synced ? (
+        <p
+          role="status"
+          className="fixed inset-x-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 rounded-xl border border-ok/40 bg-ok-soft p-3 text-center text-xs md:inset-x-auto md:right-4 md:bottom-4 md:max-w-xs"
+        >
+          {synced}
+        </p>
+      ) : null}
       <button
         type="button"
         onClick={() => setMenu((open) => !open)}
