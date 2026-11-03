@@ -52,6 +52,17 @@ The browser will not complain. It will quietly repair the document into *somethi
 This is why the **Elements panel is the truth and your source file is only an intention**. The browser's repaired version is what is actually on screen. When markup behaves oddly, compare the two.
 </Callout>
 
+Prove it to yourself. The markup below is nested wrongly on purpose — `<strong>` opens inside the paragraph and closes after it.
+
+<LivePlayground
+  task="Look at the tree. The browser has not kept what you wrote. Now fix the nesting and watch the tree change shape."
+  html={`<p>This is <strong>not</strong> nested correctly.</p>
+
+<p>Here is a <strong>second one.</p></strong>
+
+<p>And a <div>block inside a paragraph</div> for good measure.</p>`}
+/>
+
 ## Self-closing elements
 
 Some elements have no content, so they have no closing tag:

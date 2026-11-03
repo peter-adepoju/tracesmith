@@ -69,6 +69,10 @@ All three make something invisible. They are completely different, and knowing w
 - **`visibility: hidden`** — invisible, but **still takes up its space**. You get a mysterious gap.
 - **`opacity: 0`** — fully transparent, takes up space, and is **still clickable**. An invisible button that intercepts clicks is a genuinely nasty bug, and this is how it happens.
 
+Switch between them and click where the button is. Watch which methods leave a gap, and which one still catches your click.
+
+<HidingDemo />
+
 <Callout kind="key">
 "The element is missing" and "the element is invisible" are different findings with different causes and different fixes. The Elements panel tells you which: if you can find it in the tree, it is not missing. Search the DOM before you report something absent.
 </Callout>

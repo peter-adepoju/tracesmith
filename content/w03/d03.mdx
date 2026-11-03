@@ -37,6 +37,10 @@ The fix, which almost every modern site applies globally:
 
 Now `width: 200px` means the whole box is 200px, with padding and border fitting *inside* it. Far more intuitive, and what people assume is happening anyway.
 
+Drag the sliders. The arithmetic is shown underneath, and the `box-sizing` toggle changes what the same numbers mean.
+
+<BoxModel />
+
 <Callout kind="job">
 When an element is mysteriously too wide, check `box-sizing` in the Computed tab. A component written assuming `border-box`, dropped into a page that does not set it, overflows its container — and that single missing line explains a whole family of layout bugs.
 </Callout>

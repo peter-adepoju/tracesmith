@@ -25,6 +25,10 @@ A form is a container that collects values and sends them somewhere.
 A missing `name` attribute is one of the sneakiest bugs in web development. The field renders, accepts typing, passes visual inspection, and vanishes on submit. You find it in the Network tab's Payload, not on the screen — which is exactly why week 1 came first.
 </Callout>
 
+This is the lesson in one widget. Submit it, then untick `name` on any field and submit again. The field still looks perfect; its value silently stops being sent.
+
+<FormLab />
+
 ## Labels, and why they are not decoration
 
 ```html
