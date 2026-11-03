@@ -97,7 +97,27 @@ Pure standard library, no Pillow. It draws the signal trace and writes the
    the row-level security that protects the data.
 3. In Supabase → Authentication → URL Configuration, set the Site URL and add
    `https://<your-app>/auth/callback` as a redirect URL.
-4. Redeploy. Vercel does not apply new variables to an existing build.
+4. **Turn off email confirmation**, unless you want it: Authentication →
+   Sign In / Providers → Email → uncheck *Confirm email*. Supabase's built-in
+   email service is rate limited to a handful of messages an hour and is not
+   meant for production, so leaving confirmation on makes signing up feel
+   broken. With it off, creating an account signs you straight in.
+5. Redeploy. Vercel does not apply new variables to an existing build.
+
+### Authentication
+
+Email and password, not magic links. A magic link opens the system browser
+rather than the installed app, so on a phone you end up signed in somewhere
+you are not — and it depends on Supabase's rate-limited email service for
+every single sign-in.
+
+- `/login` handles sign in, create account and forgot password in one screen.
+- `/auth/callback` accepts both link shapes Supabase sends: the PKCE `code`
+  used by `@supabase/ssr`, and the older `token_hash` plus `type`.
+- `/auth/reset` sets a new password, and is where a reset link lands.
+
+Email is only needed for the password-reset flow. Day-to-day sign-in does not
+touch it at all.
 
 **Known limitation.** Meridian's API keeps stock and orders in memory. On
 Vercel's serverless functions each request may hit a different instance, so
