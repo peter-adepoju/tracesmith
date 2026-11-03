@@ -1,0 +1,146 @@
+A schema is the promise an API makes about the shape of its answers. Knowing how to read one turns "that looks odd" into "that violates the contract", which is a much stronger thing to say.
+
+<Video id="json-schema" />
+
+## What a schema says
+
+```json
+{
+  "type": "object",
+  "required": ["reference", "amount", "currency", "paid"],
+  "properties": {
+    "reference": { "type": "string" },
+    "amount":    { "type": "integer", "minimum": 1 },
+    "currency":  { "type": "string", "enum": ["NGN", "USD", "GHS"] },
+    "paid":      { "type": "boolean" },
+    "email":     { "type": ["string", "null"], "format": "email" }
+  }
+}
+```
+
+Read in plain words: this is an object; four fields must be present; `amount` is a whole number of at least 1; `currency` must be one of three values; `email` may be a string or null, and when it is a string it must look like an address.
+
+You will not often write these. You read them constantly, because they tell you **what to test**:
+
+- Every `required` field is a test: what happens when it is missing?
+- Every `enum` is a test: what happens with a value not on the list?
+- Every `minimum` is a boundary: test it, and one below it.
+- Every `["string", "null"]` tells you null is expected, so the page must handle it.
+
+<Callout kind="key">
+A schema is a **test plan someone else already wrote for you.** Each constraint is a case, and the negative case is usually the interesting one. This is where week 10's test-case writing and week 13's API testing meet.
+</Callout>
+
+## Where you find one
+
+| Source | What you get |
+| --- | --- |
+| **OpenAPI / Swagger** | The common one. A whole API described, often with a "Try it" console |
+| **A JSON Schema file** | The shape alone, as above |
+| **Typed client code** | TypeScript types are a schema in another costume |
+| **The docs page** | A table of fields and types. Informal, and still a contract |
+| **Nothing at all** | Common. Then the *observed* shape is the only contract, which is a finding in itself |
+
+## Comparing a response against its promise
+
+The method is mechanical, and worth doing in this order:
+
+1. **Required fields.** Is every one present? Absent is a contract violation; `null` is only one if the schema does not allow null.
+2. **Types.** Is `amount` a number, or the string `"4850000"`? Is `paid` a boolean or `"true"`?
+3. **Values.** Inside the enum? Above the minimum? A plausible date?
+4. **Extra fields.** Not usually a bug, but worth noticing — an unexpected `internal_notes` or `debug_token` in a public response is a real finding.
+
+<Callout kind="job">
+Point 4 is where security findings hide. Compare what the schema promises with what actually arrives, and look for the **extra**. An internal flag, a hashed password, another customer's id, a stack trace. The page never shows them; the response contains them. This becomes one of the five security checks in week 14.
+</Callout>
+
+## Do it now
+
+Here is a response that is supposed to satisfy the schema above. It does not.
+
+<JsonExplorer
+  task="Four things violate the schema at the top of this lesson. Find them all, then write a one-line finding for each. One of them is not a validation problem at all — it is a security one."
+  value={`{
+  "reference": "ORDER-1003",
+  "amount": "4850000",
+  "currency": "EUR",
+  "email": "ada@example.com",
+  "internal_risk_score": 0.82,
+  "reviewer_note": "flagged by fraud team, do not surface"
+}`}
+/>
+
+<Callout kind="watch">
+Work them out before reading on.
+
+**`amount` is a string**, not an integer. Arithmetic on it will concatenate rather than add — a classic way to get a nonsense total.
+
+**`currency` is `"EUR"`**, which is not in the enum. Either the enum is out of date or the server is wrong, and both matter.
+
+**`paid` is absent**, and it is required. The page has no way to know whether this order was paid.
+
+**`internal_risk_score` and `reviewer_note` should not be here at all.** A note explicitly saying "do not surface" is being sent to the browser, where anyone can read it. That is the finding to escalate first, and the screen would never have shown you it.
+</Callout>
+
+<Exercise
+  prompt={'Why is "amount": "4850000" a real defect rather than a formatting preference?'}
+  accept={["string", "concatenate", "arithmetic", "not a number", "type"]}
+  hint="What happens when you add it to something?"
+  solution={'It is a string, so arithmetic on it concatenates instead of adding: adding 500 gives "4850000500" rather than 4850500. Any total calculated from it will be wrong in a way that looks absurd rather than slightly off, and it violates the declared integer type.'}
+/>
+
+<Exercise
+  prompt="An API has no published schema at all. What is the contract, and is that worth reporting?"
+  accept={["observed", "what it returns", "behaviour", "yes"]}
+  hint="If nothing is written down, what is everyone relying on?"
+  solution="The observed behaviour becomes the contract: whatever it returns today is what every consumer has built against. That is worth reporting, because it means any change is a silent breaking change — nobody can tell a fix from a regression without a documented shape to compare to."
+/>
+
+<Terms items={[
+  { term: "Schema", meaning: "A declared promise about the shape and types of a response." },
+  { term: "required", meaning: "Fields that must be present. Each one is a test." },
+  { term: "enum", meaning: "A fixed list of allowed values. Test one that is not on it." },
+  { term: "OpenAPI / Swagger", meaning: "The common format for describing a whole API." },
+  { term: "Contract violation", meaning: "A response that does not match its declared schema." },
+  { term: "Extra field", meaning: "Something present but undeclared. Where leaks hide." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "A schema says currency is an enum of NGN, USD, GHS. What is the most valuable test?",
+    options: [
+      "Send NGN",
+      "Send a value not on the list and see whether it is rejected",
+      "Send all three",
+      "Send nothing"
+    ],
+    answer: 1,
+    why: "Confirming an allowed value only shows the happy path. The interesting question is whether the server enforces the list at all."
+  },
+  {
+    q: "A response contains a field the schema does not mention. Is that a bug?",
+    options: [
+      "Always",
+      "Never",
+      "Not usually, but it is where leaked internal data hides, so always read it",
+      "Only if it is null"
+    ],
+    answer: 2,
+    why: "Extra fields are often harmless, which is exactly why nobody checks them — and why an internal flag or another customer's data can sit there unnoticed."
+  },
+  {
+    q: "Why does a schema function as a test plan?",
+    options: [
+      "It contains test code",
+      "Every required field, enum and minimum is a case, and the negative case is usually the interesting one",
+      "It runs automatically",
+      "It replaces manual testing"
+    ],
+    answer: 1,
+    why: "Each constraint states something that must hold, and each one can be deliberately violated to see whether the server actually enforces it."
+  }
+]} />
+
+## Tomorrow
+
+Ten broken payloads. Diagnose each, say what the sender did wrong, and write the corrected version.

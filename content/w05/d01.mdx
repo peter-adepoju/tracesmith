@@ -1,0 +1,149 @@
+Phase 1 taught you to read what comes back. Phase 2 teaches you to read it precisely, and then to send your own.
+
+Almost every API response you will ever see is JSON. This week is about reading one with confidence, which sounds small and is not: most support tickets are settled by one person reading a response carefully.
+
+## Why HTML is the wrong answer
+
+You already know one format a server sends: HTML. It works beautifully for a page and badly for data, because it describes *presentation*.
+
+Imagine asking a server for one customer and getting back:
+
+```html
+<div class="customer">
+  <span class="label">Name:</span>
+  <span class="value">Ada Obi</span>
+</div>
+```
+
+To get the name, a program must find the right `<span>`, in the right position, inside the right `<div>` — and all of that breaks the moment a designer moves something. People have genuinely built systems this way. It is called scraping, and it is miserable.
+
+What a program wants is:
+
+```json
+{ "name": "Ada Obi" }
+```
+
+No presentation. No ambiguity. One name, one value.
+
+<Callout kind="key">
+This is the distinction: **HTML is for a human to look at, JSON is for a program to use.** The same server often sends both — HTML to your browser, JSON to the page's own scripts. That is exactly what you saw in the Network tab, where `Doc` and `Fetch/XHR` are two different kinds of answer.
+</Callout>
+
+## The formats you will meet
+
+| Format | Where you meet it |
+| --- | --- |
+| **JSON** | Almost every modern API. This week. |
+| **XML** | Older systems, banking, SOAP services. Angular-bracketed and verbose. |
+| **CSV** | Spreadsheet exports, bulk uploads. Rows and commas, no nesting. |
+| **Form-encoded** | What a plain HTML form submits: `name=Ada&qty=2` |
+| **Multipart** | File uploads. |
+
+You need to recognise all five and read one fluently. JSON is the one.
+
+## A whole document
+
+```json
+{
+  "status": "success",
+  "data": {
+    "reference": "ORDER-1001",
+    "paid": true,
+    "amount": 4850000,
+    "customer": { "name": "Ada Obi" },
+    "items": [
+      { "sku": "mer-01", "qty": 1 }
+    ]
+  }
+}
+```
+
+You can probably already read that, which is the point — JSON is deliberately small. The whole syntax is tomorrow's lesson and it genuinely fits in one day.
+
+Two things in there are worth noticing now, because both cause real bugs:
+
+**`"amount": 4850000`** is not forty-eight million. It is **minor units** — kobo, cents, pence — so it means ₦48,500.00. Storing money as a whole number of the smallest unit avoids the rounding errors that floating-point decimals cause. When an amount looks absurd by a factor of a hundred, this is almost always why.
+
+**`"paid": true`** is a boolean, not the string `"true"`. They look similar and behave differently, and a system that checks `if (paid === "true")` against a real boolean silently never matches.
+
+<Callout kind="job">
+"The amount is wrong by 100x" is one of the most common support reports in payments, and it is usually not a bug: it is somebody reading minor units as major. Knowing to check is worth a lot, and so is knowing when it genuinely *is* the bug, because the reverse mistake charges someone a hundred times too much.
+</Callout>
+
+<Video id="json-10min" />
+
+## Reading one properly
+
+Below is a real response shape. Click any row and it gives you the **path** to that value.
+
+<JsonExplorer task="Find the customer's email. Click it, and read the path. Then find the amount, and work out what that is in naira." />
+
+That path is the thing to take away. Compare these two bug reports:
+
+> The customer details are broken.
+
+> `data.order.customer.email` is `null` in the response for ORDER-1001, so the confirmation email has nowhere to go.
+
+The second one cannot be argued with and needs no follow-up question. You could write it in thirty seconds with the panel above.
+
+<Exercise
+  prompt="In the explorer, what is the full path to the quantity of the second item?"
+  accept={["data.order.items[1].qty", "items[1].qty"]}
+  hint="Arrays are counted from zero."
+  solution="data.order.items[1].qty — the second item is index 1, because arrays start at zero. Getting that off by one is the single most common mistake when reading a path aloud to a developer."
+/>
+
+<Exercise
+  prompt={'A response says "amount": 199900 for something priced at £1,999.00. Is this a bug?'}
+  accept={["no", "not a bug", "minor units", "correct"]}
+  hint="Count the digits."
+  solution="No. 199900 pence is £1,999.00, so it is correct. The value is in minor units. It would be a bug if the system displayed it as £199,900.00, which is the same mistake in the other direction."
+/>
+
+<Terms items={[
+  { term: "JSON", meaning: "JavaScript Object Notation: the data format almost every API answers in." },
+  { term: "Scraping", meaning: "Extracting data from HTML meant for humans. Fragile, and a last resort." },
+  { term: "Minor units", meaning: "Money as a whole number of the smallest unit: 4850000 is ₦48,500.00." },
+  { term: "Path", meaning: "The route to one value, such as data.order.items[0].qty." },
+  { term: "Boolean", meaning: "true or false, with no quotes. Not the same as the string \"true\"." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Why do APIs answer in JSON rather than HTML?",
+    options: [
+      "JSON is faster to download",
+      "HTML describes presentation; JSON describes data a program can use directly",
+      "HTML cannot contain data",
+      "JSON is newer"
+    ],
+    answer: 1,
+    why: "Pulling a value out of HTML means depending on its position and markup, which changes whenever the design does."
+  },
+  {
+    q: "A response contains \"amount\": 250000 for an item priced ₦2,500. What is going on?",
+    options: [
+      "The price is wrong by 100x",
+      "It is in minor units — 250000 kobo is ₦2,500.00",
+      "It is a string",
+      "The currency is missing"
+    ],
+    answer: 1,
+    why: "Money is stored as a whole number of the smallest unit to avoid decimal rounding errors. 250000 kobo is exactly ₦2,500.00."
+  },
+  {
+    q: "Which bug report is more useful?",
+    options: [
+      "The customer section is broken.",
+      "data.order.customer.email is null for ORDER-1001, so no confirmation can be sent.",
+      "Something is wrong with emails.",
+      "The API returned bad data."
+    ],
+    answer: 1,
+    why: "It names the exact path, the exact value and the consequence, so nobody has to ask a follow-up question."
+  }
+]} />
+
+## Tomorrow
+
+The whole of JSON syntax. It is six types and two brackets, and you will be writing it by hand by the end of the hour.

@@ -8,6 +8,8 @@ import { Video } from "@/components/Video";
 import { AccessibleName } from "@/components/interactive/AccessibleName";
 import { BoxModel } from "@/components/interactive/BoxModel";
 import { ConsoleLab } from "@/components/interactive/ConsoleLab";
+import { EndpointBuilder } from "@/components/interactive/EndpointBuilder";
+import { JsonExplorer } from "@/components/interactive/JsonExplorer";
 import { FormLab } from "@/components/interactive/FormLab";
 import { HidingDemo } from "@/components/interactive/HidingDemo";
 import { LivePlayground } from "@/components/interactive/LivePlayground";
@@ -30,9 +32,11 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     BoxModel,
     Callout,
     ConsoleLab,
+    EndpointBuilder,
     Exercise,
     FormLab,
     HidingDemo,
+    JsonExplorer,
     LivePlayground,
     PanelPicker,
     Quiz,

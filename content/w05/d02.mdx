@@ -1,0 +1,185 @@
+JSON is a genuinely small language. Six types, two containers, and a handful of punctuation rules. You can learn all of it today.
+
+## The six types
+
+```json
+{
+  "aString": "text, always in double quotes",
+  "aNumber": 4850000,
+  "aBoolean": true,
+  "nothing": null,
+  "anObject": { "nested": "values" },
+  "anArray": [1, 2, 3]
+}
+```
+
+**String** — double quotes. Always double, never single. `'Ada'` is invalid JSON.
+
+**Number** — no quotes. Integers or decimals. No leading `+`, no trailing `.`, and **no commas as separators**: `48,500` is invalid.
+
+**Boolean** — `true` or `false`, lowercase, no quotes. `True` is invalid; `"true"` is a string, which is a different thing.
+
+**Null** — `null`, lowercase. Deliberately empty.
+
+**Object** — `{ }`. A set of key-value pairs. Keys are **always quoted strings**.
+
+**Array** — `[ ]`. An ordered list. Items may be any type, including mixed.
+
+That is the entire language.
+
+## The punctuation rules that actually trip people
+
+**Every key is quoted.** `{ name: "Ada" }` is valid JavaScript and invalid JSON. This catches people constantly, because the two look nearly identical.
+
+**Commas separate, they do not terminate.** The last item takes no comma:
+
+```json
+{
+  "a": 1,
+  "b": 2
+}
+```
+
+A **trailing comma** after `2` is invalid. This is the single most common cause of a 400 from a JSON API, and you met it in week 1.
+
+**No comments.** `//` and `/* */` are not allowed. A config file that accepts them is not JSON, whatever its extension says.
+
+<Callout kind="watch">
+Those three rules explain nearly every "Bad Request" you will ever diagnose on a JSON body: an unquoted key, a trailing comma, or a single quote. When a developer swears their JSON is fine, ask them to paste it into a validator. It usually is not.
+</Callout>
+
+## Try breaking it
+
+The explorer below validates as you type and tells you the **line and column** where the parser gave up.
+
+<JsonExplorer
+  task="Break it on purpose, one at a time: add a trailing comma, unquote a key, change a double quote to a single. Read the error each time — and notice the reported position is usually just AFTER the real mistake."
+  value={`{
+  "reference": "ORDER-1001",
+  "paid": true,
+  "amount": 4850000,
+  "discount": null,
+  "tags": ["priority", "gift"],
+  "customer": {
+    "name": "Ada Obi",
+    "vip": false
+  }
+}`}
+/>
+
+<Callout kind="key">
+Notice where the error points. A parser reports the position where it *realised* something was wrong, which is typically the token after your actual mistake. A trailing comma on line 4 is often reported on line 5.
+
+So when you get a parse error, **look at the line above the one it names**. That one habit saves a surprising amount of time.
+</Callout>
+
+## Numbers deserve a warning
+
+```json
+{
+  "amount": 4850000,
+  "rate": 1.5,
+  "big": 9007199254740993
+}
+```
+
+Two traps.
+
+**Very large numbers lose precision.** JavaScript can represent integers exactly only up to about nine quadrillion. Beyond that, digits change silently. This matters for long identifiers: a 19-digit account number sent as a JSON *number* can come back altered. Which is why good APIs send identifiers as **strings**, even when they look numeric.
+
+**Decimals are not exact.** `0.1 + 0.2` is `0.30000000000000004` in essentially every language. That is why money is sent in minor units as a whole number rather than as `48500.00`.
+
+<Callout kind="job">
+If you see `"accountNumber": 3012345678` as a number rather than a string, that is worth raising. Leading zeros are also lost — `0123456789` becomes `123456789` — and Nigerian account numbers can begin with a zero. It is a real defect with a quiet failure mode.
+</Callout>
+
+## Whitespace and formatting
+
+JSON ignores whitespace between tokens, so these are identical to a parser:
+
+```json
+{"a":1,"b":2}
+```
+
+```json
+{
+  "a": 1,
+  "b": 2
+}
+```
+
+Real APIs send the first, to save bytes. DevTools pretty-prints it for you in the **Preview** tab — which is exactly why Preview exists alongside Response.
+
+<Exercise
+  prompt="Name the three errors in: { name: 'Ada', age: 30, }"
+  accept={["unquoted", "single quote", "trailing comma"]}
+  hint="One per rule from this lesson."
+  solution={'Three: the key "name" is unquoted; the string uses single quotes instead of double; and there is a trailing comma after 30. The valid version is { "name": "Ada", "age": 30 }.'}
+/>
+
+<Exercise
+  prompt="Why should a 19-digit transaction reference be sent as a string rather than a number?"
+  accept={["precision", "lose precision", "rounded", "changed", "large"]}
+  hint="How large an integer can be represented exactly?"
+  solution="Beyond about nine quadrillion, integers lose precision and the last digits can change silently. A 19-digit reference exceeds that, so sending it as a number risks it arriving different from how it left. As a string it is preserved exactly, and you never do arithmetic on a reference anyway."
+/>
+
+<Terms items={[
+  { term: "Object", meaning: "{ } with quoted keys and values. Order is not meaningful." },
+  { term: "Array", meaning: "[ ] an ordered list. Order is meaningful." },
+  { term: "Trailing comma", meaning: "A comma after the last item. Invalid, and the top cause of a 400." },
+  { term: "null", meaning: "Deliberately empty. Lowercase, unquoted." },
+  { term: "Minor units", meaning: "Money as a whole number, to dodge decimal imprecision." },
+  { term: "Precision loss", meaning: "Very large numbers silently change. Send long identifiers as strings." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which of these is valid JSON?",
+    options: [
+      "{ name: \"Ada\" }",
+      "{ 'name': 'Ada' }",
+      "{ \"name\": \"Ada\" }",
+      "{ \"name\": \"Ada\", }"
+    ],
+    answer: 2,
+    why: "Keys and strings both need double quotes, and there is no trailing comma. Each of the other three breaks exactly one rule."
+  },
+  {
+    q: "A parse error reports line 12, but line 12 looks fine. What now?",
+    options: [
+      "The error is wrong",
+      "Check line 11 — the parser reports where it noticed, not where you erred",
+      "Reformat the whole document",
+      "The file is corrupt"
+    ],
+    answer: 1,
+    why: "A trailing comma or missing bracket is only detected at the next token, so the real mistake is usually just above."
+  },
+  {
+    q: "Why is money sent as 4850000 rather than 48500.00?",
+    options: [
+      "It is shorter",
+      "Decimal arithmetic is not exact, so whole minor units avoid rounding errors",
+      "JSON cannot store decimals",
+      "It hides the real price"
+    ],
+    answer: 1,
+    why: "JSON handles decimals fine, but floating-point arithmetic on them is imprecise. Whole numbers of the smallest unit sidestep it entirely."
+  },
+  {
+    q: "What is wrong with \"paid\": \"true\"?",
+    options: [
+      "Nothing",
+      "It is a string, not a boolean, so a check against true will never match",
+      "true must be capitalised",
+      "Booleans are not valid JSON"
+    ],
+    answer: 1,
+    why: "The quotes make it a string. Code comparing it to a real boolean silently fails, and the bug looks like 'payments are never marked paid'."
+  }
+]} />
+
+## Tomorrow
+
+Nesting. How to walk into a hundred-line response and come out with the one value you needed.

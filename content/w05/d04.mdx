@@ -1,0 +1,135 @@
+Four states look like "nothing" and mean four different things. Telling them apart is one of the highest-value things in this week, because the difference decides whose bug it is.
+
+## The four
+
+```json
+{
+  "a": null,
+  "b": "",
+  "c": [],
+  "d": 0
+}
+```
+
+Plus a fifth that is not in the document at all: **the key is absent**.
+
+| State | Means | Who to ask |
+| --- | --- | --- |
+| **Absent key** | The server did not send this field | Back end: was it meant to? |
+| **`null`** | The field exists and is deliberately empty | Back end: why is it empty? |
+| **`""`** | A string that is present and blank | Usually validation: should blank be allowed? |
+| **`[]`** | A list with genuinely no items | Normal. Handle it. |
+| **`0`** | A real number, which happens to be zero | Normal, and not "nothing" |
+
+<Callout kind="key">
+**Absent and null are not the same.** Absent means the server never mentioned it. Null means the server mentioned it and told you it is empty.
+
+That distinction routinely decides ownership. A missing key is often a back-end bug or an API version mismatch. A null is usually correct behaviour the front end failed to handle.
+</Callout>
+
+## Zero is the dangerous one
+
+```json
+{ "balance": 0, "itemCount": 0, "discount": 0 }
+```
+
+Many languages treat `0` as false in a plain truthiness check. So code written as *"if there is a balance, show it"* hides a zero balance entirely — and the customer sees a blank where they should see ₦0.00.
+
+The same bug hides an empty string, an empty array, and `false`.
+
+<Callout kind="watch">
+This is behind a whole family of real defects:
+
+- A zero balance renders as blank instead of ₦0.00
+- A "0 items" state shows nothing rather than "no items"
+- A discount of 0 is skipped, so the line vanishes from a receipt
+- `false` in a settings list makes the row disappear instead of showing "off"
+
+Test with zero. Test with an empty string. Test with `false`. These are not edge cases; they are Tuesday.
+</Callout>
+
+## See them side by side
+
+<JsonExplorer
+  task="Click each of the five keys and read what the panel says about it. Then delete the line for absent_example entirely and notice it simply stops existing — which is the point."
+  value={`{
+  "nullValue": null,
+  "emptyString": "",
+  "emptyArray": [],
+  "zero": 0,
+  "falseFlag": false,
+  "absent_example": "delete this whole line to see absence",
+  "realValue": "Ada Obi"
+}`}
+/>
+
+## How to report each one
+
+The wording matters, because it tells the reader where to look.
+
+> **Absent:** "The response for ORDER-1002 has no `customer.phone` key at all. The API docs list it as always present."
+
+> **Null:** "`customer.email` is `null` for ORDER-1002, so the confirmation has nowhere to go. Should a paid order be able to have no email?"
+
+> **Empty string:** "`customer.name` is `""` — the signup accepted a blank name. Server-side validation is missing."
+
+> **Empty array:** "`items` is `[]` on a paid order. Either the order is genuinely empty, which should not be possible, or the items failed to attach."
+
+Each one points at a different team and a different question. That is the whole value of knowing the difference.
+
+<Exercise
+  prompt="A customer's balance shows as blank rather than ₦0.00. Is the data wrong?"
+  accept={["no", "rendering", "front end", "frontend", "truthiness", "zero"]}
+  hint="What is zero treated as in a plain if-check?"
+  solution={'Almost certainly not. The data is 0, which is correct; the page treats zero as falsy and skips rendering it. That is a front-end bug, and you can prove it by showing the response contains "balance": 0.'}
+/>
+
+<Exercise
+  prompt="The docs say every order has a shipping object. One response has no shipping key at all. Who owns this, and what is your next question?"
+  accept={["back end", "backend", "server", "api"]}
+  hint="Absent, not null."
+  solution="The back end, because the server never sent a documented field. The next question is whether the documentation is out of date or the server is wrong — both happen, and the answer decides whether this is a code fix or a docs fix."
+/>
+
+<Terms items={[
+  { term: "Absent", meaning: "The key is not in the response at all." },
+  { term: "null", meaning: "The key is present and deliberately empty." },
+  { term: "Empty string", meaning: "A present string with no characters. Often a validation gap." },
+  { term: "Empty array", meaning: "A present list with no items. Normal, and must be handled." },
+  { term: "Falsy", meaning: "Values a plain check treats as false: 0, \"\", null, false, undefined." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What is the difference between an absent key and a null value?",
+    options: [
+      "Nothing, they are the same",
+      "Absent means the server never sent it; null means it sent it and said it is empty",
+      "Null is an error, absent is not",
+      "Absent is faster"
+    ],
+    answer: 1,
+    why: "One is silence, the other is an explicit statement of emptiness, and they usually point at different teams."
+  },
+  {
+    q: "Which of these is NOT falsy in a plain truthiness check?",
+    options: ["0", "\"\"", "[]", "false"],
+    answer: 2,
+    why: "An empty array is truthy in JavaScript, which surprises people. Its length is zero, but the array itself is an object and passes an if-check."
+  },
+  {
+    q: "A receipt omits the discount line entirely when the discount is zero. What is this?",
+    options: [
+      "Correct, there is no discount to show",
+      "A rendering bug: 0 is being treated as nothing",
+      "A back-end bug",
+      "A currency problem"
+    ],
+    answer: 1,
+    why: "A zero discount is a real value and arguably should be shown for clarity. Dropping it because 0 is falsy is the classic version of this bug."
+  }
+]} />
+
+## Tomorrow
+
+Schemas: what a response promises to look like, and how to report it when it does not.

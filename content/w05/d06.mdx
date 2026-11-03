@@ -1,0 +1,154 @@
+A working day. Ten payloads, each broken in a different way. For each one: say what is wrong, say what the sender did, and write the corrected version.
+
+Use the explorer. Paste each payload in, read the error, fix it, confirm it goes green.
+
+<JsonExplorer task="Paste each payload below in turn. Diagnose, then repair it until the badge reads valid." rows={10} value={`{ "paste": "each payload here" }`} />
+
+## The ten
+
+**1.**
+```json
+{ "reference": "ORDER-1001", "amount": 4850000, }
+```
+
+**2.**
+```json
+{ reference: "ORDER-1002", "amount": 750000 }
+```
+
+**3.**
+```json
+{ 'reference': 'ORDER-1003', 'amount': 185000 }
+```
+
+**4.**
+```json
+{ "reference": "ORDER-1004", "amount": 48,500 }
+```
+
+**5.**
+```json
+{ "reference": "ORDER-1005", "paid": True }
+```
+
+**6.**
+```json
+{
+  "reference": "ORDER-1006",
+  // the customer asked for next-day delivery
+  "amount": 620000
+}
+```
+
+**7.**
+```json
+{ "reference": "ORDER-1007", "items": [ { "sku": "mer-01" } }
+```
+
+**8.**
+```json
+{ "reference": "ORDER-1008", "amount": 340000 "currency": "NGN" }
+```
+
+**9.**
+```json
+{ "reference": "ORDER-1009", "note": "Ada said "ship it today"" }
+```
+
+**10.**
+```json
+{ "reference": "ORDER-1010", "amount": 4850000, "amount": 1 }
+```
+
+<Callout kind="watch">
+Number 10 is the sly one. It is **valid JSON** — the parser accepts it without complaint — and the duplicate key means one of the two values silently wins. Most parsers keep the last, so this order costs ₦0.01 instead of ₦48,500.
+
+A payload that parses is not a payload that is correct. This is exactly why validation happens after parsing, and why a 422 exists alongside a 400.
+</Callout>
+
+## The answers
+
+Work them out first.
+
+1. **Trailing comma** after the last value. Remove it.
+2. **Unquoted key.** `reference` needs double quotes.
+3. **Single quotes.** Valid JavaScript, invalid JSON. Use double quotes throughout.
+4. **A comma inside a number.** `48,500` is read as two values. Write `48500` — and note this would be minor units anyway.
+5. **`True` capitalised.** JSON booleans are lowercase `true`.
+6. **A comment.** JSON has none. Delete it, or move it into a real field.
+7. **Mismatched brackets.** The array opens with `[` and is closed with `}`. Close the object, then the array.
+8. **A missing comma** between two pairs.
+9. **Unescaped quotes** inside a string. Escape them as `\"`, or use single quotes *inside* the double-quoted string.
+10. **A duplicate key.** Parses fine; the last value wins. Not a syntax error, and arguably worse for it.
+
+## What this is really teaching
+
+Look back at which of the ten a parser catches.
+
+Nine of them produce a **400**: the body never parsed, so the server never looked at your fields. One of them — the duplicate key — produces a perfectly successful request that charges the wrong amount.
+
+<Callout kind="key">
+That split is the lesson of the whole week.
+
+**A 400 means the shape was wrong.** The server could not read the body, so nothing you put in the fields mattered.
+
+**A 422 means the shape was fine and the content was not.** It parsed, and then failed the rules.
+
+**And a 200 means neither check objected — which is not the same as the data being right.** Number 10 would have returned 200.
+</Callout>
+
+<Exercise
+  prompt="Which of the ten payloads would a server accept without any error at all, and why is that worse than a parse failure?"
+  accept={["10", "ten", "duplicate", "duplicate key"]}
+  hint="Which one is valid JSON?"
+  solution="Number 10, the duplicate key. It is valid JSON, so it parses, and the last value silently wins — the order goes through for ₦0.01. A parse failure is loud and gets fixed in minutes; this one succeeds quietly and is found in a reconciliation weeks later."
+/>
+
+<Exercise
+  prompt="A developer insists their JSON is correct, and the API keeps returning 400. What do you ask them to do, and what is the most likely cause?"
+  accept={["validate", "validator", "paste", "trailing comma", "parse"]}
+  hint="Do not argue; get evidence."
+  solution="Ask them to paste the exact body into a validator — or the explorer in this lesson — rather than re-reading it. The most likely causes are a trailing comma or an unquoted key, both of which the eye skips over. A 400 means it did not parse, so the problem is shape, not content."
+/>
+
+<Quiz questions={[
+  {
+    q: "A JSON body has a duplicate key. What happens?",
+    options: [
+      "A 400, because it is invalid",
+      "It parses, and one value silently wins",
+      "Both values are kept as an array",
+      "The server always rejects it"
+    ],
+    answer: 1,
+    why: "Duplicate keys are legal JSON. Most parsers keep the last, so the payload succeeds while meaning something you did not intend."
+  },
+  {
+    q: "What does a 400 on a JSON endpoint usually tell you about your fields?",
+    options: [
+      "One of them is invalid",
+      "Nothing — the body never parsed, so the fields were never examined",
+      "They are all missing",
+      "They are the wrong type"
+    ],
+    answer: 1,
+    why: "Parsing comes first. A 400 means the server never got as far as looking at what you sent, so fix the shape before touching the content."
+  },
+  {
+    q: "Why is 48,500 invalid in JSON?",
+    options: [
+      "Numbers must be quoted",
+      "JSON numbers have no thousands separators; the comma ends the value",
+      "It is too large",
+      "Decimals are not allowed"
+    ],
+    answer: 1,
+    why: "A comma separates items, so the parser reads 48 and then chokes on 500. Separators are a display concern, never a data one."
+  }
+]} />
+
+## Week 5 done
+
+You can read any JSON response with confidence: the six types, the punctuation rules that cause real 400s, how to walk a deep document and state a path precisely, the difference between absent, null, empty and zero, and how to compare a response against the shape it promised — including noticing the fields that should not be there.
+
+Next week: APIs and endpoints. What you have been reading, and where it comes from.

@@ -1,0 +1,151 @@
+Real responses are not flat. A payment response can be two hundred lines deep. Today you learn to walk into one and come out with the value you needed, and nothing else.
+
+## The two moves
+
+Everything is a combination of two steps:
+
+- **Into an object**, by key: `.customer`
+- **Into an array**, by position: `[0]`
+
+Chain them and you have a path.
+
+```json
+{
+  "data": {
+    "orders": [
+      {
+        "reference": "ORDER-1001",
+        "customer": { "name": "Ada Obi" },
+        "items": [ { "sku": "mer-01", "qty": 2 } ]
+      }
+    ]
+  }
+}
+```
+
+- `data.orders` — the array of orders
+- `data.orders[0]` — the first order
+- `data.orders[0].customer.name` — `"Ada Obi"`
+- `data.orders[0].items[0].qty` — `2`
+
+Read it left to right as instructions: go into `data`, into `orders`, take the first, into `customer`, take `name`.
+
+<Callout kind="key">
+**Arrays start at zero.** The first item is `[0]`, the second is `[1]`.
+
+This causes more confusion in spoken conversation than almost anything else. "The second item" and "item 1" are the same thing, and if you and a developer disagree by one, this is why. Say the path, not the ordinal.
+</Callout>
+
+## Describing a shape in words
+
+A skill worth practising, because you will do it in every escalation:
+
+> The response is an object with `status` and `data`. `data` holds `orders`, an array. Each order has a `reference`, a `customer` object, and an `items` array.
+
+That description is what lets someone picture the response without seeing it. Notice it names **types**, not values — the shape is the thing that is stable.
+
+## Walk one
+
+<JsonExplorer
+  task="Find the quantity of the second item in the second order. Click it and check the path matches what you predicted before clicking."
+  rows={18}
+  value={`{
+  "status": "success",
+  "meta": { "page": 1, "total": 2 },
+  "data": {
+    "orders": [
+      {
+        "reference": "ORDER-1001",
+        "paid": true,
+        "customer": { "name": "Ada Obi", "email": "ada@example.com" },
+        "items": [
+          { "sku": "mer-01", "qty": 1, "price": 4850000 },
+          { "sku": "mer-08", "qty": 2, "price": 750000 }
+        ]
+      },
+      {
+        "reference": "ORDER-1002",
+        "paid": false,
+        "customer": { "name": "Bola Ade", "email": null },
+        "items": [
+          { "sku": "mer-04", "qty": 1, "price": 6200000 },
+          { "sku": "mer-06", "qty": 3, "price": 3400050 }
+        ]
+      }
+    ]
+  }
+}`}
+/>
+
+## Where it goes wrong
+
+**Assuming an array has anything in it.** `data.orders[0]` on an empty array is undefined, and code that walks further crashes — which you now recognise as `Cannot read properties of undefined`. An empty list is a normal outcome, not an error, and a surprising number of pages break on it. Always test the no-results case.
+
+**Assuming the order is stable.** Unless the API documents a sort, `[0]` is not reliably the same record twice. If an automated test depends on position, it will be flaky.
+
+**Confusing a single object with an array of one.** `{ "order": {...} }` and `{ "orders": [{...}] }` need different code. An API that returns one shape for a single result and another for several is a genuine design defect, and worth reporting.
+
+<Callout kind="job">
+In the Network tab, the **Preview** tab gives you this tree with expand arrows, which is far easier to walk than raw Response. Use Preview to find the value, then Response when you need the exact raw text for evidence.
+</Callout>
+
+<Exercise
+  prompt="In the explorer above, what is the path to the second order's customer email, and what is its value?"
+  accept={["data.orders[1].customer.email", "orders[1].customer.email"]}
+  hint="Second order is index 1."
+  solution="data.orders[1].customer.email, and it is null. Worth noticing: that order is also unpaid, so this is exactly the record where a confirmation could not be sent even if you tried."
+/>
+
+<Exercise
+  prompt="A page crashes with 'Cannot read properties of undefined (reading name)' but only for new customers. What do you suspect?"
+  accept={["empty array", "empty", "no orders", "zero results"]}
+  hint="What is different about a brand-new customer?"
+  solution="They have no orders, so the array is empty and [0] is undefined. The page was only ever tested with data in it. The fix is to handle the empty case, and the test you should have run is 'what does a new account see?'"
+/>
+
+<Terms items={[
+  { term: "Path", meaning: "The route to a value: data.orders[0].customer.name." },
+  { term: "Index", meaning: "An array position, counted from zero." },
+  { term: "Shape", meaning: "The structure and types of a response, independent of its values." },
+  { term: "Empty array", meaning: "A normal result meaning no matches. Not an error, and must be handled." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What does data.items[2].sku refer to?",
+    options: [
+      "The second item's sku",
+      "The third item's sku",
+      "All item skus",
+      "An error"
+    ],
+    answer: 1,
+    why: "Index 2 is the third item, because counting starts at zero."
+  },
+  {
+    q: "A feature works for existing users and crashes for new ones. Most likely cause?",
+    options: [
+      "A permissions problem",
+      "An empty array the page does not handle",
+      "A slow network",
+      "A missing stylesheet"
+    ],
+    answer: 1,
+    why: "New accounts have no records, so lists come back empty and anything reaching into [0] fails."
+  },
+  {
+    q: "Why should an automated test avoid depending on array position?",
+    options: [
+      "Positions are slow to read",
+      "Unless the API documents a sort, order is not guaranteed between calls",
+      "Arrays cannot be indexed in tests",
+      "It uses more memory"
+    ],
+    answer: 1,
+    why: "Undocumented ordering can change, and a test that assumes it becomes intermittently red for no real reason."
+  }
+]} />
+
+## Tomorrow
+
+Null, missing and empty — three things that look alike and mean completely different things.
