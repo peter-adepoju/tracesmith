@@ -28,7 +28,7 @@ export default async function LabPage({
 
   return (
     <main className="mx-auto max-w-[88rem] px-4 py-8">
-      <nav className="text-xs text-muted">
+      <nav className="no-touch-target text-xs text-muted">
         <Link href="/lab" className="hover:text-text">
           Labs
         </Link>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import {
   DEFECTS,
   SEVERITY_ORDER,
@@ -55,11 +55,17 @@ export function Workbench({ lab }: { lab: Lab }) {
   const stage = lab.stages.find((item) => item.n === stageNumber) ?? lab.stages[0];
 
   const frameRef = useRef<HTMLIFrameElement>(null);
-  const [sessionId] = useState(() => "lab_" + Math.random().toString(36).slice(2, 10));
+  // useId, not Math.random: a value randomised during render differs between
+  // the server and the client and produces a hydration mismatch. useId is
+  // generated identically on both sides and is still unique per mount.
+  const sessionId = "lab_" + useId().replace(/[^a-zA-Z0-9]/g, "");
   const [consoleLog, setConsoleLog] = useState<ConsoleEntry[]>([]);
   const [network, setNetwork] = useState<NetEntry[]>([]);
   const [tab, setTab] = useState<"brief" | "console" | "network" | "report">("brief");
   const [reloadKey, setReloadKey] = useState(0);
+  // A phone cannot show the app and the tools at once and have either be
+  // usable, so on small screens they take turns at full width.
+  const [mobileView, setMobileView] = useState<"app" | "tools">("app");
 
   const [reports, setReports] = useState<Report[]>([]);
   const [draft, setDraft] = useState<Omit<Report, "id">>({
@@ -218,8 +224,29 @@ export function Workbench({ lab }: { lab: Lab }) {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+      {/* Phone: one at a time, switched here. */}
+      <div className="no-touch-target sticky top-14 z-30 -mx-4 flex gap-1 border-b border-border bg-bg/95 px-4 py-2 backdrop-blur lg:hidden">
+        {(["app", "tools"] as const).map((view) => (
+          <button
+            key={view}
+            type="button"
+            onClick={() => setMobileView(view)}
+            className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium capitalize transition-colors ${
+              mobileView === view
+                ? "bg-accent text-white"
+                : "bg-surface-2 text-muted"
+            }`}
+          >
+            {view === "app" ? "The shop" : "Tools"}
+            {view === "tools" && reports.length > 0 ? ` (${reports.length})` : ""}
+          </button>
+        ))}
+      </div>
+
       {/* The product under test */}
-      <section className="space-y-2">
+      <section
+        className={`space-y-2 ${mobileView === "app" ? "" : "hidden lg:block"}`}
+      >
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-semibold uppercase tracking-wider text-muted">
             Meridian
@@ -251,7 +278,7 @@ export function Workbench({ lab }: { lab: Lab }) {
           src={src}
           onLoad={instrument}
           title="Meridian, the product under test"
-          className="h-[36rem] w-full rounded-xl border border-border bg-white"
+          className="h-[30rem] w-full rounded-xl border border-border bg-white sm:h-[36rem]"
         />
         <p className="text-xs text-muted">
           This is a real page. Press <kbd>F12</kbd> and the browser&apos;s own
@@ -261,7 +288,11 @@ export function Workbench({ lab }: { lab: Lab }) {
       </section>
 
       {/* The tools */}
-      <section className="rounded-xl border border-border bg-surface">
+      <section
+        className={`rounded-xl border border-border bg-surface ${
+          mobileView === "tools" ? "" : "hidden lg:block"
+        }`}
+      >
         <div className="flex gap-1 border-b border-border bg-surface-2 px-2 py-1.5">
           {(["brief", "console", "network", "report"] as const).map((name) => (
             <button

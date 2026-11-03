@@ -33,7 +33,7 @@ export default async function ProjectPage({
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
-      <nav className="text-xs text-muted">
+      <nav className="no-touch-target text-xs text-muted">
         <Link href="/build" className="hover:text-text">
           Build
         </Link>

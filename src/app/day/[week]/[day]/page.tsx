@@ -44,18 +44,22 @@ export default async function DayPage({
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
-      <nav className="flex flex-wrap items-center gap-1.5 text-xs text-muted">
+      <nav className="no-touch-target flex items-center gap-1.5 text-xs text-muted">
         <Link href="/" className="hover:text-text">
           Course
         </Link>
-        <span>/</span>
-        {phase ? <span>Phase {phase.n}</span> : null}
+        {phase ? (
+          <>
+            <span className="hidden sm:inline">/</span>
+            <span className="hidden sm:inline">Phase {phase.n}</span>
+          </>
+        ) : null}
         <span>/</span>
         <Link href={`/#week-${week.n}`} className="hover:text-text">
           Week {week.n}
         </Link>
-        <span className="ml-auto font-mono">
-          Day {index + 1} of {total}
+        <span className="ml-auto shrink-0 font-mono">
+          {index + 1}/{total}
         </span>
       </nav>
 

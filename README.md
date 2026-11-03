@@ -47,6 +47,64 @@ Both keys are meant to be public. Row-level security in the schema is what
 protects the data: every table is restricted to `auth.uid() = user_id`, so one
 account can never read another's rows.
 
+## On a phone
+
+Tracesmith is an installable PWA, not just a responsive site.
+
+- **Install it.** Android Chrome offers an Install button; on iOS use Share →
+  Add to Home Screen. It then opens full screen with no browser chrome.
+- **Offline.** A service worker caches pages you have already opened, so
+  lessons you have read stay readable with no connection. The review deck
+  works offline too. Live data (`/api/`, `/auth/`) is never cached.
+- **Separate mobile layout.** Below `md` the top navigation is replaced by a
+  bottom tab bar — Course, Labs, Build, Review — because thumbs reach the
+  bottom of a phone. The lab switches the shop and the tools into a segmented
+  control rather than trying to show both.
+- **Safe areas.** The layout respects the notch and the home indicator through
+  `env(safe-area-inset-*)`, which is what stops an installed PWA looking like
+  a web page in a frame.
+
+The service worker is registered in production only. A worker caching pages
+while you edit them produces baffling stale results.
+
+Regenerate the icons after changing the mark:
+
+```bash
+python -I scripts/make-icons.py
+```
+
+Pure standard library, no Pillow. It draws the signal trace and writes the
+192, 512, maskable and Apple touch icons into `public/`.
+
+## Deploying
+
+1. **Vercel** — import the repo at vercel.com. Next.js is detected; change
+   nothing. It deploys and works immediately in guest mode.
+2. **Supabase**, for progress that follows you between devices — create a
+   project, run `supabase/schema.sql` in the SQL editor, then set these three
+   in Vercel's environment variables:
+
+   ```
+   NEXT_PUBLIC_SUPABASE_URL
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+   NEXT_PUBLIC_SITE_URL
+   ```
+
+   The `NEXT_PUBLIC_` prefix is required: without it Next.js will not expose
+   the value to browser code and the app silently stays in guest mode. These
+   are compiled into the browser bundle and are public by design, so mark them
+   Config rather than Secret. Never add the `service_role` key — it bypasses
+   the row-level security that protects the data.
+3. In Supabase → Authentication → URL Configuration, set the Site URL and add
+   `https://<your-app>/auth/callback` as a redirect URL.
+4. Redeploy. Vercel does not apply new variables to an existing build.
+
+**Known limitation.** Meridian's API keeps stock and orders in memory. On
+Vercel's serverless functions each request may hit a different instance, so
+server-side state is unreliable in production: the *stock not decremented*
+defect may behave inconsistently. Every client-side lab defect is unaffected.
+Moving that store into Supabase is the fix.
+
 ## Layout
 
 ```
