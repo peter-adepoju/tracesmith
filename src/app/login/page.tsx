@@ -22,10 +22,13 @@ type Mode = "signin" | "signup" | "forgot";
 function explain(message: string, mode: Mode): string {
   const m = message.toLowerCase();
   if (m.includes("invalid login credentials")) {
-    return "That email and password do not match an account. Check for a typo, or create an account below.";
+    // Supabase returns this same message for an unconfirmed account, to avoid
+    // revealing which addresses exist. So it has two quite different causes
+    // and the message has to name both.
+    return "That did not sign you in. Either the password is wrong, or the account exists but is waiting on email confirmation — Supabase reports both the same way. If you just created it, turn off Confirm email in Supabase (Authentication → Sign In / Providers → Email), delete the half-created user, and sign up again.";
   }
   if (m.includes("email not confirmed")) {
-    return "This account exists but the email has not been confirmed. Check your inbox, or turn off email confirmation in Supabase under Authentication → Sign In / Providers.";
+    return "This account exists but the email has not been confirmed. Turn off Confirm email in Supabase under Authentication → Sign In / Providers → Email, or click the link in your inbox.";
   }
   if (m.includes("user already registered") || m.includes("already been registered")) {
     return "An account with that email already exists. Sign in instead, or reset the password.";
@@ -33,8 +36,10 @@ function explain(message: string, mode: Mode): string {
   if (m.includes("password should be at least")) {
     return "That password is too short. Supabase requires at least six characters by default.";
   }
-  if (m.includes("rate limit") || m.includes("too many")) {
-    return "Too many attempts for now. Supabase rate limits this; wait a minute and try again.";
+  if (m.includes("rate limit") || m.includes("too many") || m.includes("for security purposes")) {
+    // Nearly always the email send, not the sign-in: Supabase's built-in SMTP
+    // allows only a couple of messages an hour and is not for production.
+    return "Supabase is rate limiting this, and it is almost certainly the confirmation email rather than the sign-up itself. Its built-in email service allows only a couple of messages an hour. Turn off Confirm email (Authentication → Sign In / Providers → Email) and no email is sent at all.";
   }
   if (m.includes("fetch")) {
     return "Could not reach Supabase. Check your internet connection and that the project URL is correct.";
@@ -96,8 +101,20 @@ function LoginForm() {
           router.refresh();
           return;
         }
+
+        // Supabase will not admit that an address is already taken, to avoid
+        // letting anyone enumerate users. Instead it returns a user with an
+        // empty identities array. That is the only way to tell "already
+        // registered" from "needs confirming", and they need opposite advice.
+        if (data.user && (data.user.identities?.length ?? 0) === 0) {
+          setError(
+            "An account already exists for that email. Sign in instead, or use Forgot to set a new password. If you never confirmed it, delete the user in Supabase under Authentication → Users and sign up again.",
+          );
+          return;
+        }
+
         setNotice(
-          "Account created. Supabase is set to confirm emails, so check your inbox for the confirmation link before signing in.",
+          "Account created, but Supabase is set to confirm emails, so you cannot sign in until that is done. Turn off Confirm email under Authentication → Sign In / Providers → Email, delete this user under Authentication → Users, and create the account again — it will sign you straight in.",
         );
         setMode("signin");
         return;
