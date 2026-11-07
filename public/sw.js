@@ -48,7 +48,9 @@ self.addEventListener("activate", (event) => {
 function isAsset(url) {
   return (
     url.pathname.startsWith("/_next/static/") ||
-    /\.(?:png|jpg|jpeg|svg|webp|woff2?|ico)$/.test(url.pathname)
+    // sql-wasm.wasm is large and changes only when the dependency does, so
+    // it is cache-first too — otherwise the SQL lesson needs the network.
+    /\.(?:png|jpg|jpeg|svg|webp|woff2?|ico|wasm)$/.test(url.pathname)
   );
 }
 
