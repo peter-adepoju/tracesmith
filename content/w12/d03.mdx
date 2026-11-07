@@ -1,0 +1,122 @@
+The same page, the same build, two browsers, two different results. This is normal, and knowing *why* is what lets you write a report a developer can act on.
+
+<Video id="cross-browser" />
+
+## Why browsers differ
+
+Three reasons, and they are not the same kind of problem:
+
+**Engines.** Chrome and Edge use Blink, Firefox uses Gecko, Safari uses WebKit. Three separate implementations of a very large specification, each with its own bugs and its own pace.
+
+**Support.** A CSS or JavaScript feature arrives in one engine before the others. Safari in particular is the one that lags, and because iOS requires WebKit, *every* browser on an iPhone is Safari underneath — including Chrome for iOS. A bug "only in Chrome on iPhone" is a Safari bug.
+
+**Defaults.** Form controls, date pickers, fonts and scrollbars are styled by the browser itself. A date input is three dropdowns in one and a text field in another.
+
+<Callout kind="key">
+**"It works on my machine" is not a defence, and neither is "it is broken in Safari".**
+
+The useful report names the engine, the version, the platform, and says whether it reproduces elsewhere. That is what turns a vague complaint into a ticket someone can pick up.
+</Callout>
+
+## Which browsers do you owe?
+
+Not all of them. Your analytics decide it: take the browsers covering roughly 95% of your actual users, plus anything the business has committed to.
+
+A realistic set for most products:
+
+- Chrome, current, desktop
+- Safari, current, desktop and iOS
+- Firefox, current, desktop
+- Edge, current, desktop
+- Chrome, current, Android
+
+Write it down and agree it. An undocumented support matrix means every browser bug becomes an argument about whether it counts.
+
+## Responsive, which is a different question
+
+Cross-browser is *which engine*. Responsive is *which width*. They fail differently and you test them separately.
+
+Three widths, at minimum:
+
+- **375px** — a phone. The hardest one, and the most used.
+- **768px** — a tablet, and usually the most neglected.
+- **1280px** — a desktop.
+
+Test *either side of each breakpoint*, not just at it. The bug lives at 767px or 769px far more often than at exactly 768.
+
+<ViewportSlider />
+
+Drag slowly through the marks. The jumps are the breakpoints, and finding them is the first thing to do on any new feature, because you cannot test either side of a line you have not located.
+
+<Callout kind="watch">
+**Resizing a desktop browser is not the same as a phone.** It gets you the layout, and that is genuinely most of it — but it does not get you touch targets, the on-screen keyboard covering the field you are typing into, momentum scrolling, or the address bar resizing the viewport mid-scroll.
+
+Do the width pass in DevTools. Then do a real pass on a real phone before you call it tested.
+</Callout>
+
+## Reporting a browser-specific bug
+
+Four things the report must carry:
+
+1. **Where it fails** — browser, version, platform.
+2. **Where it does not** — "Chrome 131 and Firefox 133 on the same build are correct."
+3. **The engine**, if you know it — "Safari 17.6, so WebKit; likely affects all iOS browsers."
+4. Whether it is **layout, behaviour or a console error** — they go to different fixes.
+
+Point 2 does most of the work. A bug that fails everywhere is a product bug; one that fails in a single engine is a compatibility bug, and the fix is a different conversation.
+
+<Exercise
+  prompt="A user reports a bug in Chrome on an iPhone. Nobody can reproduce it in Chrome on desktop. What is your first hypothesis?"
+  accept={["safari", "webkit", "ios", "same engine"]}
+  hint="What runs underneath every browser on iOS?"
+  solution="That it is a WebKit bug, not a Chrome bug. iOS requires every browser to use WebKit, so Chrome on iPhone is Safari wearing a different icon. Test Safari on desktop and on iOS, and report it as a WebKit issue — which also means it affects every browser on that platform."
+/>
+
+<Exercise
+  prompt="You are testing a layout with a breakpoint at 768px. Which widths do you check, and why not just 768?"
+  accept={["767", "769", "either side", "both sides"]}
+  hint="Where does a boundary bug live?"
+  solution="767px and 769px, as well as 768. A breakpoint is a boundary, and boundary bugs live one pixel either side of the line — a rule written as max-width: 768px and one written as min-width: 768px both match at exactly 768, so testing only there can hide an overlap or a gap."
+/>
+
+<Terms items={[
+  { term: "Rendering engine", meaning: "Blink (Chrome, Edge), Gecko (Firefox), WebKit (Safari and all of iOS)." },
+  { term: "Support matrix", meaning: "The written list of browsers you commit to supporting." },
+  { term: "Breakpoint", meaning: "A width at which the layout changes. Test either side." },
+  { term: "Progressive enhancement", meaning: "Core function works everywhere; extras appear where supported." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which engine does Chrome on iOS use?",
+    options: ["Blink", "Gecko", "WebKit", "Its own"],
+    answer: 2,
+    why: "iOS requires WebKit, so every browser on an iPhone is Safari underneath — and a 'Chrome on iPhone' bug is a Safari bug."
+  },
+  {
+    q: "What does naming where the bug does NOT reproduce add to a report?",
+    options: [
+      "Politeness",
+      "It separates a product bug from a compatibility bug, which are different fixes",
+      "Nothing",
+      "A higher severity"
+    ],
+    answer: 1,
+    why: "Failing everywhere is the product; failing in one engine is compatibility, and that is a different conversation and a different owner."
+  },
+  {
+    q: "What does resizing a desktop browser NOT give you?",
+    options: [
+      "The mobile layout",
+      "Touch targets, the on-screen keyboard and real scrolling behaviour",
+      "Media queries",
+      "The breakpoints"
+    ],
+    answer: 1,
+    why: "It gets the layout right, which is most of it, but the physical interaction only shows up on a real device."
+  }
+]} />
+
+## Tomorrow
+
+Forms: boundary values, equivalence partitioning, and six documented ways to break one.

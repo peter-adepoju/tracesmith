@@ -1,0 +1,129 @@
+Forms are where users type, so forms are where products break. Today, the two techniques that turn an infinite input space into a short list you can actually run.
+
+<Video id="boundary-values" />
+
+## Equivalence partitioning
+
+A quantity field accepts 1 to 99. How many values could you try? All of them, and you have an afternoon.
+
+But the field does not treat each value individually. It treats **groups** the same way:
+
+| Partition | Example | Expected |
+| --- | --- | --- |
+| Below the range | `0`, `-5` | Rejected |
+| Inside the range | `7` | Accepted |
+| Above the range | `150` | Rejected |
+| Not a number | `abc`, `` | Rejected |
+
+Four tests instead of a hundred, and the coverage is genuinely similar — because if `7` works, `8` almost certainly works for the same reason.
+
+**The rule: one value per partition.** Testing `7` and then `8` and then `9` is not three tests. It is one test run three times.
+
+## Boundary value analysis
+
+Then the part that actually finds bugs. **Defects cluster at the edges**, because edges are where someone wrote `<` when they meant `<=`.
+
+For a range of 1 to 99, test: **0, 1, 2, 98, 99, 100.**
+
+Each boundary gives three values — just below, exactly on, just above. Two boundaries, six values, and that set catches nearly every off-by-one ever written.
+
+<Callout kind="key">
+**Partitioning tells you which values to skip. Boundaries tell you which to keep.**
+
+Used together: one value from the middle of each partition, plus three at every edge. For most fields that is seven or eight tests, and it is a genuinely strong set.
+</Callout>
+
+## Six ways to break any form
+
+Work through these on every form you meet:
+
+1. **Empty.** Submit with nothing. Does it say which field, in words a person understands?
+2. **Boundaries.** 0, 1, 2 and 98, 99, 100 for a 1–99 field. Minimum and maximum lengths for text.
+3. **Wrong type.** Letters in a number field, `abc` in a date.
+4. **Too long.** Paste 5,000 characters into a name. Does it truncate silently, error, or hang?
+5. **Special characters.** `O'Brien`, `José`, `名前`, emoji, and a leading `=` in anything that may end up in a spreadsheet.
+6. **Submit twice.** Double-click. One record or two?
+
+Then two more that catch what the screen hides:
+
+7. **Bypass the client.** Validation in the browser is for convenience, not safety. Remove the `required` attribute in Elements, or send the request directly, and see whether the **server** also refuses. A server that trusts the browser is a real finding, every time.
+8. **Whitespace.** `" ada@example.com "` with spaces, and a field containing only spaces. Many forms treat a space as content.
+
+<Callout kind="watch">
+Number 7 is the one that separates a tester from a person clicking buttons.
+
+Client-side validation can be removed by anyone with DevTools, so it is not a control. If the API accepts a quantity of `-5` when the form would not let you type it, the form is decoration and the real bug is on the server.
+</Callout>
+
+## What a form actually sends
+
+<FormLab />
+
+Remove a `name` attribute and watch the field disappear from the payload while looking perfectly normal on screen. Disable a field and watch the same thing happen. This is why you read the payload rather than trusting the form.
+
+## Error messages are testable too
+
+A message is a defect if it does not say **which** field, **what** is wrong, and **what to do**:
+
+| Weak | Strong |
+| --- | --- |
+| Invalid input | Quantity must be between 1 and 99 |
+| Error | Enter an email address, like ada@example.com |
+| Please check your details | Your card number is 15 digits; it should be 16 |
+
+<Exercise
+  prompt="A field accepts 18 to 65. List the boundary values you would test."
+  accept={["17", "18", "19", "64", "65", "66"]}
+  hint="Three at each edge."
+  solution="17, 18, 19, 64, 65, 66. Just below, exactly on, and just above each boundary. Add one value from the middle (say 40) and one from each invalid partition (a letter, an empty field) and you have a strong set in eight tests."
+/>
+
+<Exercise
+  prompt="The form will not let you type a negative quantity. Why is that not the end of the test?"
+  accept={["server", "api", "devtools", "bypass", "client"]}
+  hint="Who else can send the request?"
+  solution="Because client-side validation is convenience, not a control — anyone can remove it in DevTools or send the request directly. Send a negative quantity straight to the API. If the server accepts it, the real defect is there, and it is the one that matters."
+/>
+
+<Terms items={[
+  { term: "Equivalence partition", meaning: "A group of inputs treated the same way. Test one from each." },
+  { term: "Boundary value", meaning: "The edge of a partition. Test just below, on, and just above." },
+  { term: "Off-by-one", meaning: "The bug boundary analysis is designed to catch: < where <= was meant." },
+  { term: "Client-side validation", meaning: "Browser checks. Convenience, never a control." },
+  { term: "Server-side validation", meaning: "The only validation that counts." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "A field accepts 1 to 99. Which set is the boundary set?",
+    options: ["1 and 99", "0, 1, 2, 98, 99, 100", "50", "1 to 10"],
+    answer: 1,
+    why: "Three values at each edge catch the off-by-one errors, which is where defects cluster."
+  },
+  {
+    q: "Why test 7, 8 and 9 in a 1–99 field is NOT three tests?",
+    options: [
+      "They are too small",
+      "They are in the same equivalence partition, so they pass or fail for the same reason",
+      "They are boundaries",
+      "They are invalid"
+    ],
+    answer: 1,
+    why: "One value per partition. Repeating within a partition adds time, not coverage."
+  },
+  {
+    q: "The form blocks a negative quantity. What must you still check?",
+    options: [
+      "Nothing",
+      "Whether the server also rejects it when the request is sent directly",
+      "The error colour",
+      "Other browsers"
+    ],
+    answer: 1,
+    why: "Client validation can be removed by anyone with DevTools, so only the server's refusal is a real control."
+  }
+]} />
+
+## Tomorrow
+
+Accessibility: the checks you can run today, with no tools and no training.

@@ -1,0 +1,113 @@
+You have written cases. You have found bugs. This week you do the thing itself: a full manual pass over a feature, start to finish, the way a working day actually goes.
+
+Today is execution — turning a list of cases into a set of recorded results.
+
+## A test run is not reading your cases
+
+It is a session with a shape:
+
+1. **Set up.** Right environment, right account, known starting state. Write down which.
+2. **Execute.** One case at a time, following the steps as written.
+3. **Record immediately.** Pass, fail or blocked, as you finish each one. Not at the end.
+4. **Raise bugs as you go**, with the evidence still on screen.
+5. **Summarise.** Counts, what failed, what you could not reach.
+
+<Callout kind="key">
+**Record the result before you move to the next case.**
+
+Nobody remembers twelve outcomes. What actually happens is you reconstruct them from memory an hour later and quietly turn three "I think that was fine" into passes.
+
+A pass you did not record at the time is not a pass. It is a guess with a tick next to it.
+</Callout>
+
+## The three outcomes, and the one people forget
+
+**Pass** — the actual result matched the expected result. Not "nothing obviously exploded".
+
+**Fail** — it did not. Raise the bug now, link it to the case.
+
+**Blocked** — you could not run it. The environment was down, the data did not exist, a prior defect stopped you reaching the screen.
+
+Blocked is not a soft fail and it is not a pass. It is a distinct and important outcome, because it says *this area is untested*. Collapsing blocked into either of the others is how a release ships with a whole feature nobody looked at.
+
+## Record this much
+
+| Field | Why |
+| --- | --- |
+| Case id | So it can be re-run |
+| Result | Pass, fail or blocked |
+| Build or commit | Which version you tested |
+| Environment | Which one, which account |
+| Date and tester | For the log, and for questions later |
+| Bug id | If it failed |
+| Note | Only when something was odd |
+
+A spreadsheet is enough. Most teams use a test management tool, but the fields are these.
+
+## Exploring around the cases
+
+Your cases are not the ceiling. Between them, look sideways: press Back, reload mid-flow, open the same thing in two tabs, submit twice.
+
+Anything you find this way still gets reported — and if it is worth keeping, write it up as a new case, so next time it is in the list rather than in your memory.
+
+<TestCaseBuilder />
+
+## While you execute, keep the console open
+
+A console error that nobody looks at is a bug nobody files. Docked console, Network tab preserved, throttling ready. Three seconds of setup per session.
+
+<Exercise
+  prompt="You cannot reach the payment screen because sign-in is broken on staging. What result do you record for the four payment cases?"
+  accept={["blocked", "block"]}
+  hint="Not pass, and not fail."
+  solution="Blocked, with a note naming the sign-in defect. It says those four cases are untested, which is the honest state. Marking them failed would invent four payment defects that may not exist; marking them passed would be a lie that someone relies on."
+/>
+
+<Exercise
+  prompt="Why record each result as you finish the case rather than at the end of the run?"
+  accept={["memory", "forget", "remember", "reconstruct"]}
+  hint="What happens to twelve outcomes in an hour?"
+  solution="Because you will not remember them accurately, and reconstruction quietly turns uncertain outcomes into passes. The evidence is also still on screen at that moment, which is when a bug report costs two minutes instead of twenty."
+/>
+
+<Terms items={[
+  { term: "Test run", meaning: "One execution of a set of cases against one build." },
+  { term: "Blocked", meaning: "Could not be run. A distinct outcome meaning untested." },
+  { term: "Build under test", meaning: "The exact version your results apply to." },
+  { term: "Exploring around", meaning: "Deliberate looking between the scripted cases." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "A case could not be run because a prior defect blocked the path. What do you record?",
+    options: ["Pass", "Fail", "Blocked", "Skip it"],
+    answer: 2,
+    why: "Blocked says the area is untested, which is the fact. The other two both claim knowledge you do not have."
+  },
+  {
+    q: "What is the strongest argument for recording results immediately?",
+    options: [
+      "It is faster",
+      "Memory reconstructs uncertain outcomes as passes, and the evidence is still on screen",
+      "The tool requires it",
+      "It looks professional"
+    ],
+    answer: 1,
+    why: "Both halves matter: the honesty of the record, and the cost of recapturing evidence later."
+  },
+  {
+    q: "You find a bug while exploring between cases. What should happen besides filing it?",
+    options: [
+      "Nothing",
+      "Write a new case so the check exists next time",
+      "Delete the old case",
+      "Lower its severity"
+    ],
+    answer: 1,
+    why: "Otherwise the check lives only in your memory, and the next run will not include it."
+  }
+]} />
+
+## Tomorrow
+
+Regression: what to re-run when something changes, and why re-running everything is not the safe answer it looks like.

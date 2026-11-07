@@ -540,6 +540,28 @@ export const VIDEOS = {
     length: "4:54",
     why: "Five minutes on the distinction beginners most often get wrong.",
   },
+  "regression-testing": {
+    id: "xmQuLTarGI4",
+    title: "What is Regression Testing? A Software Testing FAQ - Why? How? When?",
+    channel: "EvilTester - Software Testing",
+    length: "11:15",
+    why: "Honest about the part most courses skip: you cannot re-run everything, so the skill is choosing.",
+  },
+  "boundary-values": {
+    id: "uydAyjqTSiw",
+    title:
+      "Equivalence Partitioning In Testing-Boundary Value Analysis In Testing With Example",
+    channel: "Software and Testing Training",
+    length: "9:49",
+    why: "The two techniques that cut a hundred possible inputs down to the six worth trying.",
+  },
+  "cross-browser": {
+    id: "fiPzpMUhaKE",
+    title: "Cross Browser Testing - Ultimate Guide (Start to Finish) [With Checklist]",
+    channel: "The Testing Academy",
+    length: "14:05",
+    why: "What actually differs between browsers, and how to decide which ones you owe coverage to.",
+  },
   "severity-priority-long": {
     id: "xhNFH5FBbC0",
     title: "Severity Vs Priority | Difference between them With Examples",

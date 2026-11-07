@@ -1,0 +1,123 @@
+A regression is something that used to work and no longer does. Regression testing is the work of catching those before a customer does.
+
+<Video id="regression-testing" />
+
+## Why it is hard
+
+Not because the tests are difficult. Because there are too many of them.
+
+Every release adds cases. After two years there are four thousand, and a full manual pass takes three weeks. The release is on Thursday. So the question is never "shall we regression test?" — it is **which subset, and can you defend it?**
+
+<Callout kind="key">
+**"Re-run everything" is not the safe answer.** It is the answer of someone who has not had to make the choice.
+
+In practice it means one of two things: the release waits three weeks, or the run is rushed and done badly, which is worse than a careful subset because now everyone believes it was covered.
+
+Choosing is the job. Being able to say *why* you chose is the professional part.
+</Callout>
+
+## How to choose
+
+Four questions, in order:
+
+1. **What changed?** Get the actual diff or a clear description. "Some things in checkout" is not an answer you can work from.
+2. **What shares code with it?** The same function, the same component, the same service.
+3. **What shares data with it?** The same table, the same field. A change to how a discount is stored reaches the receipt, the report and the refund.
+4. **What is high risk regardless?** Sign-in, payment, anything touching money. These earn a smoke pass on every release, whatever changed.
+
+Then cut by severity: if a case covers something cosmetic, it loses to a case covering something that charges a card.
+
+## Try it
+
+<RegressionPicker />
+
+Run both scenarios. The second is the one worth sitting with: a dependency upgrade changed no application code at all, which is precisely why it is more dangerous than the one-line fix — there is no diff to point you anywhere.
+
+## The smoke test
+
+Separate from regression, and every team needs one: **the ten-minute set that proves the build is worth testing at all.**
+
+For a shop, roughly:
+
+1. The home page loads
+2. Sign in works
+3. Search returns results
+4. A product page opens
+5. Add to cart updates the cart
+6. Checkout reaches payment
+7. An order completes and appears in history
+
+If any of those fail, stop. Reject the build and say so. Do not spend the afternoon testing edge cases on a build whose checkout is broken.
+
+<Callout kind="job">
+A good smoke test is **wide and shallow**: one path through every major area, no variations. Its job is a go or no-go in ten minutes, not confidence in any single feature.
+
+Write yours once and keep it in a document people can find. It is the single most reused artefact a tester owns.
+</Callout>
+
+## Saying what you did not run
+
+Your run summary must include it:
+
+> Ran: discount codes, cart totals, checkout smoke. Not run: search, profile, admin reports — unrelated to the change and outside the window. Accessibility audit deferred to next sprint.
+
+This is not an apology. It is the record that makes the decision reviewable, and it protects you: if something escapes in an area you explicitly named as not covered, that was a known risk the team accepted, not a miss.
+
+<Exercise
+  prompt="A developer upgrades a date library two major versions and changes no application code. Is the regression set smaller or larger than for a one-line bug fix, and why?"
+  accept={["larger", "bigger", "wider", "more"]}
+  hint="What can you point at?"
+  solution="Larger. A one-line fix has a diff that tells you exactly what it touches. A dependency upgrade changes behaviour underneath everything that uses it, with nothing in your codebase to point at — so you have to test every area that formats, parses or compares a date, plus a smoke pass for transitive upgrades nobody listed."
+/>
+
+<Exercise
+  prompt="Write the one sentence that must appear in every run summary besides what you ran."
+  solution="What you did not run, and why. For example: 'Not run: search and profile — unrelated to the change and outside the window.' It makes the decision reviewable, and it turns an escape in that area into an accepted risk rather than a miss."
+/>
+
+<Terms items={[
+  { term: "Regression", meaning: "Something that used to work and no longer does." },
+  { term: "Regression set", meaning: "The subset you re-run for a given change." },
+  { term: "Smoke test", meaning: "Ten minutes, wide and shallow: is this build worth testing?" },
+  { term: "Impact analysis", meaning: "Working out what a change can reach, through code and through data." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Why is 're-run everything' not the safe answer?",
+    options: [
+      "It is boring",
+      "It either delays the release or is rushed, and a rushed full run is believed to be coverage",
+      "Tools do not support it",
+      "It is too cheap"
+    ],
+    answer: 1,
+    why: "False confidence is worse than a careful subset, because nobody goes back to check what a 'complete' run actually covered."
+  },
+  {
+    q: "What makes a good smoke test?",
+    options: [
+      "Deep coverage of the riskiest feature",
+      "Wide and shallow: one path through every major area",
+      "Every case marked high priority",
+      "Whatever changed most recently"
+    ],
+    answer: 1,
+    why: "Its job is a go or no-go in ten minutes, not confidence in any one feature."
+  },
+  {
+    q: "What must a run summary record besides what you ran?",
+    options: [
+      "How long it took",
+      "What you did not run, and why",
+      "The tester's name",
+      "The number of bugs"
+    ],
+    answer: 1,
+    why: "It makes the choice reviewable, and it turns an escape in an uncovered area into an accepted risk rather than a miss."
+  }
+]} />
+
+## Tomorrow
+
+The same flow at three widths and in two browsers, and why they disagree.

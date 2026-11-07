@@ -1,0 +1,115 @@
+One sitting, two hours, one feature. Plan it, run it, report it. This is a working day compressed, and it is the closest thing on this site to the task you will be given in a real first week.
+
+## The feature
+
+**Meridian checkout, end to end**, in the lab. Open it in a second tab and leave it open.
+
+## Phase 1 — plan (20 minutes)
+
+Before you touch anything, write down:
+
+**Scope.** What is in: cart, discount, checkout, order confirmation. What is out: search, product pages, admin.
+
+**Risk order.** Use the matrix — what gets tested first if you run out of time?
+
+<RiskMatrix />
+
+**The cases.** Eight to twelve, no more. For each: id, title, steps, expected result. Cover the happy path first, then the boundaries from day 4, then one or two negative cases.
+
+**What you will not do**, and why. Write it now, not at the end — deciding it in advance is planning; deciding it at the end is an excuse.
+
+## Phase 2 — execute (60 minutes)
+
+Console docked, Network preserved, results recorded as you go.
+
+Work in this order, so that running out of time costs you the least:
+
+1. **Smoke first.** Ten minutes, wide and shallow. If checkout is dead, stop and report it rather than testing around it.
+2. **Happy path**, carefully.
+3. **Boundaries** on every input you meet.
+4. **Negative cases** — empty, wrong type, too long, submit twice, bypass the client.
+5. **One width pass** at 375px.
+6. **One keyboard pass** on the checkout form.
+
+Raise each bug as you find it, with the evidence still on screen. Do not batch them for the end; you will lose the evidence and the detail.
+
+## Phase 3 — report (30 minutes)
+
+Write the summary. This is the deliverable — the thing your lead actually reads.
+
+```
+FEATURE PASS — Meridian checkout
+Build       lab session 7 Nov, stage 3
+Tester      Peter
+Environment Chrome 131 desktop, 375px pass in device mode
+
+RESULTS     11 cases: 7 passed, 3 failed, 1 blocked
+
+FAILED
+  CHK-004  Quantity accepts 0 and negative numbers        BUG-31  High
+  CHK-007  Double-clicking Place order creates two orders BUG-32  Critical
+  CHK-009  Email with no @ accepted at checkout           BUG-33  High
+
+BLOCKED
+  CHK-011  Order history — no completed order survives a
+           session reset in the lab, so unverifiable here
+
+NOT TESTED
+  Search, product pages, admin. Out of scope.
+  Safari and Firefox — not available to me; Chrome only.
+  Accessibility: keyboard pass on checkout only, not the full audit.
+
+ASSESSMENT
+  Not ready. BUG-32 charges a customer twice and has no
+  workaround; BUG-31 allows a zero-value order. Recommend
+  both fixed and retested before release.
+```
+
+<Callout kind="key">
+**The assessment line is what distinguishes a tester from a test runner.**
+
+Counts are data. "Not ready, because this one charges people twice and has no workaround" is a judgement, and it is the thing you are actually paid for.
+
+Make it, say why in one sentence, and accept that the decision to ship anyway belongs to someone else. Your job is that nobody can say they did not know.
+</Callout>
+
+## Grade yourself
+
+<TestCaseBuilder />
+
+Put two of today's cases through it. If either fails a structure check, fix it — and notice whether you would have spotted it yourself.
+
+## The honest questions
+
+- Did I record results as I went, or reconstruct them at the end?
+- Did I write "not tested" before I ran out of time, or after?
+- Is every failure backed by evidence someone else can follow?
+- Would my assessment still read as fair if the release went ahead and nothing broke?
+- Is there a credential anywhere in what I am about to attach?
+
+<Exercise
+  prompt="You have 20 minutes left and four cases unrun: two cosmetic, two touching payment. What do you do, and what do you write?"
+  accept={["payment", "risk", "money", "two payment"]}
+  hint="You already decided this in phase 1."
+  solution="Run the two payment cases. Record the two cosmetic ones as not run, in the summary, with the reason — 'cosmetic, deprioritised against payment coverage in the time available'. The risk order from phase 1 is exactly what this moment is for; making the call in advance is why it is a plan and not a panic."
+/>
+
+<Exercise
+  prompt="Write the assessment line for a run where everything passed except one low-severity cosmetic defect."
+  solution="Something like: 'Ready to release. One low-severity cosmetic defect (BUG-34, misaligned label on the confirmation page); no functional or money defects found in scope. Not covered: Safari, Firefox, full accessibility audit.' A clean run still names its limits — that is what makes the 'ready' credible."
+/>
+
+<Terms items={[
+  { term: "Feature pass", meaning: "Plan, execute and report over one feature in one sitting." },
+  { term: "Risk order", meaning: "Decided in advance, so running out of time is survivable." },
+  { term: "Results summary", meaning: "Counts, failures, blocked, not tested, assessment." },
+  { term: "Assessment", meaning: "Your judgement on readiness, and the reason." },
+]} />
+
+## Week 12 in one line
+
+Testing is a planned pass with recorded results and a stated judgement — not clicking until something looks wrong.
+
+## Next week
+
+Below the screen: API and data testing, where the screen can lie to you and the database tells the truth.

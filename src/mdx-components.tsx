@@ -12,11 +12,13 @@ import { ConsoleLab } from "@/components/interactive/ConsoleLab";
 import { CurlReader } from "@/components/interactive/CurlReader";
 import { EndpointBuilder } from "@/components/interactive/EndpointBuilder";
 import { JsonExplorer } from "@/components/interactive/JsonExplorer";
+import { KeyboardPass } from "@/components/interactive/KeyboardPass";
 import { FormLab } from "@/components/interactive/FormLab";
 import { HidingDemo } from "@/components/interactive/HidingDemo";
 import { LivePlayground } from "@/components/interactive/LivePlayground";
 import { PanelPicker } from "@/components/interactive/PanelPicker";
 import { RedactionDrill } from "@/components/interactive/RedactionDrill";
+import { RegressionPicker } from "@/components/interactive/RegressionPicker";
 import { RequestJourney } from "@/components/interactive/RequestJourney";
 import { RiskMatrix } from "@/components/interactive/RiskMatrix";
 import { SeverityGrid } from "@/components/interactive/SeverityGrid";
@@ -47,10 +49,12 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     FormLab,
     HidingDemo,
     JsonExplorer,
+    KeyboardPass,
     LivePlayground,
     PanelPicker,
     Quiz,
     RedactionDrill,
+    RegressionPicker,
     RequestInspector,
     RequestJourney,
     RiskMatrix,

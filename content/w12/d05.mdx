@@ -1,0 +1,130 @@
+Accessibility is not a specialism you need a certificate for. There are four checks you can run on any screen, today, in about ten minutes, and between them they find most of what is wrong.
+
+<Video id="accessibility-intro" />
+
+## Check 1 — the keyboard pass
+
+Put the mouse away. Tab through the whole screen.
+
+You are watching for four things:
+
+- **Can you reach everything?** Every control that does something.
+- **Can you see where you are?** A visible focus indicator, always.
+- **Does the order make sense?** Roughly the order things appear on screen.
+- **Can you get out?** No trap — in particular, can you close a modal with Escape?
+
+<KeyboardPass />
+
+Tab through it with the faults on, then turn them off one at a time and Tab again. Three faults, three findings, and all three are ones you will meet in real products.
+
+<Callout kind="key">
+**The keyboard pass costs two minutes per screen and finds more than any automated scanner.**
+
+A scanner can tell you an image has no `alt`. It cannot tell you the focus order jumps from the header to the footer and back, because nothing in the markup is technically wrong — it just makes no sense to use.
+
+This is also not only about disability. Keyboard users include anyone with a broken trackpad, anyone fast, and every power user you have.
+</Callout>
+
+## Check 2 — images and buttons
+
+**Every image needs an `alt`.** Meaningful images get a description of what they convey; decorative ones get `alt=""`, which tells a screen reader to skip them. A missing attribute is not the same as an empty one, and an empty one is often correct.
+
+Bad alt text is its own defect: `alt="image"`, `alt="photo123.jpg"`, or a product photo described as `alt="product"`.
+
+**Every icon-only button needs a name.** The commonest finding in any audit:
+
+<AccessibleName />
+
+Turn everything off. That is a button a screen reader announces as "button" — the user is told there is something clickable and nothing about what it does.
+
+## Check 3 — contrast
+
+Text must stand clear of its background. The thresholds:
+
+- **4.5:1** for normal text
+- **3:1** for large text (18pt and up, or 14pt bold)
+
+Check it in DevTools: inspect the element, click the colour swatch in the Styles panel, and the contrast ratio is shown with a tick or a cross against both thresholds.
+
+The usual offenders are light grey placeholder text, disabled states, and white text on a brand colour that was chosen for a logo rather than for reading.
+
+## Check 4 — zoom and reflow
+
+Set the browser to **200%** zoom.
+
+Does the content reflow into one column and stay usable, or does it overlap, clip, or force sideways scrolling? Text being cut off at 200% is a finding, and it affects far more people than most teams assume.
+
+## Writing an accessibility finding
+
+Same report as any bug, with three additions:
+
+- **Who it affects** — "keyboard users", "screen reader users", "anyone with low vision"
+- **The barrier** — reached, or blocked entirely
+- **The guideline**, where you know it — WCAG 2.1 has numbered criteria, and citing one moves the conversation from opinion to standard
+
+> **The Filter control cannot be reached by keyboard (product list).** It is a `<div>` with a click handler, so it takes no focus and no key activates it. Keyboard and screen reader users cannot filter at all — the feature does not exist for them. WCAG 2.1.1 Keyboard (Level A). Fix: use a `<button>`.
+
+Severity: a control that cannot be reached is **high**, because for that user the feature is absent, not awkward.
+
+<Callout kind="job">
+In Nigeria, the EU and the US, accessibility is increasingly a legal requirement rather than a nice-to-have, and for public-sector or enterprise buyers it is often a procurement condition.
+
+That is worth knowing because it changes how a finding is received. "This is a WCAG Level A failure" lands differently from "this would be nice to fix".
+</Callout>
+
+<Exercise
+  prompt="A button shows only a trash icon, with no text and no aria-label. What does a screen reader announce, and how severe is it?"
+  accept={["button", "just button", "nothing"]}
+  hint="There is nothing to read out."
+  solution='It announces "button" and nothing else. The user knows something is clickable and cannot know that it deletes. High severity: this is an unlabelled destructive action, so the realistic outcome is data lost by someone who had no way to know. WCAG 4.1.2 Name, Role, Value.'
+/>
+
+<Exercise
+  prompt="You remove the focus outline because the designer said it looks untidy. What have you broken, and what is the right answer?"
+  accept={["focus", "keyboard", "where", "visible"]}
+  hint="Who needs to see where they are?"
+  solution="Sighted keyboard users can no longer tell which control is focused, so they are navigating blind. The right answer is never outline: none on its own — restyle the indicator so it fits the design and stays clearly visible. WCAG 2.4.7 Focus Visible."
+/>
+
+<Terms items={[
+  { term: "Focus indicator", meaning: "The visible marker showing which control has keyboard focus." },
+  { term: "Keyboard trap", meaning: "Focus enters something and cannot leave." },
+  { term: "Alt text", meaning: "A text alternative. Empty is correct for decorative images." },
+  { term: "Contrast ratio", meaning: "4.5:1 for normal text, 3:1 for large." },
+  { term: "WCAG", meaning: "The guidelines. Levels A, AA and AAA; AA is the usual target." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What is the minimum contrast ratio for normal body text?",
+    options: ["2:1", "3:1", "4.5:1", "7:1"],
+    answer: 2,
+    why: "4.5:1 for normal text and 3:1 for large text, at WCAG AA."
+  },
+  {
+    q: "Why does the keyboard pass find more than an automated scanner?",
+    options: [
+      "Scanners are slow",
+      "A nonsensical focus order breaks nothing in the markup, so only using it reveals the problem",
+      "Scanners cost money",
+      "It does not"
+    ],
+    answer: 1,
+    why: "Automated tools check what is checkable. Order, sense and traps need a human pressing Tab."
+  },
+  {
+    q: "A decorative image should have:",
+    options: [
+      "No alt attribute",
+      "alt=\"\"",
+      "alt=\"decorative image\"",
+      "alt=\"image\""
+    ],
+    answer: 1,
+    why: "An empty alt tells a screen reader to skip it. A missing attribute makes it announce the filename instead."
+  }
+]} />
+
+## Tomorrow
+
+Everything together: plan, execute and report a full feature pass in one sitting.
