@@ -14,7 +14,9 @@ import { FormLab } from "@/components/interactive/FormLab";
 import { HidingDemo } from "@/components/interactive/HidingDemo";
 import { LivePlayground } from "@/components/interactive/LivePlayground";
 import { PanelPicker } from "@/components/interactive/PanelPicker";
+import { RedactionDrill } from "@/components/interactive/RedactionDrill";
 import { RequestJourney } from "@/components/interactive/RequestJourney";
+import { TokenInspector } from "@/components/interactive/TokenInspector";
 import { SpecificityScorer } from "@/components/interactive/SpecificityScorer";
 import { StatusExplorer } from "@/components/interactive/StatusExplorer";
 import { StorageAudit } from "@/components/interactive/StorageAudit";
@@ -40,12 +42,14 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     LivePlayground,
     PanelPicker,
     Quiz,
+    RedactionDrill,
     RequestInspector,
     RequestJourney,
     SpecificityScorer,
     StatusExplorer,
     StorageAudit,
     Terms,
+    TokenInspector,
     Video,
     ViewportSlider,
     WaterfallExplorer,

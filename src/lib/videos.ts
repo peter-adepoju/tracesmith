@@ -351,6 +351,27 @@ export const VIDEOS = {
     length: "2:10",
     why: "Official and blunt about key safety, which is the part that matters.",
   },
+  "authn-vs-authz": {
+    id: "7ijBiXddB7w",
+    title: "Authentication vs Authorization Explained",
+    channel: "xplodivity",
+    length: "3:41",
+    why: "Short and squarely on the one distinction that decides 401 from 403.",
+  },
+  oauth: {
+    id: "ZV5yTm4pT8g",
+    title: "OAuth 2 Explained In Simple Terms",
+    channel: "ByteByteGo",
+    length: "4:32",
+    why: "Four minutes, and genuinely simple. OAuth diagrams are usually impenetrable; this one is not.",
+  },
+  jwt: {
+    id: "7Q17ubqLfaM",
+    title: "What Is JWT and Why Should You Use JWT",
+    channel: "Web Dev Simplified",
+    length: "14:53",
+    why: "Covers the part that matters to a tester: what is inside a token and who can read it.",
+  },
   "api-auth": {
     id: "GcVtElYa17s",
     title: "API Authentication EXPLAINED! OAuth vs JWT vs API Keys",

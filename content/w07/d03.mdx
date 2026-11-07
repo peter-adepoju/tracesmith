@@ -1,0 +1,145 @@
+A key lasts forever. A token expires. That one difference changes how a system fails, and therefore how you diagnose it.
+
+<Video id="jwt" />
+
+## The shape
+
+```http
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjdXNfMDEifQ.abc123
+                ──────  ──────────────────────────────────────────────
+                scheme                    the token
+```
+
+**Bearer** means "whoever holds this is treated as the owner". There is no second check. A stolen token is a stolen identity until it expires, which is exactly why expiry exists.
+
+## Where tokens come from
+
+```
+1. POST /auth/login  { email, password }
+2. ← { access_token: "eyJ...", expires_in: 3600, refresh_token: "..." }
+3. Every later request:  Authorization: Bearer eyJ...
+4. An hour later the access token expires → 401
+5. POST /auth/refresh  { refresh_token }  → a new access token
+```
+
+Two tokens, two jobs. The **access token** is short-lived and sent constantly. The **refresh token** is long-lived, sent rarely, and used only to get a new access token.
+
+The reasoning: the credential that travels on every request is exposed most, so it should be worth least. The valuable one stays put.
+
+## A JWT is encoded, not encrypted
+
+This is the thing most people have wrong, and it is worth proving rather than asserting.
+
+A JSON Web Token has three parts separated by dots: header, payload, signature. The first two are **base64**, which is an encoding, not a cipher. Anyone holding the token can read every claim inside it without any key at all.
+
+<TokenInspector />
+
+Work through all four samples. The third one is the finding: somebody has used the token as a convenient place to carry a phone number, a home address and an internal risk score, all readable by anyone who obtains it.
+
+<Callout kind="key">
+**The signature does not hide anything. It proves nothing was changed.**
+
+So the rules follow directly:
+
+- Never put anything sensitive in a token payload. It is public to whoever holds it.
+- A server **must** verify the signature. Try the fourth sample: the role sits in the payload, and anyone can edit it and re-encode. Only signature verification stops `"role": "admin"` from working.
+</Callout>
+
+## Expiry, and the bug it creates
+
+The classic report: **"it worked this morning and now it doesn't."**
+
+Nothing changed except the clock. The access token expired, and whatever was meant to refresh it did not.
+
+Signs it is an expiry problem:
+
+- It works right after signing in, and fails later.
+- It fails after exactly the same interval each time — an hour, a day.
+- The failure is a 401, not a 403.
+- Signing out and in again fixes it, temporarily.
+
+<Callout kind="job">
+"Have you tried signing out and back in?" is a cliché, and in this one case it is a genuine diagnostic rather than a brush-off. If it fixes the problem, you have learned something specific: authentication works and **token refresh is broken**. That is a precise finding for the engineers, not a workaround.
+
+Say that in the ticket. "Signing out and in restores it, which points at refresh rather than login" is useful. "Tell them to log in again" is not.
+</Callout>
+
+## The timing trap
+
+A token expires at a moment in time, so a race is possible: the client checks the token, decides it is valid, sends the request, and the token expires in between. Rare, intermittent, and maddening.
+
+Clock skew makes it worse. If the client's clock is a few minutes ahead of the server's, the client believes a token is still good when the server has already rejected it. This is a real cause of "only one user has this problem" — their laptop clock is wrong.
+
+<Exercise
+  prompt="A merchant's integration works for about an hour after each deploy, then every call returns 401 until they redeploy. What is happening?"
+  accept={["refresh", "expiry", "not refreshing", "token expires"]}
+  hint="What lasts an hour?"
+  solution="The access token is fetched once at startup and never refreshed. It lasts an hour, then every call fails; redeploying fetches a fresh one and resets the clock. The fix is to implement refresh, or to re-authenticate when a 401 comes back."
+/>
+
+<Exercise
+  prompt={'In the inspector, the fourth sample has "role": "admin" in the payload. What stops anyone granting themselves that?'}
+  accept={["signature", "verify", "signature verification"]}
+  hint="Which of the three parts is not readable data?"
+  solution="Only the signature. The payload is base64 and trivially editable, so anyone can change the role and re-encode it. If the server does not verify the signature, that forged token works — which is one of the most serious authentication bugs there is."
+/>
+
+<Terms items={[
+  { term: "Bearer", meaning: "Whoever holds the token is treated as the owner. No second check." },
+  { term: "Access token", meaning: "Short-lived, sent on every request." },
+  { term: "Refresh token", meaning: "Long-lived, sent rarely, used only to get a new access token." },
+  { term: "JWT", meaning: "Header, payload, signature. The first two are encoded, not encrypted." },
+  { term: "exp", meaning: "The expiry claim, as a Unix timestamp." },
+  { term: "Clock skew", meaning: "Client and server clocks disagreeing. A cause of one-user-only bugs." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Can someone holding a JWT read what is inside it?",
+    options: [
+      "No, it is encrypted",
+      "Yes — the payload is base64 encoded, not encrypted",
+      "Only with the signing key",
+      "Only if it has expired"
+    ],
+    answer: 1,
+    why: "Encoding is not encryption. Anything in the payload is readable by whoever holds the token, which is why nothing sensitive belongs there."
+  },
+  {
+    q: "What does a signature on a JWT actually guarantee?",
+    options: [
+      "That the contents are secret",
+      "That the contents have not been altered",
+      "That the token has not expired",
+      "That the user is an admin"
+    ],
+    answer: 1,
+    why: "It proves integrity, not confidentiality. A server that skips verification can be handed any claims the caller likes."
+  },
+  {
+    q: "Something works right after signing in and fails an hour later. Most likely?",
+    options: [
+      "A permissions change",
+      "The access token expired and refresh is not working",
+      "The server is overloaded",
+      "A caching problem"
+    ],
+    answer: 1,
+    why: "A consistent interval followed by 401s is the signature of expiry without working refresh."
+  },
+  {
+    q: "Why is the refresh token long-lived while the access token is short-lived?",
+    options: [
+      "Refresh tokens are smaller",
+      "The credential sent on every request is exposed most, so it should be worth least",
+      "It is faster",
+      "The standard requires it"
+    ],
+    answer: 1,
+    why: "Exposure scales with use. The frequently-sent token is cheap to lose; the valuable one is sent rarely."
+  }
+]} />
+
+## Tomorrow
+
+OAuth: how a site acts on your behalf without ever seeing your password.

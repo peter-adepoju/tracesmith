@@ -1,0 +1,134 @@
+Everything this week has been about credentials. Today is about the habits that stop you becoming the leak — which is a real risk, because the normal daily work of a tester involves capturing exactly the things that must not be shared.
+
+## The list
+
+Never collect, never accept, never paste, never store:
+
+- **Passwords.** Yours, a colleague's, a customer's.
+- **Secret API keys.** Anything `sk_`.
+- **Tokens.** Access, refresh, session.
+- **Session cookies.** A cookie is a live credential.
+- **Card numbers, CVVs, card photos.** Including test cards, because nobody reading your ticket can tell the difference.
+- **One-time codes.** By the time you receive one it is already wrong for you to have it.
+- **Full bank account and national identity numbers.** Personal data with real consequences.
+
+<Callout kind="watch">
+And the one people forget: **if someone volunteers one of these, that is not permission.**
+
+A merchant pasting their secret key into chat to be helpful has still exposed it. Your job is to stop them, tell them plainly it is now compromised, and help them rotate it — not to use it because they offered.
+</Callout>
+
+## Where it leaks accidentally
+
+Every one of these is ordinary daily work:
+
+| What you do | What it captures |
+| --- | --- |
+| Screenshot the Headers tab | The `Authorization` header, in full |
+| **Copy as cURL** into a ticket | Every header, including the credential |
+| Export a HAR | The entire session: headers, cookies, bodies |
+| Screen recording | Whatever scrolled past |
+| Paste a JWT into an online decoder | You just sent a live credential to a stranger's server |
+| Share a reproduction URL | Anything in the query string |
+
+That fifth one deserves a moment. Online JWT decoders are convenient and completely normal to reach for, and pasting a real token into one hands it to whoever runs the site. Decode locally — that is why yesterday's inspector sits inside this course and warns you not to paste a real one.
+
+## Redacting well
+
+Two failure modes, and the second is underrated.
+
+**Under-redacting** turns your bug report into a second incident.
+
+**Over-redacting** produces a black rectangle nobody can act on. A capture with the endpoint, the status code and the request id blacked out proves nothing and wastes the reader's time.
+
+The target: **everything needed to act, nothing that can be abused.**
+
+| Keep | Remove |
+| --- | --- |
+| Method, path, status code | `Authorization`, `Cookie` |
+| Error code and message | Card numbers, passwords, OTPs |
+| Request id, timestamp | Email addresses and names — use the customer id |
+| Amounts, references, field names | Anything `sk_` |
+| Which environment | Full account and identity numbers |
+
+## Practise it
+
+<RedactionDrill />
+
+Work through it properly. Click each underlined value and read why it stays or goes, then press Check. Over-redacting is scored as well as under-redacting, because both make a report useless — in different ways.
+
+<Callout kind="job">
+When you genuinely cannot sanitise something — a HAR file is the usual case, because they are large and full of everything — **do not attach it**. Describe the requests instead, or share it through whatever secure channel your company has.
+
+"I have a HAR but it contains live session data, so here are the three relevant requests with headers redacted" is a better message than either attaching it or saying nothing.
+</Callout>
+
+## Saying no to a customer
+
+You will be offered credentials, and the way you refuse matters. Blunt refusal sounds like unhelpfulness.
+
+> Please don't send that — I'm not able to accept API keys, and now that it's been in a chat message it should be treated as exposed. Let's rotate it: generate a new secret key in your dashboard, update your server, then revoke the old one. I'll wait, and then we can carry on with the original problem using your test credentials.
+
+That does four things at once: refuses, explains why, gives the fix, and makes clear you are still helping. It takes thirty seconds to write and it is the difference between sounding obstructive and sounding competent.
+
+<Exercise
+  prompt="You need a HAR file to diagnose a tricky bug, but it contains live session cookies. What do you do?"
+  accept={["do not attach", "don't attach", "describe", "secure channel", "redact"]}
+  hint="There are two acceptable routes and one unacceptable one."
+  solution="Either sanitise it properly, or do not attach it — describe the relevant requests with their headers redacted, or share it through a secure internal channel. Attaching it to a ticket, especially a public one, hands out a live session. Saying why you have not attached it is part of the message."
+/>
+
+<Exercise
+  prompt="Why is over-redacting a real problem rather than just cautious?"
+  accept={["useless", "cannot act", "no information", "unactionable"]}
+  hint="What is the report for?"
+  solution="A capture with the endpoint, status and error code removed proves nothing and cannot be acted on, so the reader has to come back and ask — or reproduce it themselves. The goal is evidence that is safe, not evidence that is empty."
+/>
+
+<Terms items={[
+  { term: "Redaction", meaning: "Removing secrets from evidence before sharing it." },
+  { term: "Over-redaction", meaning: "Removing so much that the evidence proves nothing." },
+  { term: "HAR", meaning: "A full session export. Contains everything; sanitise or withhold." },
+  { term: "Rotation", meaning: "New credential issued, old one revoked, after exposure." },
+  { term: "Volunteered secret", meaning: "Still exposed. Being offered it is not permission to use it." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "A merchant sends their secret key unprompted. Is it compromised?",
+    options: [
+      "No, only you saw it",
+      "Yes — it is in a chat log, a ticket database and their backups",
+      "Only if someone malicious reads it",
+      "Only if it is a live key"
+    ],
+    answer: 1,
+    why: "Exposure is about where the value now exists, not about intent. It has been written to several systems you do not control."
+  },
+  {
+    q: "Which of these should stay in a redacted capture?",
+    options: [
+      "The Authorization header",
+      "The customer's email address",
+      "The request id and error code",
+      "The session cookie"
+    ],
+    answer: 2,
+    why: "Those are exactly what an engineer needs to find the failure, and neither is a credential or personal data."
+  },
+  {
+    q: "Why not paste a real JWT into an online decoder?",
+    options: [
+      "They are inaccurate",
+      "You are sending a live credential to someone else's server",
+      "They are slow",
+      "JWTs cannot be decoded online"
+    ],
+    answer: 1,
+    why: "A bearer token is an identity. Handing it to a third-party site is handing over the account until it expires."
+  }
+]} />
+
+## Tomorrow
+
+Six failing requests. Diagnose each one, name the cause, and say who fixes it.

@@ -1,0 +1,113 @@
+A working day. Six failing requests. For each: the status, the cause, who fixes it, and the one-line reply you would send.
+
+Every one is reproducible in the inspector below. Diagnose before you read the answers.
+
+<RequestInspector />
+
+## The six
+
+**1.** A merchant's integration returns **401** on every call. It worked yesterday. They have changed nothing.
+
+**2.** A merchant gets **403** on `/v1/customers`. Their key is correct and they have regenerated it twice.
+
+**3.** A developer's test payments work. The same code against production returns **401** immediately.
+
+**4.** A mobile app works for about an hour after each launch, then every call returns **401** until it is restarted.
+
+**5.** An OAuth integration worked on staging. On production the user never reaches the consent screen at all — they see an error on Google's page.
+
+**6.** A merchant gets **401** intermittently. Most calls work; perhaps one in twenty fails. No pattern by endpoint.
+
+## Reproduce what you can
+
+Numbers 1, 2 and 3 you can produce exactly:
+
+- Send with **no key** → 401, `missing_authorization`
+- Send with a **made-up key** → 401, `invalid_key`
+- Call `/v1/customers` with the **public** key → 403, `wrong_key_type`
+
+Read the error code in each body, not just the status. Those three codes are three different conversations.
+
+## The answers
+
+Work them out first.
+
+**1 — Expired or revoked credential.** "Nothing changed" is almost always true and almost always irrelevant: the clock changed. Either a token expired and refresh is broken, or someone rotated a key and did not update everywhere it is used. *Fix: theirs, but you can tell them exactly where to look.* Ask when it last worked and whether anyone regenerated a key.
+
+**2 — Wrong key type, not a wrong key.** A 403 means the key was recognised. They are using the public key where the secret is needed. Regenerating produces another public key, which behaves identically — which is why they are stuck. *Fix: theirs, in one line of configuration.*
+
+**3 — Test credentials against production.** Test keys do not work on the live base URL. The usual cause is an environment variable that was never set for production, so the test value is still in place. *Fix: theirs.* Worth checking the base URL in the same breath, because the two go wrong together.
+
+**4 — No token refresh.** The access token lasts an hour. The app fetches one at startup and never renews it; restarting fetches a fresh one. *Fix: theirs, and it is a code change.* Your contribution is the precise diagnosis — "works for exactly an hour, restart resets it" is the whole bug report.
+
+**5 — Redirect URI not registered for the production domain.** The error appears on the provider's page, before the user reaches consent, which is the tell: the flow failed at the very first step. *Fix: a configuration change with the provider, not code.*
+
+**6 — Clock skew, or a load-balanced server with an inconsistent clock.** Intermittent 401s with no pattern are nearly always timing: one server in a pool disagrees about what time it is, so it considers tokens expired that the others accept. *Fix: theirs, and infrastructure rather than application.* Ask whether it is consistently about one call in N — a steady ratio points at one bad instance out of N.
+
+<Callout kind="key">
+Notice what distinguishes them. Not one was diagnosed from the status code alone.
+
+**1 and 4** came from *when* it fails. **2** came from 403 rather than 401. **3** came from which environment. **5** came from *where* the error appeared. **6** came from the pattern across many attempts.
+
+The status code narrows it to authentication. **Timing, environment and pattern** do the rest — which is why "when did it last work?" and "does it fail every time?" are the two best questions in support.
+</Callout>
+
+## Write the replies
+
+For each, write the message you would actually send. One of them is a 403 where the merchant has already wasted an hour regenerating keys — begin by telling them to stop, because that is the kindest thing in the message.
+
+<Exercise
+  prompt="Across the six, which two questions would have narrowed the diagnosis fastest?"
+  accept={["when", "last work", "every time", "always", "intermittent", "pattern"]}
+  hint="One is about time, one is about consistency."
+  solution='"When did it last work?" and "does it fail every time, or sometimes?" The first separates expiry and rotation from configuration; the second separates a steady fault from clock skew or a bad instance. Between them they split all six.'
+/>
+
+<Exercise
+  prompt="Why is a 403 after regenerating a key twice actually good news for the merchant?"
+  accept={["recognised", "key is fine", "permission", "one line"]}
+  hint="What has the 403 already told you?"
+  solution="It means the key works — it was recognised and the account was identified. Nothing is broken with their credentials. They are simply using the wrong kind of key for that endpoint, which is a one-line configuration change rather than anything structural."
+/>
+
+<Quiz questions={[
+  {
+    q: "Intermittent 401s with no pattern by endpoint. Most likely cause?",
+    options: [
+      "A wrong key",
+      "Clock skew, or one server in a pool with a bad clock",
+      "A permissions problem",
+      "Rate limiting"
+    ],
+    answer: 1,
+    why: "A wrong key fails every time. Intermittency with no endpoint pattern points at timing or at one inconsistent instance."
+  },
+  {
+    q: "An OAuth error appears on the provider's own page, before the consent screen. What does that tell you?",
+    options: [
+      "The user's password is wrong",
+      "The flow failed at the first step — almost always an unregistered redirect URI",
+      "The scopes are too narrow",
+      "The token expired"
+    ],
+    answer: 1,
+    why: "Failing before consent means the provider rejected the request itself, and an unregistered redirect address is the usual reason."
+  },
+  {
+    q: "What did the status code alone tell you in these six cases?",
+    options: [
+      "The exact cause each time",
+      "Only that it is an authentication problem — timing, environment and pattern did the rest",
+      "Nothing useful",
+      "Who to escalate to"
+    ],
+    answer: 1,
+    why: "Every one of the six was a 401 or 403. The distinguishing information came from when, where and how often."
+  }
+]} />
+
+## Week 7 done
+
+You can tell authentication from authorization and read 401 against 403 correctly. You know what public and secret keys each do, and what to do when one is exposed. You understand tokens, expiry and refresh, and you have seen for yourself that a JWT hides nothing from whoever holds it. You can follow an OAuth flow and name its usual failure. You can redact a capture so it proves a bug without becoming one. And you can diagnose a failing credential from timing, environment and pattern rather than guessing.
+
+Next week closes Phase 2: Postman and cURL, where you stop reading requests and start sending your own.

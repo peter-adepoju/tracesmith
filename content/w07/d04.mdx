@@ -1,0 +1,140 @@
+OAuth has a reputation for being complicated. The idea is not; the diagrams are. Here is the idea.
+
+<Video id="oauth" />
+
+## The problem it solves
+
+A site wants to do something with your data somewhere else — read your Google contacts, post to your LinkedIn, list your bank transactions.
+
+The terrible solution: give them your password. Then they can do *everything*, forever, and you cannot revoke it without changing your password everywhere.
+
+**OAuth is the arrangement that avoids that.** The site never sees your password. Instead it gets a token that does one specific thing, that you can revoke, and that expires.
+
+## The flow, in plain words
+
+1. You click **Connect Google** on some site.
+2. The site sends you **to Google** — note, you have left the site.
+3. **Google** asks for your password. The site never sees it.
+4. Google asks: *"this site wants to read your contacts. Allow?"*
+5. You agree. Google sends you back with a **code**.
+6. The site swaps that code, **server to server**, for an access token.
+7. The site uses that token to read your contacts, and nothing else.
+
+Two things make it work. **You authenticate with the provider, not the site.** And **the consent is specific** — contacts, not everything.
+
+<Callout kind="key">
+Step 2 is the one to notice. If a site asks for your Google password **on its own page**, that is not OAuth. That is phishing, and the design of OAuth exists precisely so you never have to do it.
+
+The habit this gives you: when a login flow sends you somewhere, **look at the address bar.** The domain should be the provider's, not the site asking.
+</Callout>
+
+## The words
+
+| Term | Means |
+| --- | --- |
+| **Resource owner** | You |
+| **Client** | The site wanting access |
+| **Authorization server** | Who authenticates you, and issues the token |
+| **Scope** | What exactly is permitted: `contacts.read` |
+| **Consent screen** | The "this app wants to…" page |
+| **Authorization code** | The short-lived code handed back in step 5 |
+| **Redirect URI** | Where the provider sends you afterwards |
+| **PKCE** | An extra check so a stolen code cannot be used by someone else |
+
+## Where it breaks, and what you will see
+
+OAuth has more moving parts than a key, so it has more failure modes. These are the ones you will actually meet.
+
+**Redirect URI mismatch.** The commonest by far. The provider only redirects to addresses registered in advance. Deploy to a new domain, or test on a preview URL, and the flow dies before it starts — usually with a blunt error on the provider's page rather than yours.
+
+You met this exactly: the Supabase setup needed `/auth/callback` added to the redirect list, and without it the link would have failed there.
+
+**Scope too narrow.** Consent was granted for reading, the site tries to write, and you get a **403**. Authentication succeeded; this token is not permitted for that.
+
+**Expired or revoked.** The user removed the app from their account settings. Every call becomes a **401**, and reconnecting is the only fix.
+
+**State or PKCE mismatch.** Usually a sign the flow was interrupted — a back button, a stale tab, two attempts at once.
+
+<Callout kind="job">
+When an OAuth integration breaks, check in this order, because it ranks by how often each is the cause:
+
+1. **Is the redirect URI registered**, exactly, including protocol and trailing slash?
+2. **Are the scopes** what the app actually needs?
+3. **Has the user revoked access**, or changed their password?
+4. **Is the clock right** on the server?
+
+The first one is the answer more often than the other three combined.
+</Callout>
+
+## Why you meet it as a tester
+
+Three places, all common:
+
+- **Signing in** to the product you are testing, via Google or Microsoft.
+- **The product connecting out** to something else — an accounting tool, a bank.
+- **Your own tools** connecting to each other.
+
+Each environment usually needs its **own** registered redirect URI, which is why an OAuth flow that works on staging fails on production and vice versa. Treat the redirect list as an environment setting, and check it before blaming the code.
+
+<Exercise
+  prompt="A site shows a Google-branded login form on its own domain, asking for your Google password. What is wrong?"
+  accept={["phishing", "not oauth", "never see password", "fake"]}
+  hint="Where should you be when you type a Google password?"
+  solution="OAuth never asks for the provider's password on the requesting site. You should be redirected to google.com to authenticate. A Google-looking form on another domain is phishing, and the address bar is the tell."
+/>
+
+<Exercise
+  prompt="An OAuth flow works on staging and fails on production with an error on the provider's page before the user sees anything. What is the first thing to check?"
+  accept={["redirect", "redirect uri", "registered"]}
+  hint="What differs between the two environments?"
+  solution="The redirect URI for the production domain is not registered with the provider. The staging one is, which is why only one works. It must match exactly — protocol, domain, path and trailing slash."
+/>
+
+<Terms items={[
+  { term: "OAuth", meaning: "Granting an app limited access to your data elsewhere, without sharing your password." },
+  { term: "Scope", meaning: "Exactly what the token permits." },
+  { term: "Consent screen", meaning: "The provider's page asking you to approve." },
+  { term: "Redirect URI", meaning: "Where the provider returns you. Must be registered exactly." },
+  { term: "Authorization code", meaning: "The short-lived code swapped server-to-server for a token." },
+  { term: "PKCE", meaning: "An extra check so a stolen code cannot be redeemed by someone else." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "In OAuth, who sees your password?",
+    options: [
+      "The site you are connecting",
+      "Only the provider you are authenticating with",
+      "Both",
+      "Neither"
+    ],
+    answer: 1,
+    why: "You authenticate on the provider's own domain. The requesting site receives a token and never the password — that is the whole point."
+  },
+  {
+    q: "An OAuth integration returns 403 when writing but works when reading. Why?",
+    options: [
+      "The token expired",
+      "The granted scope covers reading but not writing",
+      "The redirect URI is wrong",
+      "The clock is wrong"
+    ],
+    answer: 1,
+    why: "Authentication succeeded, so it is not a 401. A 403 means this token is not permitted for that action, which is a scope problem."
+  },
+  {
+    q: "What is the most common cause of an OAuth flow failing after a deploy?",
+    options: [
+      "The user's password changed",
+      "The new domain's redirect URI is not registered with the provider",
+      "The token expired",
+      "Scopes were revoked"
+    ],
+    answer: 1,
+    why: "Providers only redirect to pre-registered addresses, and a new domain or preview URL is a new address."
+  }
+]} />
+
+## Tomorrow
+
+The habits: what never to collect, and how to redact a capture so it proves the bug without becoming one.

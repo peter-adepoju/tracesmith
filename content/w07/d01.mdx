@@ -1,0 +1,128 @@
+Two words that sound alike, mean different things, and map onto two different status codes. Getting them straight is the whole of today, and it will settle a surprising number of tickets.
+
+<Video id="authn-vs-authz" />
+
+## The distinction
+
+**Authentication** — *who are you?* Proving identity.
+
+**Authorization** — *what are you allowed to do?* Checking permission.
+
+They happen in that order, and they are separate decisions. A system can know exactly who you are and still refuse you.
+
+| | Question | Failure | Status |
+| --- | --- | --- | --- |
+| **Authentication** | Who are you? | We do not know you | **401** |
+| **Authorization** | May you do this? | We know you, and no | **403** |
+
+<Callout kind="key">
+**401 is identity. 403 is permission.**
+
+It is worth noticing that 401 is named "Unauthorized", which is exactly the wrong word — it is about *authentication*. That misnaming is baked into the standard and it confuses people permanently. Remember the meaning, not the name.
+</Callout>
+
+## Why it matters in a ticket
+
+The two have completely different fixes, and different owners.
+
+**401** — the credential is missing, mistyped, expired, or for the wrong environment. Usually the caller can fix it themselves, and often in seconds.
+
+**403** — the credential is fine. This account is not permitted. Nobody fixes that by retrying; it needs a permission change, a different key, or an honest "you cannot do this".
+
+Telling a merchant to "check your API key" when they are getting a 403 wastes everyone's afternoon. Their key is perfect. It is simply not allowed to do what they are asking.
+
+## The one that bit you
+
+Last week you hit this exactly. Sign-in returned **"Invalid login credentials"**, which reads like a wrong password — authentication failing on the password itself.
+
+The real cause was an unconfirmed account. Supabase returns the same message for both, deliberately, so that nobody can probe which email addresses exist by watching the error change.
+
+<Callout kind="watch">
+That is a real and deliberate pattern: **a good login endpoint gives the same answer for "no such user" and "wrong password"**. If it distinguished them, anyone could discover which addresses have accounts by trying them.
+
+So an unhelpful login error is sometimes a security feature. The cost is exactly what you experienced — it is harder to diagnose, including for the people who built it.
+</Callout>
+
+## Three ways to prove who you are
+
+You will meet all three, and each gets its own day this week.
+
+**API key** — a long secret string. Simple, and it never expires on its own. Day 2.
+
+**Token** — issued after you log in, expires on its own. Day 3.
+
+**OAuth** — a flow for acting on someone else's behalf without their password. Day 4.
+
+## Feel the difference
+
+<RequestInspector preset="No key at all" />
+
+Three requests, three outcomes. Send each and read the body as well as the code.
+
+1. **No key at all** → 401. No identity offered.
+2. **Right call, wrong key** (the public key on a customers endpoint) → 403. Identity accepted, permission refused.
+3. Set the Authorization to `pk_test_nonsense` → 401. A credential was offered and not recognised.
+
+Numbers 1 and 3 are both 401 for different reasons — absent versus unrecognised — and the body distinguishes them. Number 2 is the one where the key is entirely valid.
+
+<Exercise
+  prompt="A merchant gets a 403 on every call to /v1/customers. They have regenerated their key twice. What do you tell them?"
+  accept={["permission", "not allowed", "stop regenerating", "wrong key type", "403"]}
+  hint="What does a 403 say about the key?"
+  solution="Stop regenerating — the key is fine. A 403 means it was recognised and is not permitted on this endpoint. Either they are using the public key where the secret key is required, or their account does not have access to customer data. A new key of the same kind will behave identically."
+/>
+
+<Exercise
+  prompt="Why might a login endpoint deliberately give the same error for a wrong password and a non-existent account?"
+  accept={["enumeration", "enumerate", "which emails exist", "discover accounts"]}
+  hint="What could you learn by watching the error change?"
+  solution="To prevent user enumeration. If the two differed, anyone could try a list of addresses and learn which ones have accounts — useful for phishing or credential stuffing. The cost is that genuine users, and the people supporting them, get a vaguer error."
+/>
+
+<Terms items={[
+  { term: "Authentication", meaning: "Proving who you are. Fails with 401." },
+  { term: "Authorization", meaning: "Checking what you may do. Fails with 403." },
+  { term: "401", meaning: "Misleadingly named: it means we do not know who you are." },
+  { term: "403", meaning: "We know exactly who you are, and you may not do this." },
+  { term: "User enumeration", meaning: "Discovering which accounts exist by watching errors differ. Why login errors are vague." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "A request returns 403. What do you know for certain?",
+    options: [
+      "The credential is missing",
+      "The credential was recognised, and is not permitted to do this",
+      "The server is down",
+      "The endpoint does not exist"
+    ],
+    answer: 1,
+    why: "Authentication already passed. The refusal is about permission, so a different key of the same kind will not help."
+  },
+  {
+    q: "Why is 401 a misleading name?",
+    options: [
+      "It should be 404",
+      "It says 'Unauthorized' but means unauthenticated — we do not know who you are",
+      "It is only for browsers",
+      "It is deprecated"
+    ],
+    answer: 1,
+    why: "The naming is backwards relative to the two concepts, and it is permanent, so learn the meaning rather than the word."
+  },
+  {
+    q: "Two requests both return 401: one with no header, one with a mistyped key. How do you tell them apart?",
+    options: [
+      "You cannot",
+      "Read the response body — a good API distinguishes missing from unrecognised",
+      "Check the timing",
+      "Look at the method"
+    ],
+    answer: 1,
+    why: "The status is identical; the body carries the detail, and the two have different fixes."
+  }
+]} />
+
+## Tomorrow
+
+API keys: public versus secret, and the single rule that keeps you out of trouble.

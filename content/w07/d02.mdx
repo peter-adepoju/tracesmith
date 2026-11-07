@@ -1,0 +1,150 @@
+The simplest way to prove who you are: a long secret string you send with every request.
+
+<Video id="api-keys" />
+
+## What a key is
+
+```http
+Authorization: sk_test_trace_93ba07
+```
+
+That is it. A password for software. The server looks it up, finds the account it belongs to, and acts as that account.
+
+Keys have no username, no expiry of their own, and no second factor. Their only protection is **staying secret**. Which is why most of this lesson is about that.
+
+## The two pairs
+
+You met these in the sandbox. They matter enough to spell out.
+
+**Public versus secret.**
+
+| | Public key | Secret key |
+| --- | --- | --- |
+| Prefix | `pk_` | `sk_` |
+| Lives | In a browser, in an app, in page source | On a server, and nowhere else |
+| Can | Start a payment | Everything, including reading customer data and issuing refunds |
+| If exposed | Expected; it is designed to be visible | An incident |
+
+**Test versus live.**
+
+`pk_test_` and `sk_test_` move no real money. `pk_live_` and `sk_live_` do. The only difference is a few characters in the middle, which is exactly why mistakes happen.
+
+<Callout kind="key">
+The naming convention is doing real work. `sk_live_` tells you, at a glance, that you are looking at a **secret** key for **production**. If you see one in a screenshot, a ticket, a chat message or a repository, that is an incident and the key must be rotated.
+
+Learn to read those prefixes the way you read status codes.
+</Callout>
+
+## Why a public key is safe to expose
+
+This confuses people, so it is worth being precise.
+
+A public key can only *start* a payment. It cannot read customer data, cannot issue a refund, cannot list transactions. The worst someone can do with yours is create payment attempts that would pay **you**.
+
+A secret key can do everything. The asymmetry is the whole design: the thing that must live in a browser is deliberately almost powerless.
+
+## The rule
+
+<Callout kind="watch">
+**Never ask a merchant for their secret key, and never accept one if offered.**
+
+If someone sends you one — in chat, in a ticket, in a screenshot — then:
+
+1. Tell them to stop, plainly.
+2. Treat it as **compromised**. It does not matter that only you saw it; it is now in a chat log, a ticket database and probably a backup.
+3. Help them **rotate** it: generate a new one, update their server, revoke the old one.
+4. Do not use it to reproduce their problem, however convenient. Using it spreads the exposure and puts you in the position of having acted as them.
+
+You never need their key. You have your own test credentials, and if you genuinely cannot reproduce without their account, that is a conversation with your lead, not a copy of their secret.
+</Callout>
+
+This happens regularly, and it is almost always someone trying to be helpful. Protecting a merchant from their own helpfulness is good support.
+
+## Where keys leak
+
+Worth knowing, because you will find some.
+
+- **A repository.** Committed once, and present in the history forever, even after a later commit removes it.
+- **A front-end bundle.** A secret key used in browser code is visible to everyone. Search the page source.
+- **A screenshot in a ticket.** Including the Headers tab in DevTools.
+- **A `Copy as cURL`** pasted anywhere.
+- **A log.** Especially if the key travelled in a query string.
+- **A support chat.** The one above.
+
+<Callout kind="job">
+Finding `sk_live_` in front-end code is a serious, immediately reportable security finding, and it is more common than it should be. Someone swapped a public key for a secret one to "make it work" — because using the secret key does make the error go away.
+
+Check the page source and the JavaScript bundle. It takes a minute and occasionally finds something that matters enormously.
+</Callout>
+
+## Practise the distinction
+
+<RequestInspector preset="Start a payment" />
+
+1. Start a payment with the **public** key. Works — this is what public keys are for.
+2. Try the same call with the **secret** key. **403.** The API actively refuses it, because a secret key has no business being wherever a payment is started from.
+3. Now list customers with the **public** key. **403** again, the other way round.
+
+That second one is worth sitting with. A well-built API does not merely allow the secret key everywhere — it **refuses** it where it should not be, because that refusal catches the mistake early.
+
+<Exercise
+  prompt="A merchant pastes their sk_live_ key into the support chat so you can reproduce their bug. List the four things you do, in order."
+  accept={["stop", "rotate", "compromised", "do not use"]}
+  hint="One of them is about what you must not do."
+  solution="Tell them to stop. Treat the key as compromised regardless of who saw it. Help them rotate it and revoke the old one. And do not use it to reproduce the problem, however tempting — using it spreads the exposure and means you acted as them."
+/>
+
+<Exercise
+  prompt="Why does a well-built API return 403 when you use a secret key on a payment-initiation endpoint, rather than just accepting it?"
+  accept={["catch", "mistake", "early", "browser", "should not be there"]}
+  hint="Where is that endpoint called from?"
+  solution="That endpoint is called from a browser, so a secret key arriving there means one has been exposed to the client side. Refusing it surfaces the mistake immediately instead of letting the integration work while leaking the key to every visitor."
+/>
+
+<Terms items={[
+  { term: "API key", meaning: "A long secret string identifying an account. A password for software." },
+  { term: "Public key (pk_)", meaning: "Safe in a browser. Can start a payment and little else." },
+  { term: "Secret key (sk_)", meaning: "Server only. Can do everything. Exposure is an incident." },
+  { term: "Test vs live", meaning: "Fake money versus real. A few characters apart." },
+  { term: "Rotation", meaning: "Issuing a new key and revoking the old one after exposure." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "You find sk_live_... in a site's JavaScript bundle. What is this?",
+    options: [
+      "Normal, keys go in the front end",
+      "A serious security finding: a secret key is visible to every visitor",
+      "Only a problem if the site is popular",
+      "A test key, so harmless"
+    ],
+    answer: 1,
+    why: "The sk_ prefix means secret and live means production. Anyone viewing the page can take full control of that account."
+  },
+  {
+    q: "Why is a public key safe to expose?",
+    options: [
+      "It is encrypted",
+      "It expires quickly",
+      "It can only start a payment, not read data or move money out",
+      "It is checked against the domain"
+    ],
+    answer: 2,
+    why: "The design deliberately makes the browser-side credential almost powerless, so exposure costs nothing."
+  },
+  {
+    q: "A merchant sends you their secret key. May you use it to reproduce their bug?",
+    options: [
+      "Yes, if you delete the message afterwards",
+      "Yes, if your manager approves",
+      "No — treat it as compromised, help them rotate it, and reproduce with your own test credentials",
+      "Only in the sandbox"
+    ],
+    answer: 2,
+    why: "Using it spreads the exposure and means you acted as them. Deleting the message does not undo a key being in a chat log and its backups."
+  }
+]} />
+
+## Tomorrow
+
+Tokens: credentials that expire, and why that changes everything about diagnosis.
