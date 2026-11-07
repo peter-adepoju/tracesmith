@@ -1,0 +1,151 @@
+"Payload" is a word people use loosely. Today it gets a precise meaning, because reading one carefully is how you catch the bugs a screen will never show you.
+
+## What it means
+
+**The payload is the data carried inside a request or a response** — the body, not the address or the headers.
+
+So there are two:
+
+- **Request payload** — what you sent.
+- **Response payload** — what came back.
+
+In DevTools these are two different tabs, and confusing them makes diagnosis impossible. **Payload** is yours. **Response** is theirs.
+
+## A matched pair
+
+Request:
+
+```json
+POST /v1/payments/initiate
+{
+  "amount": 4850000,
+  "currency": "NGN",
+  "reference": "ORDER-1001",
+  "customer": { "email": "ada@example.com" }
+}
+```
+
+Response:
+
+```json
+201 Created
+{
+  "status": "success",
+  "reference": "ORDER-1001",
+  "amount": 4850000,
+  "checkout_url": "https://checkout.example.test/pay/abc123"
+}
+```
+
+Three things worth noticing, and each is a habit:
+
+**The reference is echoed back.** Good APIs return the identifier you sent, so you can match request to response in a log. When it is missing, correlating anything becomes guesswork.
+
+**The amount is echoed back.** Always check it matches what you sent. A mismatch here is a money bug and it is invisible on screen.
+
+**Something new appears.** The `checkout_url` did not exist before; the server created it. The response is not an echo, it is the result.
+
+<Callout kind="key">
+**Compare the request payload against the response payload, field by field.** Anything you sent that comes back different is either a transformation you should know about, or a bug.
+
+This is a thirty-second check that catches wrong amounts, truncated names, mangled characters and silently dropped fields. Almost nobody does it.
+</Callout>
+
+## What goes wrong in a request payload
+
+**A missing field.** Usually a 422 naming it. Easy.
+
+**A field with the wrong type.** `"amount": "4850000"` as a string. Sometimes accepted and then mishandled, which is worse than a rejection.
+
+**A field that never arrived.** The classic from week 2: an input with no `name`, so the browser never sent it. The form looked perfect.
+
+**A field with the right name in the wrong place.** Nested under `customer` when the API wants it at the top level. A 422 if you are lucky, a silently ignored value if you are not.
+
+**Extra fields.** Usually harmless, occasionally revealing — a `debug: true` or an `internal_override` in a request payload is worth asking about.
+
+## And in a response payload
+
+Everything from week 5: absent versus null, wrong types, contract violations, and the extra fields where leaks hide.
+
+Plus one that only shows when you compare the pair:
+
+**The response disagrees with the request.** You sent `4850000`, the response says `485000`. Someone dropped a zero in a conversion. The screen will show whatever the response says and look entirely normal.
+
+<Callout kind="watch">
+That last one is the reason this lesson exists. A screen renders the response. If the response is wrong, the screen is confidently, beautifully wrong — and the only way to know is to compare it against what you sent.
+</Callout>
+
+## Do it
+
+Send a payment, then compare the two tabs field by field.
+
+<RequestInspector preset="Start a payment" />
+
+Then try these deliberately:
+
+1. Change `amount` to `"4850000"` — a string. Does it still work?
+2. Remove `currency` entirely. What status, and does the response name the field?
+3. Add `"debug": true`. Is it rejected, ignored, or echoed?
+4. Change `reference` to something with a space in it. What happens?
+
+<Exercise
+  prompt="You send amount 4850000 and the response comes back with amount 485000. The checkout page shows ₦4,850.00 and the customer is happy to pay it. Is this a bug, and how bad?"
+  accept={["yes", "critical", "money", "severe", "high"]}
+  hint="Who loses what?"
+  solution="Yes, and critical. The merchant is being underpaid by a factor of ten on every transaction, and nothing on screen looks wrong — the customer sees a consistent price and pays it. It is only visible by comparing the request payload against the response payload, which is exactly why that habit matters."
+/>
+
+<Exercise
+  prompt="In DevTools, which tab shows what you sent and which shows what came back?"
+  accept={["payload", "response", "payload and response"]}
+  hint="Two tabs, two directions."
+  solution="Payload is what you sent; Response is what came back. Preview is the same data as Response, formatted as a tree. Mixing up Payload and Response makes it impossible to tell your bug from theirs."
+/>
+
+<Terms items={[
+  { term: "Payload", meaning: "The data inside a request or response. The body." },
+  { term: "Request payload", meaning: "What you sent. The Payload tab." },
+  { term: "Response payload", meaning: "What came back. The Response tab." },
+  { term: "Echo", meaning: "A field returned as sent, so request and response can be matched." },
+  { term: "Field-by-field comparison", meaning: "Checking the two payloads against each other. Catches invisible money bugs." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What is the single most valuable habit when reading a request and response pair?",
+    options: [
+      "Checking the status code only",
+      "Comparing the two payloads field by field",
+      "Measuring the timing",
+      "Counting the headers"
+    ],
+    answer: 1,
+    why: "A matching status and a sensible-looking screen can both sit on top of a value that changed in transit."
+  },
+  {
+    q: "Why do good APIs echo the reference you sent?",
+    options: [
+      "To make the response larger",
+      "So request and response can be matched in a log",
+      "It is required by HTTP",
+      "To confirm encryption"
+    ],
+    answer: 1,
+    why: "Without it, correlating a specific request with its answer across two systems becomes guesswork."
+  },
+  {
+    q: "A field was in your form but is absent from the Payload tab. What happened?",
+    options: [
+      "The server rejected it",
+      "The input had no name attribute, so the browser never sent it",
+      "It was encrypted",
+      "The response overwrote it"
+    ],
+    answer: 1,
+    why: "The Payload tab shows what left the browser. A field missing there never left, and the usual cause is a missing name."
+  }
+]} />
+
+## Tomorrow
+
+REST conventions, and the honest truth about how often real APIs follow them.

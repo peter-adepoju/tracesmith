@@ -1,0 +1,139 @@
+A request can carry a value in three places. Choosing the wrong one is not a style question — it produces real bugs, including values that silently never arrive.
+
+<Video id="path-vs-query" />
+
+## The three places
+
+**Path parameter** — part of the address. Identifies *which* resource.
+
+```
+GET /v1/customers/cus_01
+                  ───────
+```
+
+**Query string** — after the `?`. Modifies *how* you want the answer.
+
+```
+GET /v1/orders?status=paid&limit=25&sort=-created
+               ──────────────────────────────────
+```
+
+**Body** — sent inside the request, usually JSON. The data you are *submitting*.
+
+```
+POST /v1/orders
+{ "customerId": "cus_01", "items": [...] }
+```
+
+## The rule for choosing
+
+| Ask | Then it belongs in |
+| --- | --- |
+| Does it identify which thing? | **Path** |
+| Does it filter, sort, page or shape the result? | **Query** |
+| Is it data you are sending to be stored or acted on? | **Body** |
+
+A useful test for path versus query: **remove it. If the request no longer makes sense, it was a path parameter. If it still makes sense but returns more, it was a query parameter.**
+
+`/v1/customers/cus_01` without `cus_01` becomes `/v1/customers` — still meaningful, returns all. So arguably either. But `/v1/payments/verify/ORDER-1001` without the reference is meaningless, so that one is firmly a path parameter.
+
+## Move them around
+
+<EndpointBuilder />
+
+Try putting `status` in the path and see what the URL becomes. Then put `note` in the query string and think about what happens to a note containing a `&`.
+
+<Callout kind="watch">
+Three real bugs come out of getting this wrong.
+
+**A body on a GET.** Technically allowed, and widely discarded — caches, proxies and many server frameworks drop it. The value simply never arrives, and nothing errors. The builder above flags this one.
+
+**Sensitive data in a query string.** URLs are logged everywhere: server logs, proxy logs, browser history, the `Referer` header sent to third parties. A password, a token or a card number in a query string has been written to half a dozen places you do not control. **This is a genuine security finding**, and a common one.
+
+**Unencoded characters.** A value containing `&`, `?`, `=`, `#` or a space breaks the URL unless it is percent-encoded. `note=Ada & Bola` silently becomes a `note` of `Ada ` plus an empty parameter called `Bola`.
+</Callout>
+
+## Encoding, briefly
+
+```
+?note=Ship before Friday     wrong, spaces break it
+?note=Ship%20before%20Friday correct
+?q=a%26b                     an actual & in the value
+```
+
+You will rarely encode by hand — Postman and every HTTP library do it. You need to **recognise** it, so that `%20` and `%40` in a log do not look like corruption. `%40` is `@`, which is why you see it in emails passed through URLs.
+
+<Callout kind="job">
+A merchant reports that customer names with apostrophes or accents are saved wrong. Check whether the value travels in a query string and whether it is being encoded. `O'Brien` and `Adébáyọ̀` break more systems than anyone expects, and this is one of the two usual causes — the other is a character-encoding mismatch, from week 2.
+</Callout>
+
+## Seeing it in a real request
+
+<RequestInspector preset="Verify a payment" />
+
+That URL carries its reference as a **path parameter**: `/v1/payments/verify/ORDER-1001`. Change it to a reference that does not exist and watch the 404.
+
+Then switch to **Start a payment**, which is a POST, and open the **Payload** tab. Same information, different place, because this one is submitting data rather than identifying a resource.
+
+<Exercise
+  prompt="A developer is sending a search term as ?q=shoes&size=10 and reports that searches for 'men & women' return nothing. What is wrong?"
+  accept={["encoding", "ampersand", "percent", "not encoded", "&"]}
+  hint="What does & mean inside a query string?"
+  solution="The ampersand in the value is not percent-encoded, so the server reads it as a separator: q becomes 'men ' and a new empty parameter called ' women' appears. Encoding it as %26 fixes it. Nothing errors, which is why this one is hard to spot."
+/>
+
+<Exercise
+  prompt="You find GET /v1/login?email=ada@example.com&password=hunter2 in a server log. Name two reasons this is a finding."
+  accept={["logged", "logs", "history", "referer", "get", "credentials"]}
+  hint="Where do URLs end up, and what should carry a credential?"
+  solution="The password is now in the server log, and likely in browser history, proxy logs and any Referer header sent onward — none of which you control. And credentials should go in the body of a POST, not a GET, because a GET is cacheable and meant to be safe to repeat. Two separate defects in one line."
+/>
+
+<Terms items={[
+  { term: "Path parameter", meaning: "Part of the address, identifying which resource." },
+  { term: "Query string", meaning: "After the ?, shaping the result: filter, sort, page." },
+  { term: "Body", meaning: "Data submitted inside the request." },
+  { term: "Percent-encoding", meaning: "Escaping characters for a URL: %20 is a space, %40 is @." },
+  { term: "Body on a GET", meaning: "Usually silently discarded. Use POST if you must send data." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Where does a page number belong?",
+    options: ["Path", "Query string", "Body", "Header"],
+    answer: 1,
+    why: "It shapes the result rather than identifying a resource, so it joins filtering and sorting in the query string."
+  },
+  {
+    q: "Why is a body on a GET request a problem?",
+    options: [
+      "It is invalid HTTP",
+      "Caches, proxies and many servers discard it, so the value never arrives and nothing errors",
+      "It is too slow",
+      "GET cannot be encrypted"
+    ],
+    answer: 1,
+    why: "It is permitted but widely ignored. The silent failure is what makes it dangerous."
+  },
+  {
+    q: "A token appears in a query string. Why is that a finding?",
+    options: [
+      "Query strings have a length limit",
+      "URLs are logged in server logs, browser history and Referer headers you do not control",
+      "Tokens cannot be encoded",
+      "It is slower than a header"
+    ],
+    answer: 1,
+    why: "The credential is written to several places outside your control the moment the request is made."
+  },
+  {
+    q: "What does %40 represent in a URL?",
+    options: ["A space", "An ampersand", "An @ sign", "A newline"],
+    answer: 2,
+    why: "Which is why you see it when an email address travels through a URL."
+  }
+]} />
+
+## Tomorrow
+
+The payload: what you send, what comes back, and how to spot a wrong one.

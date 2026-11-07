@@ -1,0 +1,139 @@
+REST is the set of conventions most APIs follow, most of the time. Knowing them lets you guess your way around something new. Knowing where real APIs depart from them stops you being confused when guessing fails.
+
+<Video id="rest-api" />
+
+## The conventions you will actually meet
+
+**1. Resources are nouns, verbs live in the method.** `/v1/orders`, not `/v1/getOrders`. Yesterday's lesson.
+
+**2. The method means what it says.** GET reads, POST creates, PUT replaces, PATCH changes part, DELETE removes. Week 1 day 3.
+
+**3. Status codes carry the outcome.** Not a `200 OK` with `{"error": "not found"}` inside. Week 1 day 4.
+
+**4. Stateless.** Every request carries everything needed to serve it. The server remembers nothing between calls, which is why a credential travels on every single request.
+
+**5. Consistent shapes.** The same resource looks the same wherever it appears.
+
+That is enough. Academic REST has more rules, and almost no real API implements them all — including ones that describe themselves as RESTful.
+
+<Video id="rest-api-short" />
+
+## Where real APIs break the rules
+
+This is the useful half. Every one of these is common, and none means the API is broken.
+
+**A 200 containing an error.**
+
+```json
+200 OK
+{ "status": "failed", "message": "Insufficient funds" }
+```
+
+Very common in payments. The HTTP call succeeded; the *thing it describes* failed. You met this in week 1 day 6 with the pending payment, and it is the same trap: **the status code describes the call, not the outcome.**
+
+**Actions that are not resources.** `/v1/payments/ORDER-1001/refund`, `/v1/users/cus_01/reset-password`. Purists object; everyone does it, because some operations genuinely are not a noun.
+
+**POST used for everything.** Some APIs, especially older or internal ones, POST every call. Workable, and it means you lose the safety guarantees: nothing is cacheable and nothing is safely repeatable.
+
+**Inconsistent shapes.** `/v1/customers` returns `{ data: [...] }` while `/v1/orders` returns a bare array. Annoying, and worth reporting as a consistency finding rather than a defect.
+
+**Different field naming in one API.** `customer_id` in one endpoint, `customerId` in the next. Nearly always a sign two teams built them separately, and a reliable source of integration bugs.
+
+<Callout kind="job">
+When an API breaks a convention, the finding is usually **"this is inconsistent with the rest of the API"**, not "this is wrong". Consistency is what lets an integrator guess correctly, and every exception costs somebody an hour.
+
+Report it with the comparison: "`/v1/orders` returns a bare array while every other collection returns `{ data: [...] }`." That is checkable and actionable. "This isn't RESTful" is neither.
+</Callout>
+
+## The one that costs money
+
+Of all of these, the 200-with-an-error is the one to internalise, because the failure mode is expensive.
+
+A naive integration checks `if (response.ok)` and marks the order paid. The HTTP call *was* ok. The payment was not. Goods ship, money never arrives.
+
+```js
+// Wrong, and extremely common
+if (response.status === 200) markAsPaid()
+
+// Right
+const body = await response.json()
+if (response.status === 200 && body.status === "success" && body.paid === true) {
+  markAsPaid()
+}
+```
+
+<Callout kind="watch">
+**Check the status code and the body.** Neither alone is enough.
+
+The status tells you the call completed. The body tells you what happened. In week 19 you will meet the support version of this — "it says success but I haven't been paid" — and this is its root.
+</Callout>
+
+## Find one yourself
+
+<RequestInspector preset="Verify a payment" />
+
+Verify `ORDER-1002`. The status is **200** and the payment is **not paid** — `"status": "pending", "paid": false`.
+
+That single request is the whole lesson. A system checking only the status code would ship those goods.
+
+<Exercise
+  prompt={'An API returns 200 with { "status": "failed" } when a card is declined. Is that a bug worth reporting?'}
+  accept={["no", "convention", "common", "not a bug", "worth noting"]}
+  hint="Did the HTTP call succeed?"
+  solution="Not really a bug — the HTTP request genuinely did succeed, and the body correctly reports the business outcome. It is a convention many payment APIs follow deliberately. What IS worth reporting is any integration that checks only the status code, because that is where it becomes a money bug."
+/>
+
+<Exercise
+  prompt="One endpoint uses customer_id and another uses customerId in the same API. Write the one-line finding."
+  accept={["inconsistent", "naming", "consistency"]}
+  hint="Compare, do not just complain."
+  solution="Something like: 'Field naming is inconsistent across the API — /v1/orders returns customer_id while /v1/invoices returns customerId. Integrators must special-case each endpoint, and it suggests the two were built separately.' Naming the comparison is what makes it actionable."
+/>
+
+<Terms items={[
+  { term: "REST", meaning: "A set of conventions most APIs mostly follow." },
+  { term: "Stateless", meaning: "Each request carries everything needed; the server remembers nothing." },
+  { term: "200 with an error", meaning: "The call succeeded; the operation it describes did not. Common in payments." },
+  { term: "Action endpoint", meaning: "A verb-shaped path like /refund. Not RESTful, and everywhere." },
+  { term: "Consistency finding", meaning: "Not wrong, but different from the rest of the API — and costly for that." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "A verify call returns 200 with \"paid\": false. What should the merchant's system do?",
+    options: [
+      "Mark the order paid, because the call succeeded",
+      "Treat it as unpaid: check the status code and the body",
+      "Retry the request",
+      "Return an error to the customer"
+    ],
+    answer: 1,
+    why: "The 200 means the lookup worked. The body says the money has not arrived. Acting on the status alone ships goods for free."
+  },
+  {
+    q: "You find /v1/orders/ORDER-1001/refund. Is this a defect?",
+    options: [
+      "Yes, it is not RESTful",
+      "No — action endpoints are common and often the clearest option",
+      "Yes, refunds should be DELETE",
+      "Only if it is a POST"
+    ],
+    answer: 1,
+    why: "Some operations genuinely are not nouns. Purity is less valuable than clarity, and nearly every real API does this."
+  },
+  {
+    q: "What makes a consistency finding actionable?",
+    options: [
+      "Citing the REST specification",
+      "Naming the comparison: this endpoint differs from those ones in this specific way",
+      "Marking it critical",
+      "Suggesting a rewrite"
+    ],
+    answer: 1,
+    why: "A concrete comparison can be checked and fixed. 'This isn't RESTful' is an opinion nobody can act on."
+  }
+]} />
+
+## Tomorrow
+
+A working day: take a documentation page and turn it into a tested endpoint table.

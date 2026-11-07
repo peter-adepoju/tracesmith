@@ -1,0 +1,136 @@
+You have been reading API responses for five weeks. This week is about the thing producing them.
+
+"API" is one of those terms people use confidently without ever being told what it means. Here is the plain version.
+
+## The one-sentence answer
+
+**An API is a way for one program to ask another program to do something.**
+
+That is it. Not a technology, not a product — an agreement. One system publishes a set of things it will do and how to ask for them; another system asks.
+
+<Video id="api-postman" />
+
+## Three everyday examples
+
+**A shop that accepts cards.** The shop's own software does not know how to talk to banks. It asks a payment company's API: *"charge this card ₦48,500."* The API answers success or failure. The shop never touches a bank.
+
+**A weather widget.** It does not forecast anything. It asks a weather service's API *"what is the weather in Lagos?"* and displays the answer.
+
+**Signing in with Google.** The site does not see your Google password. It asks Google's API *"is this person who they claim to be?"* and Google answers.
+
+In each case the pattern is the same: **someone else has solved a hard problem, and the API is the door into their solution.**
+
+## Why a company publishes one
+
+Worth understanding, because it tells you what an API is optimised for.
+
+- **It is the product.** A payment company's API *is* what you buy. There is nothing else.
+- **Their own apps need one.** The phone app, the website and the back office all need the same data. Build one API, serve all three. This is why most sites have an internal API you can see in the Network tab.
+- **Partners need in.** A marketplace lets sellers manage stock programmatically rather than by hand.
+
+That second one matters to you. **The API you will test most is the one the product uses to talk to itself**, and it was often never designed to be seen by outsiders — which is exactly why interesting things leak out of it.
+
+<Callout kind="key">
+Every `Fetch/XHR` row you saw in week 4 was an API call. You have been watching APIs all along without naming them. The only new thing this week is that you will start *making* the calls instead of watching them.
+</Callout>
+
+## The vocabulary, laid out once
+
+| Word | Means |
+| --- | --- |
+| **API** | The whole agreement: everything this system will do for you |
+| **Endpoint** | One specific address you can call. Tomorrow |
+| **Request** | What you send |
+| **Response** | What comes back |
+| **Payload / body** | The data carried inside a request or response |
+| **Parameter** | A value you supply to shape the request |
+| **Authentication** | Proving who you are. Week 7 |
+| **Rate limit** | A cap on how often you may call |
+| **Client** | Whoever is calling |
+| **Provider** | Whoever answers |
+
+You already know most of these from Phase 1. They were always API words.
+
+## The distinction that confuses everyone
+
+**API** and **endpoint** are not the same, and people use them interchangeably.
+
+An API is the whole service. An endpoint is one door into it.
+
+```
+The API:          the payment service
+Its endpoints:    POST /v1/payments/initiate
+                  GET  /v1/payments/verify/{reference}
+                  GET  /v1/customers
+                  GET  /v1/customers/{id}
+```
+
+One API, four endpoints. When someone says "the API is down", ask **which endpoint** — it is very often one of them, not all. That single question has saved many hours.
+
+<Callout kind="job">
+A merchant reporting "your API is broken" is giving you almost nothing. The useful reply asks for one thing: the endpoint and the status code. "Which call, and what came back?" turns an outage report into a specific, checkable claim — and about half the time it turns out one endpoint is returning 422 because they are sending the wrong field.
+</Callout>
+
+<Video id="api-intro" />
+
+<Exercise
+  prompt="A merchant emails: 'Your API has been down all morning, nothing works.' What are the two things you ask for first, and why those two?"
+  accept={["endpoint", "status", "status code", "which call"]}
+  hint="One narrows what, one narrows whose."
+  solution="Which endpoint they are calling, and what status code comes back. The endpoint narrows it from the whole service to one door; the status code says whether it is their request or your server. Together they usually settle it in one reply."
+/>
+
+<Exercise
+  prompt="Why does a company build an API even when it has no external customers for it?"
+  accept={["own apps", "its own", "website and app", "internal", "share"]}
+  hint="How many front ends does one product usually have?"
+  solution="Its own website, phone app and back office all need the same data, so building one API and serving all three is far less work than three separate systems. That internal API is the one you will test most, and it was never designed to be looked at from outside."
+/>
+
+<Terms items={[
+  { term: "API", meaning: "An agreement letting one program ask another to do something." },
+  { term: "Endpoint", meaning: "One specific address within an API." },
+  { term: "Provider / client", meaning: "The system answering, and the system asking." },
+  { term: "Rate limit", meaning: "A cap on how often you may call." },
+  { term: "Internal API", meaning: "The one a product uses to talk to itself. Most of what you will test." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What is the difference between an API and an endpoint?",
+    options: [
+      "They are the same thing",
+      "An API is the whole service; an endpoint is one address within it",
+      "An endpoint is older terminology",
+      "An API is public, an endpoint is private"
+    ],
+    answer: 1,
+    why: "One service has many endpoints, which is why 'the API is down' is nearly always too vague to act on."
+  },
+  {
+    q: "Every Fetch/XHR row in the Network tab is what?",
+    options: [
+      "An image load",
+      "An API call",
+      "A page navigation",
+      "A stylesheet"
+    ],
+    answer: 1,
+    why: "Those are the page's data calls to its own API. You have been reading API traffic since week 4."
+  },
+  {
+    q: "A merchant says the API is down. What is the most useful first question?",
+    options: [
+      "Have you tried again?",
+      "Which endpoint, and what status code comes back?",
+      "What browser are you using?",
+      "When did you last deploy?"
+    ],
+    answer: 1,
+    why: "It narrows the whole service to one call and tells you immediately whether the fault is theirs or yours."
+  }
+]} />
+
+## Tomorrow
+
+Endpoints and paths: how to read an address and predict what it returns before you call it.

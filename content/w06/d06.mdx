@@ -1,0 +1,132 @@
+A working day. You are going to do the thing you will do on your first week in any job touching an API: take the documentation and turn it into something you can test against.
+
+<Video id="api-docs" />
+
+## The task
+
+The **Sandbox** page in this course documents a small API. Open it in another tab — it is in the navigation — and treat it as documentation you have been handed on day one.
+
+Your job is to produce three things.
+
+### 1. An endpoint table
+
+One row per endpoint. Fill it in from the documentation *before* you call anything.
+
+| Method | Path | Auth | Required input | Returns | Notes |
+| --- | --- | --- | --- | --- | --- |
+| | | | | | |
+
+### 2. One example call per endpoint
+
+For each, the exact request: method, path, which key, and a body where there is one. Write them before sending.
+
+### 3. A list of what the documentation does not tell you
+
+This is the valuable one, and the one nobody does. Every docs page has gaps. Find them.
+
+## Then test your table
+
+<RequestInspector />
+
+Work down your rows. For each endpoint:
+
+1. Send your example call. Did it do what you predicted?
+2. Send it **without** a key. What status?
+3. Send it with the **wrong kind** of key. What status, and is it different?
+4. Send it with a **deliberately wrong** path, one character off.
+5. Where there is a body, send it **without a required field**.
+
+Record the actual status and the actual error code for each. Your table is now worth something: it says what the API does, not what the documentation claims.
+
+<Callout kind="key">
+**Documentation describes intent. Testing describes behaviour.** They disagree more often than anyone admits, and the gap is where integration tickets come from.
+
+A merchant following the docs exactly and getting a 422 is not being careless — they are hitting a gap. Your table is what lets you say "the docs say X, the API does Y" instead of guessing.
+</Callout>
+
+## Gaps to look for
+
+The questions a docs page usually fails to answer:
+
+- **What are the error codes?** Not the HTTP status — the `error` string in the body. Can you enumerate them?
+- **What happens on a repeat?** Send the same POST twice with the same reference. Two payments, or one? **This is the idempotency question**, and it is almost never documented.
+- **Are there rate limits?** What status do you get, and is there a `Retry-After`?
+- **What is the maximum?** Longest string, largest amount, most items.
+- **Which fields are optional?** And what does the API do when you omit an optional one — default it, or leave it null?
+- **What does an empty result look like?** `{ "data": [] }` or a 404?
+- **How are errors shaped?** Is every error the same shape, or does each endpoint invent its own?
+
+<Callout kind="job">
+Hand that gaps list to whoever owns the API and you have done something genuinely useful on your first week. It is not a bug report and it is not a complaint — it is the list of questions every future integrator will ask, collected in one place.
+
+It is also the fastest way to learn an API deeply, which is why this exercise exists.
+</Callout>
+
+## The idempotency question
+
+Of everything on that list, this is the one to always ask.
+
+Send **Start a payment** twice with the same reference, back to back. Read both responses carefully.
+
+Does the second call return the same payment, or create a second one?
+
+- **Same payment returned** — the API is idempotent on reference. Safe. A retry after a timeout cannot double-charge.
+- **Second payment created** — not idempotent. A customer with a slow connection who taps twice can be charged twice.
+
+Either answer is a finding. The first is worth documenting so integrators can rely on it. The second is worth flagging loudly, because it is the week 1 double-submit bug at the API level, and no amount of front-end protection fixes it.
+
+<Exercise
+  prompt="Why is the list of gaps often more valuable than a list of bugs?"
+  accept={["questions", "future", "prevent", "every integrator", "repeat"]}
+  hint="Who else will hit them?"
+  solution="A bug affects whoever hit it. A documentation gap affects every single person who will ever integrate, and each one costs a support ticket. Closing one gap prevents a stream of future tickets, which is the week 9 idea of owning the problem rather than the symptom, arriving early."
+/>
+
+<Exercise
+  prompt="You send the same payment request twice and get two different references back. What have you found, and how do you report it?"
+  accept={["not idempotent", "idempotency", "duplicate", "two payments"]}
+  hint="What can a customer with a bad connection do?"
+  solution="The endpoint is not idempotent: identical requests create separate payments. Report it as a money risk, not a style issue — a customer who taps twice, or a client that retries after a timeout, is charged twice, and no front-end guard can prevent it. Suggest an idempotency key on the request."
+/>
+
+<Quiz questions={[
+  {
+    q: "Your tested table disagrees with the documentation. Which do you trust?",
+    options: [
+      "The documentation, it is official",
+      "The tested behaviour, and the disagreement is itself the finding",
+      "Neither",
+      "Whichever is newer"
+    ],
+    answer: 1,
+    why: "Behaviour is what integrators actually hit. The gap between intent and behaviour is exactly what to report."
+  },
+  {
+    q: "Sending an identical POST twice creates two records. What is this called?",
+    options: [
+      "A race condition",
+      "A failure of idempotency",
+      "A rate limit",
+      "A caching bug"
+    ],
+    answer: 1,
+    why: "Idempotent means a repeat has the same effect as one call. Without it, any retry risks a duplicate — and for payments that is a double charge."
+  },
+  {
+    q: "Which question is most often missing from API documentation?",
+    options: [
+      "What the base URL is",
+      "What happens when you send the same request twice",
+      "Which methods are supported",
+      "What JSON is"
+    ],
+    answer: 1,
+    why: "Idempotency is rarely documented and matters enormously, which is why asking it early marks you out."
+  }
+]} />
+
+## Week 6 done
+
+You can read an endpoint and predict what it returns, place a value correctly between path, query and body, compare a request payload against its response to catch what a screen hides, recognise where real APIs depart from REST and report it usefully — and turn a documentation page into a tested table plus a list of the questions it failed to answer.
+
+Next week: authentication. Keys, tokens, expiry, and the redaction habits that keep you out of trouble. You already have a vivid example to hang it on, from a sign-in that failed in a way its own error message disguised.

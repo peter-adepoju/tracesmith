@@ -1,0 +1,169 @@
+An endpoint is one address you can call. Today you learn to read one and predict what it returns before you touch it — which is most of what reading API documentation is.
+
+<Video id="api-endpoints" />
+
+## Anatomy
+
+```
+POST https://api.example.com/v1/customers/cus_01/orders?status=paid
+───  ─────────────────────── ── ───────────────────────  ───────────
+ │             │              │            │                  │
+ method      base URL      version       path            query string
+```
+
+- **Method** — what kind of action. Week 1 day 3.
+- **Base URL** — which service, and crucially **which environment**.
+- **Version** — `/v1/`. Lets the provider change things without breaking you.
+- **Path** — what you are asking about.
+- **Query string** — how to shape the answer. Tomorrow.
+
+## The resource idea
+
+Good APIs are organised around **things**, not actions. The things are called resources, and they are nouns.
+
+```
+/v1/customers              all customers
+/v1/customers/cus_01       one customer
+/v1/customers/cus_01/orders   that customer's orders
+/v1/orders/ORDER-1001      one order
+```
+
+The method supplies the verb:
+
+| | `/v1/customers` | `/v1/customers/cus_01` |
+| --- | --- | --- |
+| **GET** | list them all | fetch this one |
+| **POST** | create a new one | *(usually not allowed)* |
+| **PUT / PATCH** | *(usually not allowed)* | update this one |
+| **DELETE** | *(dangerous, usually blocked)* | remove this one |
+
+Read a path and you can predict the whole table. That is the payoff of the convention: **once you know one well-built API, you can guess your way around the next one.**
+
+<Callout kind="key">
+Notice there is no `/v1/getCustomer` or `/v1/deleteOrder`. The verb lives in the method, never in the path. When you *do* see `/api/deleteUser`, you have learned something: this API does not follow the convention, so stop guessing and read its documentation properly.
+</Callout>
+
+## Collections and items
+
+Two shapes, and they return different things.
+
+**A collection** — `/v1/customers` — returns a list, usually wrapped:
+
+```json
+{ "data": [ { "id": "cus_01" }, { "id": "cus_02" } ], "count": 2 }
+```
+
+**An item** — `/v1/customers/cus_01` — returns one object:
+
+```json
+{ "id": "cus_01", "name": "Ada Obi" }
+```
+
+The wrapper on a collection is there so the provider can add `count`, `page` and `next` without changing the shape. An API that returns a bare array has nowhere to put paging later, which is a design smell worth noticing.
+
+## The environment is in the base URL
+
+```
+https://api.example.com/v1/payments      production, real money
+https://api-sandbox.example.com/v1/payments   sandbox, fake money
+```
+
+You met this in Phase 1 with `-dev` addresses. It is the same idea, and it is the single most important thing to check before sending anything.
+
+<Callout kind="watch">
+**Read the base URL before every request that changes something.** A test POST against production is the most serious mistake available to you in this job, and the only difference between the two commands is a few characters you will stop noticing after a week.
+
+Build the habit now: say the environment out loud before you press send.
+</Callout>
+
+## Predict, then check
+
+Here is the sandbox API you have been using since week 1. Before pressing Send on each, say out loud what you expect.
+
+<RequestInspector preset="Health check" />
+
+Work through these and check your prediction each time:
+
+1. `GET /v1/customers` — a collection. What wrapper does it use?
+2. `GET /v1/customers/cus_01` — one item. Same shape, or different?
+3. `GET /v1/customers/cus_99` — an item that does not exist. What status?
+4. `GET /v1/customer` — singular, by mistake. What status, and how is it different from 3?
+5. `POST /v1/customers` — creating. Is it allowed?
+
+<Callout kind="job">
+Number 3 and number 4 return the same code — **404** — for completely different reasons: a real endpoint with no matching record, versus no such endpoint at all. Read the response body, which distinguishes them. A good API says `customer_not_found` in one case and `unknown_endpoint` in the other, and that difference is the whole diagnosis.
+</Callout>
+
+<Exercise
+  prompt="You see GET /v1/merchants/mer_44/settlements in a log. Without calling it, what does it return and what would POST to the same path probably do?"
+  accept={["settlements", "list", "merchant"]}
+  hint="Read it as nouns, outermost first."
+  solution="A list of settlements belonging to merchant mer_44 — a sub-collection. POST to the same path would most likely create a new settlement for that merchant, though many APIs forbid that and generate settlements internally."
+/>
+
+<Exercise
+  prompt="An API exposes POST /api/cancelOrder. What does that tell you about it?"
+  accept={["not rest", "verb in the path", "convention", "not restful", "read the docs"]}
+  hint="Where has the verb gone?"
+  solution="The verb is in the path rather than the method, so it does not follow REST conventions. Practically: stop guessing the rest of its endpoints and read its documentation, because none of the patterns you learned will reliably apply."
+/>
+
+<Terms items={[
+  { term: "Base URL", meaning: "Which service and, critically, which environment." },
+  { term: "Resource", meaning: "The thing an endpoint is about. Always a noun." },
+  { term: "Collection", meaning: "An endpoint returning a list, usually wrapped." },
+  { term: "Item", meaning: "An endpoint returning one object." },
+  { term: "Version", meaning: "The /v1/ segment, letting the provider change without breaking you." },
+  { term: "Sub-collection", meaning: "A list belonging to one item: /customers/cus_01/orders." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What does GET /v1/customers/cus_01/orders return?",
+    options: [
+      "All orders in the system",
+      "The orders belonging to customer cus_01",
+      "One order",
+      "The customer record"
+    ],
+    answer: 1,
+    why: "A sub-collection: the orders of that one customer. Read the path as nouns from the outside in."
+  },
+  {
+    q: "You see /api/getUserDetails in a codebase. What is the practical consequence?",
+    options: [
+      "Nothing, it is equivalent",
+      "The API does not follow REST conventions, so stop guessing and read the docs",
+      "It will be slower",
+      "It must be a GET"
+    ],
+    answer: 1,
+    why: "With the verb in the path, the patterns that let you predict endpoints no longer hold."
+  },
+  {
+    q: "Two requests both return 404: one for a missing record, one for a mistyped path. How do you tell them apart?",
+    options: [
+      "You cannot",
+      "Read the response body — a good API names which it is",
+      "Check the timing",
+      "Look at the method"
+    ],
+    answer: 1,
+    why: "The status is identical but the body distinguishes customer_not_found from unknown_endpoint, and that is the whole diagnosis."
+  },
+  {
+    q: "Why do collections usually come wrapped in an object rather than as a bare array?",
+    options: [
+      "Arrays are invalid JSON at the top level",
+      "So the provider can add count, page and next without changing the shape",
+      "It is faster",
+      "To hide the data"
+    ],
+    answer: 1,
+    why: "A bare array has nowhere to put paging metadata later, so adding it becomes a breaking change."
+  }
+]} />
+
+## Tomorrow
+
+The three places a value can go, and why putting one in the wrong place is a real bug.
