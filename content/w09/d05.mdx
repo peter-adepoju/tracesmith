@@ -1,0 +1,133 @@
+Test data is the fake-but-realistic information you test with. It sounds like a detail. It decides whether your testing means anything.
+
+## Why it matters more than it sounds
+
+A feature tested with `Test Test`, `a@b.com` and quantity `1` has been tested against the easiest possible case. Real data is longer, stranger and more varied, and that is exactly where the defects are.
+
+The pattern repeats constantly: it worked in testing because the test data was tidy.
+
+| Tidy test data | What real data does |
+| --- | --- |
+| `Test User` | `Adébáyọ̀ Oyelaran-Oyeyinka` |
+| `a@b.com` | `peter.o.adepoju+receipts@gmail.com` |
+| Quantity 1 | Quantity 0, 97, −1 |
+| ₦1,000 | ₦0.50, ₦9,999,999.99 |
+| One order | None, or four thousand |
+| English | Yoruba, Arabic, emoji |
+
+## The rule
+
+<Callout kind="watch">
+**Never test with real customer data.**
+
+Not a copy of the production database, not one real customer's details "just to check", not a real card. Two reasons, and either is sufficient:
+
+- It is a privacy breach. That data was given for a purpose, and testing is not it.
+- You will eventually change something real. A test refund against a real order is a real refund.
+
+If your team copies production data into staging, that is worth raising. The usual answer is **anonymisation** — same shape, same volume, invented values.
+</Callout>
+
+## What good test data looks like
+
+Realistic enough to be a meaningful test, invented enough to be safe.
+
+**Names.** Include an apostrophe, an accent, a hyphen, a very long one, and one with a single character. `O'Brien`, `Adébáyọ̀`, `Smith-Jones`, a 60-character name, `Li`.
+
+**Emails.** A plus sign, a subdomain, a long local part, an unusually long TLD.
+
+**Amounts.** Zero, the smallest unit, a round number, one with awkward decimals, the maximum, one above it.
+
+**Dates.** Today, the far past, the far future, 29 February, a daylight-saving boundary, the end of a month.
+
+**Text fields.** Empty, one character, the maximum, one over, 10,000 characters, with newlines, with emoji, with HTML like `<b>bold</b>`.
+
+<Callout kind="job">
+Build a personal set of awkward values and reuse it everywhere. A name with an apostrophe, a 10,000-character paragraph, an emoji string, a date of 29 February 2024.
+
+It takes an afternoon once and finds defects for years. And when someone asks why you tested with `Ṣọlá O'Brien-Adébáyọ̀`, the answer is that one of your customers is called something like it.
+</Callout>
+
+## Where test data comes from
+
+**Invented by hand.** Best for specific cases. Slow for volume.
+
+**Generated.** Libraries like Faker produce plausible names and addresses at scale. Good for volume, and worth checking it generates awkward values and not just tidy ones.
+
+**Anonymised production data.** Real shape and volume, values replaced. The best of both, and it must be done properly — a dataset where names are scrambled but email addresses are not is still a breach.
+
+**Fixtures.** A known set committed alongside the tests, so everyone tests against the same thing. Essential once automation starts.
+
+## Resetting between runs
+
+Test data goes stale. The order you created yesterday is still there, the discount code you used is spent, the email address you signed up with is taken.
+
+Three approaches:
+
+- **Unique values per run.** Append a timestamp: `peter+20261107@example.com`. Simple and effective.
+- **Clean up afterwards.** Delete what you created. Reliable until a test fails halfway.
+- **Reset the environment.** A clean database before each run. Cleanest, and usually someone else's job.
+
+You met this in week 8: a collection that passes once and fails the second time is usually a data problem, not a code one — and telling those apart is the skill.
+
+<Exercise
+  prompt="A signup form works in testing and fails for about one real customer in fifty, with no pattern anyone can see. What would you suspect about the test data?"
+  accept={["apostrophe", "accent", "special character", "long", "unicode", "name"]}
+  hint="What is in a real name that is not in Test User?"
+  solution="That it only ever used plain ASCII names. A name with an apostrophe, an accent or an unusual length breaks naive validation and naive database handling, and would appear as a small, patternless fraction of real users. Test with O'Brien and Adébáyọ̀ and the pattern appears immediately."
+/>
+
+<Exercise
+  prompt="Your team wants to copy the production database to staging so testing is realistic. What do you say?"
+  accept={["anonymise", "anonymised", "breach", "privacy", "scrub"]}
+  hint="Realistic shape is the goal; real values are not."
+  solution="That the shape and volume are worth having and the real values are not. Ask for an anonymised copy: same structure, same size, invented names, emails and card details. Raise that a straight copy puts real customer data on a system with weaker access controls, and that testers will then be acting on real people's records."
+/>
+
+<Terms items={[
+  { term: "Test data", meaning: "Fake-but-realistic data created for testing." },
+  { term: "Anonymisation", meaning: "Replacing real values while keeping the shape and volume." },
+  { term: "Fixture", meaning: "A known dataset committed with the tests so runs are comparable." },
+  { term: "Awkward values", meaning: "Apostrophes, accents, emoji, extremes. Your reusable set." },
+  { term: "Stale data", meaning: "Leftovers from a previous run that make the next one fail." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Why is testing only with names like 'Test User' a problem?",
+    options: [
+      "It is unprofessional",
+      "It is the easiest possible case, so it misses the apostrophes, accents and lengths that break things",
+      "It is slower",
+      "It is not a problem"
+    ],
+    answer: 1,
+    why: "Plain ASCII avoids exactly the characters that break naive validation and storage, so those defects reach real customers instead."
+  },
+  {
+    q: "A colleague uses one real customer's details to reproduce a bug. What is wrong?",
+    options: [
+      "Nothing, it is one record",
+      "It is a privacy breach, and a test action could change something real",
+      "It is too slow",
+      "Only if the customer complains"
+    ],
+    answer: 1,
+    why: "The data was given for a purpose that was not testing, and a test refund against a real order is a real refund."
+  },
+  {
+    q: "Your suite passes once and fails on a second run. Most likely cause?",
+    options: [
+      "A code bug",
+      "Stale test data: something created by the first run collides with the second",
+      "A network problem",
+      "The environment is down"
+    ],
+    answer: 1,
+    why: "A used email, a spent code or an existing order from the first run is the usual culprit, and it is a flaw in test design rather than in the product."
+  }
+]} />
+
+## Tomorrow
+
+A working day: take one feature and produce a ranked test plan for it.

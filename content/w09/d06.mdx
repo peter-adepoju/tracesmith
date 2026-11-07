@@ -1,0 +1,150 @@
+A working day. One feature, one plan, written the way you would hand it to a colleague.
+
+## The feature
+
+Meridian is adding **saved delivery addresses**. From the ticket:
+
+> A signed-in customer can save up to five delivery addresses. Each has a label, a recipient name, a street address, a city, a state and a phone number. One address can be marked default and is pre-selected at checkout. Addresses can be edited and deleted. A deleted address must not disappear from orders that already used it.
+
+That is all you get, which is realistic.
+
+## Step 1: find the ambiguities
+
+Before any testing, read it again and list what it does **not** say. This is the shift-left habit from day 2, and it is worth more than any test you will write today.
+
+Questions this ticket leaves open — find them yourself before reading on:
+
+- What happens at the sixth address? An error, or does it silently replace one?
+- Can two addresses be default? What if the default is deleted?
+- Which fields are required? Is a phone number optional?
+- How long may a label be? What about a street address?
+- Can two addresses be identical?
+- What does a customer with no addresses see at checkout?
+- Is the state a free-text field or a list?
+- What does "must not disappear from orders" mean — a copy taken at order time, or a soft delete?
+
+That last one is a design question hiding as a detail, and the answer changes what you test entirely. **Ask it before anyone builds it.**
+
+## Step 2: break the feature into areas
+
+- Creating an address
+- The five-address limit
+- Setting and changing the default
+- Editing
+- Deleting, and its effect on past orders
+- Using one at checkout
+- Empty state, for a new customer
+
+## Step 3: rank them
+
+<RiskMatrix />
+
+The tool above uses a different feature, but run the same scoring in your notes for these seven. Ask of each: how likely is it to break, and what is the damage if it does?
+
+Two should come out near the top. **Deleting and its effect on past orders** is the most likely to be wrong, because it is the only part involving history, and getting it wrong corrupts records that already exist. **Using one at checkout** matters because it sits on the path to money.
+
+The empty state is low impact and worth two minutes, because it is the one everybody forgets and every new customer sees first.
+
+## Step 4: choose the types
+
+| Area | Types |
+| --- | --- |
+| Creating | Functional, boundary, awkward characters |
+| The limit | Boundary: 4, 5, 6 |
+| Default | Functional, plus the state question of deleting the default |
+| Editing | Functional, regression on orders |
+| Deleting | Functional, **integration** with order history |
+| Checkout | Functional, **integration**, regression |
+| Empty state | UI, usability |
+
+And across all of it: **security** — can a customer reach someone else's addresses by changing an id? That question belongs on anything with a per-customer record, and week 14 makes it systematic.
+
+## Step 5: write the plan
+
+One page. Someone should be able to read it and know what you will do.
+
+```
+Saved addresses — test plan
+
+Questions outstanding
+  1. Behaviour at the 6th address  (asked, awaiting answer)
+  2. What happens when the default is deleted  (asked)
+  3. Is a copy taken at order time, or a soft delete?  (blocks delete testing)
+
+Priority 1  Deleting, and past orders
+            Checkout with a saved address
+Priority 2  The five-address limit
+            Setting and changing the default
+            Creating, with awkward values
+Priority 3  Editing
+            Empty state
+Across all  One customer cannot reach another's addresses
+
+Not covered
+  Performance with many addresses — the cap is five
+  Load and concurrency — not available on staging
+```
+
+<Callout kind="key">
+**"Not covered" is part of the plan, not an admission.**
+
+A plan that implies everything was tested is dishonest, and when something escapes in an area you never touched, nobody can tell whether you missed it or deliberately left it. Writing it down protects the team and protects you.
+
+This is the same instinct as week 5's "state the gaps" and week 9's honest sign-off. It keeps recurring because it is the difference between a report that can be trusted and one that cannot.
+</Callout>
+
+<Exercise
+  prompt="Of the three outstanding questions, which one blocks testing entirely until it is answered, and why?"
+  accept={["copy", "soft delete", "third", "3", "order time"]}
+  hint="Which answer changes what correct behaviour even looks like?"
+  solution="Whether a copy is taken at order time or the address is soft-deleted. Until that is answered you cannot say what correct behaviour is after a delete, so any test you write might assert the wrong thing. The other two produce a defect if guessed wrong; this one produces a wrong test."
+/>
+
+<Exercise
+  prompt="Why does the empty state deserve a place in the plan despite being low risk?"
+  accept={["first", "new customer", "everyone sees", "forgotten"]}
+  hint="Who sees it, and when?"
+  solution="Every new customer sees it before they see anything else, and it is the state developers test least because their own accounts always have data. Low impact per occurrence, high exposure, and two minutes to check — which makes it excellent value."
+/>
+
+<Quiz questions={[
+  {
+    q: "When is the best time to ask 'what happens at the sixth address?'",
+    options: [
+      "While testing",
+      "Before the code is written",
+      "In the bug report",
+      "After release"
+    ],
+    answer: 1,
+    why: "Asked early it costs minutes and prevents the defect. Asked during testing it costs a report, a fix and a retest."
+  },
+  {
+    q: "Why is 'deleting, and its effect on past orders' ranked highest?",
+    options: [
+      "It is the hardest to test",
+      "It is the only part touching history, and getting it wrong corrupts records that already exist",
+      "Customers do it most",
+      "It is the newest code"
+    ],
+    answer: 1,
+    why: "Damage to existing records is worse than a defect affecting only new actions, and history is the part this ticket handles least clearly."
+  },
+  {
+    q: "What does a 'Not covered' section do for a test plan?",
+    options: [
+      "Weakens it",
+      "Makes it honest: a plan implying full coverage cannot be trusted when something escapes",
+      "Nothing, it is optional",
+      "Shifts blame"
+    ],
+    answer: 1,
+    why: "Stating the gap lets everyone see what was deliberate, rather than wondering later whether it was missed."
+  }
+]} />
+
+## Week 9 done
+
+You know what QA is and why the cost of a defect rises so steeply with time. You can name the environments, say what staging will never find, and ask questions early enough to prevent defects rather than find them. You know the types of testing and how to choose between them. You have eleven heuristics that turn a blank page into twenty cases, and a way to rank them by likelihood and impact. You can build safe, awkward test data. And you can turn a vague ticket into a ranked plan that is honest about its own limits.
+
+Next week: writing it down. Test cases precise enough that someone else runs them and gets the same answer.

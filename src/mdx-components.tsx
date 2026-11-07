@@ -17,6 +17,9 @@ import { LivePlayground } from "@/components/interactive/LivePlayground";
 import { PanelPicker } from "@/components/interactive/PanelPicker";
 import { RedactionDrill } from "@/components/interactive/RedactionDrill";
 import { RequestJourney } from "@/components/interactive/RequestJourney";
+import { RiskMatrix } from "@/components/interactive/RiskMatrix";
+import { SeverityGrid } from "@/components/interactive/SeverityGrid";
+import { TestCaseBuilder } from "@/components/interactive/TestCaseBuilder";
 import { TokenInspector } from "@/components/interactive/TokenInspector";
 import { SpecificityScorer } from "@/components/interactive/SpecificityScorer";
 import { StatusExplorer } from "@/components/interactive/StatusExplorer";
@@ -48,10 +51,13 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     RedactionDrill,
     RequestInspector,
     RequestJourney,
+    RiskMatrix,
+    SeverityGrid,
     SpecificityScorer,
     StatusExplorer,
     StorageAudit,
     Terms,
+    TestCaseBuilder,
     TokenInspector,
     Video,
     ViewportSlider,

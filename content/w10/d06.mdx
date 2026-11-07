@@ -1,0 +1,119 @@
+A working day. Twelve cases for one feature, written properly, then run against a product that genuinely has defects in it.
+
+## The feature
+
+**Meridian's cart and discount handling.** Open the lab — **Labs → Meridian: first contact**, stage 3 — and treat it as a feature you have been asked to test.
+
+Do not go looking for the planted defects yet. Write the suite first, from what the feature is *supposed* to do. That is the order it happens at work, and writing cases after you know the answers teaches you nothing.
+
+## What the suite must contain
+
+Twelve cases, with this shape:
+
+- **3 happy paths** — add an item, apply a valid code, complete checkout
+- **4 negative** — unknown code, empty cart checkout, invalid email, missing required field
+- **3 boundary** — quantity 0, quantity 1, a very large quantity
+- **2 repeat** — the same item twice, the same discount twice
+
+Every case needs the seven parts. Every case must be runnable alone.
+
+<TestCaseBuilder />
+
+Use the builder for the first few until the structure is automatic, then write the rest in a spreadsheet — because that is where they will actually live.
+
+## Then run them
+
+Work down the suite, recording Pass, Fail, Blocked or Not run for each, and filling in Actual for every failure.
+
+Some of your cases will fail, because stage 3 has five defects planted in it. Three of your twelve should catch them if the suite is well built. If none of your cases fails, your suite is all happy paths — go back and add the attacks.
+
+<Callout kind="key">
+Notice what the suite does that free exploration does not: it tells you **what you did not find**.
+
+If you wrote a case for "the same discount applied twice" and it passed, that is information. If you never wrote the case, the absence of a bug report means nothing at all — you cannot tell a clean area from an unexamined one.
+
+That is the argument for written cases in one sentence: **a pass is only meaningful if it was possible to fail.**
+</Callout>
+
+## Report the counts
+
+At the top of your results:
+
+```
+Cart and discounts — run 1
+
+Pass 8   Fail 3   Blocked 1   Not run 0
+```
+
+Then the failures, each with expected, actual and what you observed in the Network panel. That is tomorrow's subject, and the actual you write today is the first draft of it.
+
+## Check your own suite
+
+Four questions, honestly:
+
+1. **Could a colleague run every case without asking you anything?** Hand one to someone and watch.
+2. **Can each case be run alone, in any order?** Pick number 9 and run only that.
+3. **Can every expected result be failed?** Search your own cases for "correctly", "properly", "as expected".
+4. **What did you not cover?** Write it down. Honest gaps beat implied completeness.
+
+<Callout kind="job">
+Question 4 produces your first **test report**, which is a different artefact from a suite: the counts, the failures, and what was not covered.
+
+A suite says what you checked. A report says what you found and what you did not look at. People who only ever hand over the first one get asked the same follow-up questions every time.
+</Callout>
+
+<Exercise
+  prompt="You run twelve cases and all twelve pass, on a product you know has five planted defects. What does that tell you about your suite rather than the product?"
+  accept={["happy path", "no negative", "not trying to break", "shallow"]}
+  hint="The defects are real. Your cases did not touch them."
+  solution="That the suite is testing the intended route only. The defects are reachable — by quantity 0, by applying a discount twice, by adding the same item twice — so a suite that misses all five contains no cases that attempt to break anything. It needs attacks, not more happy paths."
+/>
+
+<Exercise
+  prompt="Why does a passing case tell you more than the absence of a bug report?"
+  accept={["could have failed", "possible to fail", "examined", "deliberate"]}
+  hint="What is the difference between clean and unexamined?"
+  solution="A pass means somebody deliberately checked a specific thing and it held. No bug report might mean the area is clean, or that nobody looked at it — and you cannot tell which. Written cases are what distinguish a clean area from an unexamined one."
+/>
+
+<Quiz questions={[
+  {
+    q: "Why write the suite before hunting for the planted defects?",
+    options: [
+      "It is faster",
+      "Cases written after you know the answers test what you found, not what should happen",
+      "It is required",
+      "It avoids bias in the product"
+    ],
+    answer: 1,
+    why: "Writing from the intended behaviour is what makes a case able to find something you had not anticipated."
+  },
+  {
+    q: "What ratio of happy paths to attacks should a suite have?",
+    options: [
+      "Mostly happy paths",
+      "Roughly one happy path to two or three attacks",
+      "Only attacks",
+      "It does not matter"
+    ],
+    answer: 1,
+    why: "Happy paths establish the feature works at all; the attacks are what actually find defects."
+  },
+  {
+    q: "What does a test report contain that a suite does not?",
+    options: [
+      "The steps",
+      "The counts, the failures, and what was not covered",
+      "The preconditions",
+      "The case ids"
+    ],
+    answer: 1,
+    why: "A suite says what you checked. A report says what you found and, importantly, where you did not look."
+  }
+]} />
+
+## Week 10 done
+
+You can write a test case with all seven parts, specific enough that someone else runs it and reaches the same conclusion. You know why preconditions decide whether a case travels, and how to reach a starting state through the API rather than fifteen clicks. You can write steps with one action each and expected results that can actually be failed. You know the four results, including Blocked and why it carries more information than Fail. And you can build a suite with the right shape, find its gaps, and report what it did not cover.
+
+Next week: what happens when a case fails. The bug lifecycle, severity against priority, and writing a report an engineer can act on without asking you a single question.

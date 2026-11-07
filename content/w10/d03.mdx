@@ -1,0 +1,127 @@
+Steps are the part people write fastest and should write slowest. A vague step is where "works for me" is born.
+
+## One action per step
+
+```
+Bad
+1. Log in and go to the cart and apply a discount and check out
+
+Good
+1. Sign in as the test merchant
+2. Open the cart
+3. Enter SAVE10 in the discount field and click Apply
+4. Click Checkout
+```
+
+Numbering forces this. If a step contains "and", it is usually two steps — and when a case fails, "it failed at step 3" is useful while "it failed at step 1" is not.
+
+## Say exactly what, not approximately where
+
+| Weak | Strong |
+| --- | --- |
+| Enter some details | Enter `ada@example.com` in the Email field |
+| Add an item | Add **Harmattan Field Jacket** to the cart |
+| Use a test card | Enter the Interswitch test card `5060 6666 6666 6666 666` |
+| Click the button | Click **Place order** |
+| Wait a bit | Wait for the confirmation page to load |
+
+Name the **label**, not the position or the colour. `Click the blue button top right` breaks the first time a designer moves it; `Click Place order` survives.
+
+<Callout kind="watch">
+"Wait a bit" deserves its own warning. Timing is where flaky tests come from — in manual cases and far more so in automation.
+
+**Wait for a condition, not a duration.** "Wait until the confirmation page shows the order reference" is checkable. "Wait 3 seconds" passes on a fast day and fails on a slow one, and you will spend a morning on it in week 15.
+</Callout>
+
+## Include the values
+
+A step that says "enter a quantity" leaves the tester choosing, and two testers will choose differently. If the quantity matters — and in a boundary case it is the whole point — state it.
+
+Where the exact value genuinely does not matter, say so: *"enter any valid email"*. That is a deliberate instruction, not an omission.
+
+## Keep the goal visible
+
+Steps describe *how*. The title and expected result describe *what for*. When someone can follow all four steps without knowing what is being checked, they will not notice the thing that went wrong beside the thing they were watching.
+
+A good case reads as: **this is what we are checking → here is how → here is what should happen.**
+
+## How many steps
+
+Three to eight is the usual range.
+
+Fewer than three and the case is probably missing its setup or its verification. More than eight and it is probably two cases, or it has setup in it that belongs in preconditions.
+
+If a case has fifteen steps and the first ten are getting into position, move those ten into preconditions and do them through the API. Yesterday's lesson.
+
+## Write some
+
+<TestCaseBuilder />
+
+Write a case for **applying a discount code twice** — one of the defects planted in the Meridian lab. Watch what the structural checks say about your steps, then run the case against the lab and see whether your own instructions are followable.
+
+That last part is the real test. A case you wrote an hour ago and cannot follow today is a case nobody else can follow at all.
+
+<Exercise
+  prompt="Rewrite as proper steps: 'Log in, add something to the cart, apply a discount, and make sure the total is right.'"
+  solution={`Something like:
+1. Sign in as ada@example.com
+2. Add Harmattan Field Jacket (NGN 48,500.00) to the cart
+3. Open the cart
+4. Enter SAVE10 in the discount field and click Apply
+
+With the expected result separated out: "Subtotal shows NGN 48,500.00, discount shows NGN 4,850.00, total shows NGN 43,650.00." The original folded four actions and the verification into one line, so a failure could not be located.`}
+/>
+
+<Exercise
+  prompt="Why is 'wait 3 seconds' worse than 'wait until the confirmation page appears'?"
+  accept={["flaky", "timing", "slow", "fast", "condition"]}
+  hint="What happens on a slow day?"
+  solution="A duration is a guess about speed. On a fast machine it wastes time; on a slow one it fails while nothing is actually wrong, which is the definition of a flaky test. Waiting for an observable condition is correct regardless of how long it takes."
+/>
+
+<Terms items={[
+  { term: "One action per step", meaning: "If a step contains 'and', it is usually two steps." },
+  { term: "Label, not position", meaning: "Name the control's text so a redesign does not break the case." },
+  { term: "Explicit values", meaning: "State the data, unless you deliberately say any value will do." },
+  { term: "Wait for a condition", meaning: "Not a duration. Durations are where flakiness starts." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "A step reads 'Log in and add an item and go to checkout.' What is wrong?",
+    options: [
+      "Nothing",
+      "Three actions in one step, so a failure cannot be located",
+      "It is too short",
+      "It names the item"
+    ],
+    answer: 1,
+    why: "One action per step is what makes 'it failed at step 3' mean something."
+  },
+  {
+    q: "Why name a button by its label rather than its position?",
+    options: [
+      "Labels are shorter",
+      "A redesign moves positions but usually keeps labels, so the case survives",
+      "Positions are hard to describe",
+      "Colours vary by theme"
+    ],
+    answer: 1,
+    why: "Describing the interface instead of the goal ties your case to a layout that will change."
+  },
+  {
+    q: "A case has fifteen steps, the first ten of which are setup. What should you do?",
+    options: [
+      "Leave it",
+      "Move the setup into preconditions and create that state through the API",
+      "Split it into fifteen cases",
+      "Delete it"
+    ],
+    answer: 1,
+    why: "You are not testing the setup, and a long case quietly stops being re-run."
+  }
+]} />
+
+## Tomorrow
+
+Expected versus actual, and the four results a case can have — including the one beginners forget.

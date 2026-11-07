@@ -1,0 +1,137 @@
+A test case is one small, repeatable test written so that **anyone can run it and get the same answer**. That last part is the whole definition, and it is the part beginners skip.
+
+<Video id="test-cases" />
+
+## The seven parts
+
+```
+ID:            PAY-001
+Title:         Card payment of NGN 1,000 succeeds in the sandbox
+Preconditions: Verified test merchant; test public key set; Product A in stock
+Steps:         1. Add Product A to the cart on the test store
+               2. Go to the cart and click Checkout
+               3. Choose Card and enter the Interswitch test card
+               4. Enter the test OTP and submit
+Expected:      Transaction shows status Success, amount NGN 1,000, channel Card;
+               the order is marked paid
+Actual:        (filled in when run)
+Status:        Pass / Fail / Blocked
+```
+
+**ID** — stable, so you can refer to it in a bug report, a run and a conversation. "The third one" survives none of those.
+
+**Title** — readable on its own in a list of two hundred.
+
+**Preconditions** — what must already be true. Tomorrow.
+
+**Steps** — numbered, one action each. Day 3.
+
+**Expected result** — the observable outcome. Day 4, and it is where most cases fail.
+
+**Actual** and **Status** — filled in when you run it.
+
+## The test of a good case
+
+> Could someone who has never seen this product run it and reach the same conclusion?
+
+If a step says "log in" and they do not know as whom, your case is incomplete. If the expected result says "it works correctly", they cannot tell whether it did.
+
+<Callout kind="key">
+**A case that only you can run is a note to yourself.** That is fine in exploratory work, where notes are the output. It is not a test case.
+
+The difference matters because test cases outlive you: they run after you leave, they get handed to a new joiner, and they become the regression suite nobody remembers writing.
+</Callout>
+
+## Write one
+
+<TestCaseBuilder />
+
+Write a case for something you know — signing in, searching, adding to a cart — then press Check. The checks are structural: they can tell whether you numbered your steps, not whether the test is worth running.
+
+Load the example to see a complete one, then clear it and write your own without copying.
+
+## What makes a bad case
+
+**Too big.** "Test the checkout" is not a case, it is an area. One case checks one thing, so that a failure tells you precisely what broke.
+
+**Dependent on the last one.** Case 7 assuming case 6 just ran means it cannot be run alone, and a failure in 6 cascades into false failures. Each case stands up by itself, with preconditions doing the setup.
+
+**Vague expected results.** "The page works." Unfalsifiable, therefore useless.
+
+**Describing the interface instead of the goal.** "Click the blue button at the top right" breaks when the design changes. "Click **Checkout**" survives it.
+
+**Only the happy path.** A suite of twenty cases where all twenty pass on a working feature has told you one thing. Half your cases should be trying to break it.
+
+<Callout kind="job">
+The commonest real failure is the second one. A tester writes twelve cases in order, each continuing from the last, and it works beautifully — until someone runs case 9 on its own and it fails for no reason, or case 3 breaks and nine others go red with it.
+
+**Write each case so it can be run alone, in any order.** It takes slightly longer and saves days.
+</Callout>
+
+## Where they live
+
+A spreadsheet is completely respectable, and many good teams use one: ID, title, preconditions, steps, expected, actual, status, notes.
+
+Dedicated tools — TestRail, Zephyr, Xray, Qase — add run history, linking to tickets and reporting. Useful at scale, and not a prerequisite.
+
+What matters is that cases are **written down, shared, and have a recorded result per run.** A suite in one person's head is not a suite.
+
+<Exercise
+  prompt="Rewrite this expected result so it can actually be failed: 'The payment goes through correctly and the user sees the right thing.'"
+  solution="Something like: 'Transaction appears in the Transactions list with status Success, amount NGN 1,000 and channel Card; the confirmation page shows the order reference; the order status is Paid.' Three observable, checkable facts. The original cannot be failed, because 'correctly' is whatever the reader decides it means."
+/>
+
+<Exercise
+  prompt="Why must each case be runnable on its own?"
+  accept={["alone", "any order", "cascade", "false failures", "independent"]}
+  hint="What happens when an early case fails?"
+  solution="Because otherwise a failure early in the suite cascades: nine cases go red when only one thing is broken, and you cannot tell real failures from knock-on ones. It also means no case can be run alone to check a single fix, which is most of what you do during retesting."
+/>
+
+<Terms items={[
+  { term: "Test case", meaning: "One repeatable test with steps and an expected result." },
+  { term: "Preconditions", meaning: "What must be true before step 1." },
+  { term: "Expected result", meaning: "The observable outcome. Must be specific enough to fail." },
+  { term: "Independent case", meaning: "One runnable alone, in any order." },
+  { term: "Test suite", meaning: "A set of cases covering a feature or area." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What is the test of a good test case?",
+    options: [
+      "It passes",
+      "Someone who has never seen the product can run it and reach the same conclusion",
+      "It is short",
+      "It covers the whole feature"
+    ],
+    answer: 1,
+    why: "Repeatability by another person is the definition. A case only its author can run is a note."
+  },
+  {
+    q: "Why avoid 'Click the blue button at the top right'?",
+    options: [
+      "It is too long",
+      "It describes the interface rather than the goal, so a redesign breaks the case",
+      "Colours are subjective",
+      "Buttons cannot be clicked in tests"
+    ],
+    answer: 1,
+    why: "Naming the label instead keeps the case valid when the design moves things around."
+  },
+  {
+    q: "Twenty cases all pass on a working feature. What does that tell you?",
+    options: [
+      "The feature is well tested",
+      "Very little, if they are all happy paths",
+      "The cases are wrong",
+      "Testing is finished"
+    ],
+    answer: 1,
+    why: "Confirming the intended route twenty times is one piece of information. Half a suite should be attempting to break the thing."
+  }
+]} />
+
+## Tomorrow
+
+Preconditions: the part that makes a case runnable by someone who is not you.

@@ -1,0 +1,126 @@
+Phase 1 gave you the equipment. Phase 2 taught you to use it directly. From here it is the job.
+
+<Video id="qa-100s" />
+
+## What QA actually is
+
+**Testing a product to find its problems before real customers do.**
+
+Not proving it works. That distinction is the whole discipline, and it is where most beginners go wrong: they walk the happy path, see it work, and report that the feature is fine. They have confirmed something, not tested it.
+
+A tester's question is **"what could go wrong here?"**, asked systematically, and then answered with evidence.
+
+## Why it matters more in some places than others
+
+In most software a bug is annoying. In software that moves money, a bug:
+
+- charges someone twice
+- sends a settlement to the wrong account
+- marks an unpaid order as paid
+- exposes one customer's data to another
+
+You have already met all four in this course, in the labs and the lessons. The cost of a missed bug is money and trust, and trust is the slower of the two to rebuild.
+
+<Callout kind="key">
+**QA and support are the same job from two directions.**
+
+Support handles the problems customers hit. QA finds and removes those problems before customers hit them. Every bug caught in testing is a stack of tickets that never happens.
+
+Which is why this course teaches both, and why Phase 4 will feel like a continuation rather than a change of subject.
+</Callout>
+
+## The cost curve
+
+The earlier a defect is found, the cheaper it is. Not slightly — by orders of magnitude.
+
+| Found | What it costs |
+| --- | --- |
+| While the developer is writing it | Minutes. They still remember the code |
+| In code review | An hour |
+| In testing | Half a day: report, fix, retest |
+| In production | A day, plus support tickets, plus whatever it did while live |
+| By a regulator or in the press | Weeks, and the trust does not come back |
+
+This is why "we will test it later" is expensive, and why the most valuable thing a tester does is often not finding a bug at all — it is asking a question early enough that the bug is never written.
+
+## You are not the enemy of the developers
+
+Worth saying plainly, because new testers often feel adversarial, and the feeling makes them worse at the job.
+
+You and the developers want the same thing. You report the **bug**, never the person. You describe what the system did, not who you think is to blame. When you find something, the correct tone is "here is a thing that will embarrass us if a customer finds it first", not "here is your mistake".
+
+The practical version: **"the system did X; it should do Y"** — never "you broke X". Week 11 makes this concrete, and week 6 of Phase 5 makes it the basis of how you earn engineering's trust.
+
+## What you will actually do
+
+Over a week, roughly:
+
+- Read what is being built and work out what could go wrong
+- Write test cases and run them
+- Explore around the edges, unscripted
+- Write bug reports with evidence
+- Retest fixes, and reopen the ones that are not fixed
+- Say, at some point, "I do not think this is ready" — and be able to show why
+
+The last one is the job. Everything else supports it.
+
+<Exercise
+  prompt="A developer says a feature is 'done and tested'. You walk the happy path and it works. Have you tested it?"
+  accept={["no", "not tested", "confirmed", "happy path"]}
+  hint="What did you learn that you did not already believe?"
+  solution="No. You confirmed what you were already told. Testing means trying to make it fail: bad input, empty states, boundaries, the wrong order, doing it twice. A reviewer who only walks the happy path has done a demonstration, not a test."
+/>
+
+<Exercise
+  prompt="Why is a defect found in production so much more expensive than the same defect found in testing?"
+  accept={["already", "customers", "support", "damage", "live"]}
+  hint="What has already happened by then?"
+  solution="Because it has already done damage while live: wrong data, affected customers, support tickets, possibly money moved incorrectly. The fix itself costs the same; everything around it does not. And the developer has to reload context they lost weeks ago."
+/>
+
+<Terms items={[
+  { term: "QA", meaning: "Testing a product to find its problems before customers do." },
+  { term: "Happy path", meaning: "The intended route where everything goes right. Necessary and insufficient." },
+  { term: "Defect / bug", meaning: "Behaviour that differs from what it should be." },
+  { term: "Cost curve", meaning: "The later a defect is found, the more it costs — by orders of magnitude." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What is the tester's central question?",
+    options: [
+      "Does this work?",
+      "What could go wrong here?",
+      "Is this finished?",
+      "Who wrote this?"
+    ],
+    answer: 1,
+    why: "Asking whether it works invites you to confirm. Asking what could go wrong makes you look where defects actually are."
+  },
+  {
+    q: "Why does the course teach QA and technical support together?",
+    options: [
+      "They use the same software",
+      "They are the same job from two directions: support handles problems customers hit, QA removes them first",
+      "Both are entry level",
+      "They are usually the same person"
+    ],
+    answer: 1,
+    why: "Every bug caught in testing is a stack of support tickets that never happens, and both roles rest on reading evidence."
+  },
+  {
+    q: "What is the right way to phrase a defect to a developer?",
+    options: [
+      "You broke the checkout",
+      "The system charges twice on a double click; it should charge once",
+      "The checkout is a mess",
+      "Why wasn't this tested?"
+    ],
+    answer: 1,
+    why: "Describe what the system did and what it should do. Reporting the bug rather than the person is what gets it fixed quickly."
+  }
+]} />
+
+## Tomorrow
+
+Where testing sits as software travels from a developer to a customer, and what your role is at each stage.

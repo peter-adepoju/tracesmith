@@ -1,0 +1,133 @@
+The difference between a tester who finds things and one who does not is rarely tooling. It is where they look.
+
+## Assume nothing is true
+
+Every interface makes claims. A good tester treats each as a hypothesis.
+
+| The screen says | The question |
+| --- | --- |
+| "Out of stock" | Can I buy it anyway? |
+| "Maximum 10 characters" | What happens at 11? At 10,000? |
+| "Payment successful" | Did money actually move? |
+| "3 items" | Does the total match three items? |
+| A disabled button | Is it disabled on the server too? |
+| "Saved" | Is it there after a reload? |
+
+Half of those you have already tested in the Meridian lab. The pattern is the same every time: **the interface tells you what it believes, and you check whether it is right.**
+
+## The heuristics
+
+Not rules. Prompts that generate test ideas when you are staring at a feature with no idea where to start.
+
+**Zero, one, many.** Empty cart, one item, fifty. Empty list, one row, ten thousand.
+
+**Boundaries.** If the maximum is 10, try 9, 10 and 11. Defects cluster at edges because that is where the comparison operators are.
+
+**Too much.** Paste 10,000 characters. Upload a 2 GB file. Order 99,999.
+
+**Nothing.** Submit everything blank. What is required, and is it required on the server?
+
+**Wrong type.** Letters in a number field. A `.exe` renamed to `.pdf`.
+
+**Negative and zero.** Especially quantities and amounts. A negative quantity producing a negative total is a money bug.
+
+**Twice.** Click submit twice. Apply the discount twice. Send the webhook twice. You have met this three times now.
+
+**Out of order.** Press back and resubmit. Open two tabs and act in both. Complete step 3 without step 2.
+
+**Interrupt it.** Close the tab mid-payment. Go offline mid-upload. Lock the phone.
+
+**Someone else's.** Change the id in the URL to another customer's.
+
+**Awkward characters.** `O'Brien`. `Adébáyọ̀`. Emoji. A name with a space at each end.
+
+<Callout kind="job">
+Those eleven prompts are most of manual testing. Keep them somewhere you can see them. When handed a feature and no test plan, walk the list and you will have twenty cases in ten minutes — several of which nobody thought of.
+</Callout>
+
+## Follow the money, the data and the permissions
+
+Three questions that find the serious defects:
+
+**Where does money move?** Every amount, every total, every conversion. Check the arithmetic by hand. A money bug outranks everything.
+
+**Where does data cross a boundary?** Between customers, between tenants, between the server and the browser. Read the raw response for what should not be there.
+
+**Where does permission get checked?** And is it checked on the server, or only hidden in the interface?
+
+## Deciding what to test first
+
+You will never have time for everything. Rank by **likelihood × impact**.
+
+<RiskMatrix />
+
+Score each area, then compare with how an experienced tester would rank them. The two columns are independent, and the interesting disagreements are usually about impact rather than likelihood.
+
+<Callout kind="key">
+Notice *admin refunds* in that list. Rarely touched, so unlikely to break — but when it does, money moves wrongly and only staff can see it, so it can run wrong for weeks before anyone notices.
+
+**How long a defect can hide is part of its impact.** A bug customers hit immediately gets reported in an hour. A bug in a monthly batch job hides for a month.
+</Callout>
+
+## Staying honest
+
+Two traps worth naming.
+
+**Confirmation bias.** You expect it to work, so you test gently and see what you expected. The fix is to decide what you are trying to break *before* you touch it.
+
+**Fatigue blindness.** On the fortieth run you stop seeing the screen. The fix is a written case with a specific expected result, so you are comparing rather than glancing.
+
+<Exercise
+  prompt="You are handed a new discount-code feature and no test plan. Use the heuristics to produce five cases in a minute."
+  solution="Something like: apply a valid code once; apply the same code twice; apply a code that does not exist; apply a code to an empty cart; apply one with a 10,000-character value. Then follow the money: does the total actually reduce by the right amount, and can it be driven below zero? That last one is the expensive bug."
+/>
+
+<Exercise
+  prompt="Why does 'how long a defect can hide' belong in its impact score?"
+  accept={["longer", "undetected", "weeks", "more damage", "accumulates"]}
+  hint="Compare a bug customers see with one only a monthly job touches."
+  solution="Damage accumulates while it is undetected. A customer-facing bug is reported within hours; one in a monthly batch or an admin-only screen can run wrong for weeks, producing far more bad data before anyone notices. Same defect, much larger consequence."
+/>
+
+<Terms items={[
+  { term: "Heuristic", meaning: "A prompt that generates test ideas, not a rule." },
+  { term: "Boundary", meaning: "The edge of what is allowed. Where defects cluster." },
+  { term: "Zero, one, many", meaning: "Three quantities that behave differently and are often handled by different code." },
+  { term: "Confirmation bias", meaning: "Testing gently because you expect it to pass." },
+  { term: "Likelihood × impact", meaning: "How risk is ranked when time is short." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "A field says 'maximum 10 characters'. Which values do you test?",
+    options: ["Just 10", "1 and 10", "9, 10 and 11", "Only 11"],
+    answer: 2,
+    why: "Defects cluster at boundaries because that is where comparisons live. Either side and exactly on it covers off-by-one in both directions."
+  },
+  {
+    q: "A bug in a monthly batch job and a bug on the checkout page do equal damage per occurrence. Which has higher impact?",
+    options: [
+      "The checkout bug",
+      "The batch job bug, because it can run wrong for a month before anyone notices",
+      "They are equal",
+      "Impossible to say"
+    ],
+    answer: 1,
+    why: "Detection time is part of impact. The checkout bug is reported within hours; the hidden one accumulates bad data for weeks."
+  },
+  {
+    q: "What is the fix for confirmation bias when testing?",
+    options: [
+      "Test more slowly",
+      "Decide what you are trying to break before you start",
+      "Have someone else test it",
+      "Automate everything"
+    ],
+    answer: 1,
+    why: "Setting out to break something specific stops you walking the happy path and calling it a test."
+  }
+]} />
+
+## Tomorrow
+
+A working day: take one feature and produce a ranked plan for it.

@@ -1,0 +1,134 @@
+A test case without a specific expected result is not a test. It is an invitation to form an opinion.
+
+## Expected must be falsifiable
+
+The test of a good expected result: **could two people disagree about whether it happened?** If yes, rewrite it.
+
+| Cannot be failed | Can be failed |
+| --- | --- |
+| The payment works | Transaction status is Success, amount NGN 1,000, channel Card |
+| The page looks right | The cart shows 2 items and a total of NGN 97,000.00 |
+| An error appears | An inline error reads "Enter a valid email address" |
+| The user is logged in | The header shows ada@example.com and a Sign out link |
+| It is fast | The page is interactive within 3 seconds on Slow 4G |
+
+Words to distrust in your own writing: **correctly, properly, as expected, appropriately, successfully, fine.** Each one hides a decision you have not made.
+
+<Callout kind="key">
+Write the expected result **before** you run the case.
+
+Written afterwards, you will describe what happened and call it expected — which is not a test, it is a recording. This sounds obvious and is violated constantly, especially under time pressure.
+</Callout>
+
+## Actual: what to write
+
+When a case passes, "as expected" is fine.
+
+When it fails, **actual is the start of your bug report**, so put the effort here:
+
+> **Expected:** Total shows NGN 97,000.00
+> **Actual:** Total shows NGN 48,500.00 — the second unit is not counted. Network shows POST /v1/cart returned 200 with `"quantity": 2`, so the data is right and the display is wrong.
+
+That second line already contains the diagnosis, the evidence and the ownership. Tomorrow's lesson on evidence builds directly on it.
+
+## The four results
+
+**Pass.** It did what the expected result said. Not "near enough".
+
+**Fail.** It did something else. One defect, one failing case — if three cases fail for the same underlying reason, say so, rather than filing three bugs.
+
+**Blocked.** You could not run it, because something it depends on is broken or missing.
+
+**Not run.** Not attempted this round. Honest, and better than leaving it blank.
+
+Some teams add **N/A** for cases that no longer apply.
+
+<Callout kind="watch">
+**Blocked is the one beginners forget**, and it carries more information than anything else on the list.
+
+If exams never load, you cannot test "enter a result", "edit a result" or "print a report card". Those are **Blocked**, not **Fail**. Marking them Fail says three things are broken; marking them Blocked says one thing is broken and three are stuck behind it.
+
+In the School CRM review from the Meridian lab's sibling case, Blocked was the tallest bar — 86 of 194 cases. That shape told the whole story at a glance: a small part worked, a large part was wrong, and the biggest part could not be reached at all.
+</Callout>
+
+## Reading the counts
+
+After a run, the numbers are the headline:
+
+```
+Pass 31   Fail 40   Blocked 86   Not run 29   N/A 8
+```
+
+Nobody reads 194 rows. They read that line, and it should carry the verdict on its own. More Fail than Pass is a serious signal. Blocked as the largest group means whole areas are unreachable, which is a different and worse message than "lots of bugs".
+
+**Put the counts at the top of any report**, then let the detail support them.
+
+## Partial passes
+
+The awkward case: four of five expected outcomes happened.
+
+It is a **Fail**. Record what did work in the actual, because that narrows the defect usefully — "status and amount correct, channel shows Bank Transfer instead of Card" is far more useful than a bare fail.
+
+Resist the temptation to pass something that mostly worked. A suite where "mostly" counts as a pass cannot be trusted by anyone reading it later.
+
+<Exercise
+  prompt="Exams will not load at all. You have cases for entering a result, editing a result and printing a report card. What status do they get, and why does it matter?"
+  accept={["blocked", "block"]}
+  hint="Could you run them?"
+  solution="Blocked, not Fail. You could not run them, because they all depend on exams loading. Marking them Fail would claim four broken things; Blocked correctly says one thing is broken and three are stuck behind it — which tells the reader to fix one thing, not four."
+/>
+
+<Exercise
+  prompt="A case checks five outcomes and four happen. Pass or fail, and what goes in the actual?"
+  accept={["fail"]}
+  hint="Does 'mostly' mean anything to someone reading the suite later?"
+  solution="Fail. In the actual, record which four were right and which one was not: 'status, amount, reference and date correct; channel shows Bank Transfer instead of Card.' That narrows the defect immediately, and keeps the suite trustworthy — once 'mostly' passes, no pass means anything."
+/>
+
+<Terms items={[
+  { term: "Falsifiable", meaning: "Specific enough that two people cannot disagree about whether it happened." },
+  { term: "Pass", meaning: "Did exactly what the expected result said." },
+  { term: "Fail", meaning: "Did something else. Partial counts as fail." },
+  { term: "Blocked", meaning: "Could not be run because something it depends on is broken." },
+  { term: "Not run", meaning: "Not attempted this round. Honest, unlike a blank." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which expected result can actually be failed?",
+    options: [
+      "The checkout works correctly",
+      "The total shows NGN 97,000.00 and the cart shows 2 items",
+      "The page behaves as expected",
+      "Payment is successful"
+    ],
+    answer: 1,
+    why: "It names observable values. The other three can be argued either way, which means they can never be failed."
+  },
+  {
+    q: "Why is Blocked more informative than Fail for a case you could not run?",
+    options: [
+      "It sounds better",
+      "It says one thing is broken and others are stuck behind it, rather than claiming several separate defects",
+      "It is faster to type",
+      "There is no difference"
+    ],
+    answer: 1,
+    why: "The distinction tells the reader how many problems exist, which changes what gets fixed first."
+  },
+  {
+    q: "When should the expected result be written?",
+    options: [
+      "After running the case",
+      "Before running the case",
+      "Whenever convenient",
+      "Only when it fails"
+    ],
+    answer: 1,
+    why: "Written afterwards you describe what happened and call it expected, which records behaviour rather than testing it."
+  }
+]} />
+
+## Tomorrow
+
+Suites and coverage: how many cases is enough, and why 100 percent is the wrong target.

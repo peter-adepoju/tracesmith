@@ -1,0 +1,130 @@
+Preconditions are the state the world must be in before step 1. They are the least glamorous part of a test case and the one that decides whether anyone else can run it.
+
+## What they cover
+
+**Which environment.** Sandbox, staging, production-read-only. Never assume.
+
+**Who you are.** Not "a user" — *which* user, with which role and which permissions. "Signed in as a merchant whose KYC is approved" is a precondition. "Logged in" is not.
+
+**What exists.** Product A is in stock. The customer has at least one past order. The discount code `SAVE10` is active and unused.
+
+**What does not exist.** The cart is empty. This email has never signed up. There are no saved addresses.
+
+**Configuration.** Test keys set. The feature flag is on. The webhook URL points at the test receiver.
+
+<Callout kind="key">
+The question to ask of every precondition: **would this case behave differently if this were not true?**
+
+If yes, it is a precondition and must be stated. If no, leave it out — a precondition list that includes everything is as unusable as one that includes nothing.
+</Callout>
+
+## The absent-precondition bug
+
+It looks like this:
+
+> The case passes for you, every time. It fails for a colleague, every time. Nobody can work out why.
+
+Because your account has a saved card and theirs does not. Because you have three past orders and they have none. Because you are on staging and they are on dev.
+
+**That gap is the missing precondition.** When a case passes for one person and fails for another with no code change between them, you have found a state difference the case failed to state — and finding it is itself worth writing down.
+
+## Setup: getting to the starting state
+
+Preconditions describe the state. Setup is how you reach it.
+
+Three approaches, in increasing order of reliability:
+
+**By hand.** Click through to create what you need. Fine once; miserable the fortieth time.
+
+**Through the API.** Create the order with Postman instead of six screens. Faster, repeatable, and you built exactly this in week 8 — this is where that collection starts paying for itself.
+
+**From a fixture.** A known dataset loaded before the run, so everyone starts identically. The best option, and usually a team-level decision rather than yours.
+
+<Callout kind="job">
+If a case needs fifteen clicks of setup before the thing you are actually testing, **create that state through the API instead.** You are not testing the setup; you are testing what happens next.
+
+It turns a ten-minute case into a one-minute case, which means you will actually run it during retesting rather than quietly skipping it. A case too tedious to re-run is a case that stops being run.
+</Callout>
+
+## Cleanup
+
+What you leave behind becomes the next run's problem. Three options, same as week 9:
+
+- **Unique data per run** — `peter+20261107@example.com`. Simplest, and nothing needs undoing.
+- **Delete what you made** — reliable until a case fails halfway and leaves debris.
+- **Reset the environment** — cleanest, usually someone else's job.
+
+If a case cannot be run twice in a row without failing, say so in the case. A note reading *"uses a fresh email each run; the previous one cannot be reused"* saves the next person twenty minutes.
+
+## Writing them well
+
+| Weak | Strong |
+| --- | --- |
+| Logged in | Signed in as a merchant with KYC approved, on staging |
+| Some products exist | Product A in stock (qty > 5); Product C out of stock |
+| A discount code | `SAVE10` active, 10%, unused by this account |
+| Test environment | Staging, test keys set, webhook pointing at the test receiver |
+
+The strong column takes thirty seconds more to write and removes an entire category of "works for me".
+
+<Exercise
+  prompt="A case passes for you every time and fails for a colleague every time. No code has changed. What have you found?"
+  accept={["precondition", "state", "missing precondition", "difference"]}
+  hint="What differs between you if the code does not?"
+  solution="A missing precondition: some state differs between your accounts or environments that the case does not state — a saved card, past orders, a feature flag, a different environment. Finding the difference tells you what to add to the case, and the gap is itself worth recording."
+/>
+
+<Exercise
+  prompt="Why create test state through the API rather than clicking through the interface?"
+  accept={["faster", "repeatable", "not testing setup", "skip", "re-run"]}
+  hint="What are you actually testing?"
+  solution="You are testing what happens after the setup, not the setup itself. Doing it through the API is faster and repeatable, and — most importantly — it keeps the case cheap enough that you will actually re-run it during retesting instead of skipping it."
+/>
+
+<Terms items={[
+  { term: "Precondition", meaning: "State that must be true before step 1." },
+  { term: "Setup", meaning: "The actions that reach that state." },
+  { term: "Fixture", meaning: "A known dataset loaded so every run starts identically." },
+  { term: "Cleanup", meaning: "Undoing what a run created, so the next one is not affected." },
+  { term: "Works for me", meaning: "Almost always an unstated difference in precondition." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which is a usable precondition?",
+    options: [
+      "Logged in",
+      "Signed in as a merchant with KYC approved, on staging",
+      "Test data exists",
+      "The app is working"
+    ],
+    answer: 1,
+    why: "It names the role, the state and the environment, so another person can reach exactly the same starting point."
+  },
+  {
+    q: "How do you decide whether something is a precondition?",
+    options: [
+      "Include everything to be safe",
+      "Ask whether the case would behave differently if it were not true",
+      "Include only the environment",
+      "Ask the developer"
+    ],
+    answer: 1,
+    why: "That question keeps the list complete without making it unreadable, which is the real balance."
+  },
+  {
+    q: "A case needs fifteen clicks of setup. What should you do?",
+    options: [
+      "Accept it",
+      "Create the state through the API so the case stays cheap enough to re-run",
+      "Skip the case",
+      "Split it into fifteen cases"
+    ],
+    answer: 1,
+    why: "You are not testing the setup, and an expensive case quietly stops being run during retesting."
+  }
+]} />
+
+## Tomorrow
+
+Steps: the part people write too fast, and the specific habits that make them repeatable.

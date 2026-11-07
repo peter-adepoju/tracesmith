@@ -1,0 +1,144 @@
+A suite is a set of cases covering a feature. The questions are always the same two: what goes in it, and how do you know when there are enough?
+
+## Organising
+
+Group by **feature**, then by **area**, in the order a person would meet them:
+
+```
+Checkout
+├── Cart
+│   ├── CART-001  Add one item
+│   ├── CART-002  Add the same item twice
+│   └── CART-003  Remove the last item
+├── Discounts
+│   ├── DISC-001  Valid code reduces the total
+│   ├── DISC-002  Unknown code is rejected
+│   └── DISC-003  The same code cannot be applied twice
+└── Payment
+    ├── PAY-001  Card payment succeeds
+    ├── PAY-002  Declined card shows an error
+    └── PAY-003  Double submit creates one order
+```
+
+Prefixed ids make a bug report readable on its own: "DISC-003 fails" tells a colleague roughly what broke before they open anything.
+
+## The shape of a good suite
+
+Roughly, per area:
+
+- **One or two happy paths.** What it is for.
+- **Several negative cases.** Bad input, missing input, wrong type.
+- **The boundaries.** One below, exactly on, one above.
+- **The states.** Empty, one, many.
+- **The repeats.** Twice, quickly. Back and resubmit.
+
+If your suite is mostly happy paths, it will pass on a broken product.
+
+<Callout kind="key">
+A rule of thumb worth arguing with: **for every happy path, two or three cases trying to break it.** A twenty-case suite with eighteen happy paths covers almost nothing; six happy paths and fourteen attacks covers a great deal.
+
+The ratio matters more than the total.
+</Callout>
+
+## Coverage, and why 100 percent is the wrong target
+
+"Coverage" means different things, and the confusion causes bad decisions.
+
+**Requirements coverage** — every acceptance criterion has at least one case. This one you should genuinely aim to complete, because a criterion with no case is a thing nobody checked.
+
+**Code coverage** — the percentage of lines a test suite executes. A developer metric, and a poor one in isolation: a suite can execute every line and assert nothing.
+
+**Risk coverage** — the areas that matter most have the most cases. This is the one to care about.
+
+<Callout kind="watch">
+**100 percent coverage is not the goal, and chasing it does harm.**
+
+The number of possible tests is effectively infinite — every input, every combination, every order, every timing. You could test forever and still miss something.
+
+A suite that tests everything shallowly is worse than one that tests the risky parts deeply. The question is never "have we covered everything?" but **"have we covered the things that matter most, well?"**
+</Callout>
+
+## Finding the gaps
+
+Four questions that reliably surface missing cases:
+
+1. **Walk the acceptance criteria.** Each one: which case covers this? A criterion with no case is a hole.
+2. **Walk the heuristics** from week 9 day 4. Zero, one, many. Boundaries. Twice. Out of order.
+3. **Walk the states.** Empty, loading, error, partial, full. The empty and error states are the ones usually missing.
+4. **Walk the roles.** Signed out, ordinary customer, admin. Does each see the right thing?
+
+That fourth one finds security defects, because it asks what a low-privilege user can reach.
+
+## Keeping it alive
+
+A suite rots. Features change, cases drift out of date, and nobody trusts a suite where a third of the failures are stale.
+
+- **Delete cases for features that no longer exist.** Deleting is a contribution.
+- **Update rather than duplicate** when behaviour changes.
+- **Add a case for every escaped defect.** This is the most valuable habit here: a bug that reached production is a test you did not have, and adding it means it can never escape the same way twice.
+
+<Callout kind="job">
+That last one turns every production incident into a permanent improvement. It also gives you something precise to say in a post-mortem — "I have added CART-014 so this specific failure is caught in future" — which is more useful than any amount of apologising.
+</Callout>
+
+<Exercise
+  prompt="A suite has 40 cases and all 40 pass on a feature that a customer immediately broke. What is most likely wrong with the suite?"
+  accept={["happy path", "no negative", "shallow", "positive"]}
+  hint="What kind of cases pass easily?"
+  solution="It is almost certainly all happy paths. Forty cases that each confirm the intended route will all pass on a product that collapses at the first unexpected input. The ratio is the problem, not the count."
+/>
+
+<Exercise
+  prompt="Why is adding a case for every escaped defect so valuable?"
+  accept={["never again", "regression", "cannot escape twice", "permanent"]}
+  hint="What does a production bug prove about the suite?"
+  solution="An escaped defect is proof of a missing case. Adding it means that exact failure can never escape again, so every incident permanently improves the suite rather than just being fixed. It also gives you something concrete to report in a post-mortem."
+/>
+
+<Terms items={[
+  { term: "Suite", meaning: "A set of cases covering a feature or area." },
+  { term: "Requirements coverage", meaning: "Every acceptance criterion has a case. Worth completing." },
+  { term: "Risk coverage", meaning: "The risky areas have the most cases. The one that matters." },
+  { term: "Code coverage", meaning: "Lines executed by tests. A developer metric, weak alone." },
+  { term: "Suite rot", meaning: "Cases drifting out of date until nobody trusts the failures." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which kind of coverage should you actually aim to complete?",
+    options: [
+      "Code coverage at 100%",
+      "Requirements coverage: every acceptance criterion has at least one case",
+      "Every possible input",
+      "Every screen"
+    ],
+    answer: 1,
+    why: "A criterion with no case is something nobody checked, and unlike the infinite input space, the criteria are a finite list."
+  },
+  {
+    q: "Why is 100 percent coverage the wrong target?",
+    options: [
+      "It is too expensive",
+      "The possible tests are effectively infinite, and shallow-everywhere is worse than deep-where-it-matters",
+      "Managers dislike it",
+      "It is impossible to measure"
+    ],
+    answer: 1,
+    why: "Spreading effort evenly over an infinite space leaves the risky parts under-tested while feeling thorough."
+  },
+  {
+    q: "A defect reaches production. Beyond fixing it, what should happen to the suite?",
+    options: [
+      "Nothing",
+      "A case is added so that exact failure can never escape again",
+      "The whole suite is rewritten",
+      "Coverage is recalculated"
+    ],
+    answer: 1,
+    why: "An escaped defect is proof of a missing case, and adding it converts an incident into a permanent improvement."
+  }
+]} />
+
+## Tomorrow
+
+A working day: twelve cases for one feature, written properly and run against Meridian.

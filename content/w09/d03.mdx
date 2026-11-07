@@ -1,0 +1,128 @@
+There are dozens of named kinds of testing and you do not need to memorise them. You need to recognise the names, and know which one a given piece of work calls for.
+
+<Video id="testing-types" />
+
+## The ones that matter
+
+| Type | Checks | Meridian example |
+| --- | --- | --- |
+| **Functional** | A feature does what it should | A card payment of ₦1,000 succeeds |
+| **Regression** | Old features still work after a change | After a release, payouts still settle |
+| **Smoke** | The basics work, before deeper testing | Can you log in and see the catalogue? |
+| **Integration** | Parts work together | Payment → webhook → order marked paid |
+| **UI / UX** | Screens look and behave correctly | Checkout shows the right total |
+| **Accessibility** | Usable without sight or a mouse | Every control reachable by keyboard |
+| **Security** | Access and data are protected | One customer cannot see another's orders |
+| **Performance** | Fast enough under load | The dashboard loads with 50,000 orders |
+| **Usability** | A real person can do it | A new merchant finishes signup unaided |
+| **Exploratory** | Unscripted poking to find the unexpected | Odd inputs, odd order, odd timing |
+
+<Callout kind="key">
+Two of these are most of your week.
+
+**Functional** — does this feature work?
+**Regression** — did we break something that already worked?
+
+The rest are either specialised, scheduled occasionally, or folded into the first two. Do not let a long list make the job sound more complicated than it is.
+</Callout>
+
+## The two that find the frightening things
+
+**Security** and **exploratory** testing are where the expensive defects hide, because both deliberately leave the script.
+
+Scripted testing can only find what someone already thought to check. The data leak, the admin endpoint with no authentication, the double charge on a double click — nobody wrote a case for those, because if they had thought of them they would have been prevented.
+
+<Video id="exploratory" />
+
+Exploratory testing is not random clicking. It is structured curiosity with a time box:
+
+> *For 30 minutes, I am going to try to make the cart total disagree with the sum of its lines.*
+
+A goal, a boundary, and notes of everything you tried. At the end you have either a defect or a documented area of confidence.
+
+## Choosing
+
+Given a piece of work, ask in this order:
+
+1. **Is it new?** → Functional, against the acceptance criteria.
+2. **Does it change something that existed?** → Functional *and* regression.
+3. **Does it touch money, permissions or personal data?** → Add the five security checks from week 14.
+4. **Does it touch a screen?** → Add UI, responsive and accessibility.
+5. **Does it cross a boundary between systems?** → Integration.
+6. **Is it slow, or will it be used at scale?** → Performance.
+7. **Is there time left?** → Exploratory, time-boxed, on the riskiest area.
+
+Step 7 is not a leftover. If you only ever run scripted cases you will only ever find predicted defects.
+
+## Manual and automated
+
+A false dichotomy that causes real arguments.
+
+**Automate** what is stable, repetitive and objectively checkable — a regression suite, API assertions, a login flow run on every deploy.
+
+**Do manually** what needs judgement — exploratory work, usability, "does this look right", and anything being built right now and changing hourly.
+
+Automation does not replace a tester. It frees a tester from re-running the same forty checks so they can spend the time on the things only a person can do. Week 15 builds your first automated tests, and the point there is the same.
+
+<Exercise
+  prompt="A developer fixes the checkout button's colour. What testing does this need?"
+  accept={["regression", "visual", "ui", "smoke"]}
+  hint="A small change, but to what?"
+  solution="A quick UI check that it is right, and a regression check that checkout still works — a styling change can break layout or, if a class was reused, affect other buttons. Not a full regression run; checkout plus anything sharing that style. Proportionate is part of the skill."
+/>
+
+<Exercise
+  prompt="Why can scripted testing never find a data leak like 'the orders API returns another customer's email'?"
+  accept={["nobody wrote", "not thought of", "no case", "unanticipated"]}
+  hint="Where would that case have come from?"
+  solution="Because nobody wrote a case for it. A scripted suite can only check what someone anticipated, and if they had anticipated this they would have prevented it. Finding it needs someone reading a raw response and asking what else is in there — which is exploratory and security testing."
+/>
+
+<Terms items={[
+  { term: "Functional", meaning: "Does this feature do what it should?" },
+  { term: "Regression", meaning: "Did a change break something that already worked?" },
+  { term: "Smoke test", meaning: "A quick check of the basics before deeper testing." },
+  { term: "Integration", meaning: "Do separate parts work together?" },
+  { term: "Exploratory", meaning: "Time-boxed, goal-directed, unscripted investigation." },
+  { term: "Time box", meaning: "A fixed period for exploration, so it ends with a conclusion." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which two types make up most of a tester's week?",
+    options: [
+      "Performance and security",
+      "Functional and regression",
+      "Usability and accessibility",
+      "Smoke and integration"
+    ],
+    answer: 1,
+    why: "Does this work, and did we break what already worked. Everything else is occasional or folded into those two."
+  },
+  {
+    q: "What distinguishes exploratory testing from random clicking?",
+    options: [
+      "Nothing",
+      "A stated goal, a time box, and notes of what you tried",
+      "It is done by seniors",
+      "It uses automation"
+    ],
+    answer: 1,
+    why: "Without those three it produces no conclusion. With them it produces either a defect or documented confidence."
+  },
+  {
+    q: "What should be automated?",
+    options: [
+      "Everything",
+      "Stable, repetitive, objectively checkable things",
+      "Only the user interface",
+      "Nothing, it is unreliable"
+    ],
+    answer: 1,
+    why: "Automation suits checks that do not change and have an unambiguous answer. Judgement, usability and anything in flux stay manual."
+  }
+]} />
+
+## Tomorrow
+
+The tester's mindset: how to look at something and see where it will break.

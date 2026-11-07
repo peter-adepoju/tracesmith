@@ -1,0 +1,123 @@
+Software does not appear in front of customers. It travels, and testing sits at a specific point on that journey.
+
+## The environments
+
+| Environment | What it is | Who uses it |
+| --- | --- | --- |
+| **Local** | A developer's own machine | One developer |
+| **Dev / integration** | Everyone's work merged together | Developers |
+| **Staging / sandbox / UAT** | A full copy of production | **You** |
+| **Production** | The real one, real customers, real money | Everyone |
+
+You met this in Phase 1 as the `-dev` address rule. Here is why it exists: **each environment is a chance to find a problem before the cost of finding it goes up.**
+
+<Callout kind="watch">
+**Never run a test on production.** You have read this twice already and it is worth a third time, because the mistake is quiet and the consequences are not: a real customer charged, a real record deleted, a real email sent.
+
+Before any action that changes something, read the address bar. Say the environment out loud if you are near production. In week 8 you built environments in Postman precisely so this is a deliberate choice rather than an oversight.
+</Callout>
+
+## Staging is not production
+
+It is a copy, and copies differ in ways that hide bugs:
+
+- **Less data.** A list of 50 orders behaves differently from 50,000.
+- **Different data.** Test customers have tidy names. Real ones have apostrophes, accents and 60-character surnames.
+- **Fewer users.** No concurrency, so race conditions never appear.
+- **Different configuration.** A third party in test mode behaves differently from the real one.
+- **Smaller machines.** Which hides performance problems and surfaces imaginary ones.
+
+Knowing the differences tells you which bugs staging will **never** find, and that is worth saying in a sign-off: "tested on staging; load and concurrency behaviour is not covered by this."
+
+## How work reaches you
+
+Most teams run something like Scrum or Kanban. The vocabulary:
+
+- **Backlog** — everything not yet done.
+- **Sprint** — a fixed period, often two weeks, with a chosen set of work.
+- **Ticket / story / issue** — one piece of work.
+- **Acceptance criteria** — what must be true for it to be done. **Read these first; they are your test cases in draft.**
+- **Stand-up** — a short daily sync. Say what you are testing and what is blocking you.
+- **Definition of done** — the team's bar. If testing is not in it, that is worth raising.
+
+<Callout kind="job">
+The single highest-value habit here: **read the ticket before it is built, and ask your questions then.**
+
+"What should happen if the quantity is zero?" costs five minutes before the code is written, and half a day after. A tester who asks early prevents defects rather than finding them, and that is the difference between being useful and being a bottleneck.
+</Callout>
+
+## Shift left
+
+That habit has a name: **shifting left** — moving testing earlier on the timeline.
+
+In practice it means reviewing acceptance criteria before development starts, asking about edge cases in planning, and writing test cases from the ticket rather than from the finished feature. Writing them from the finished feature is a trap: you end up testing what was built rather than what was asked for, and you will never notice a missing requirement.
+
+## Your role, concretely
+
+- **Before building:** read the ticket, ask what is ambiguous, write draft cases.
+- **While building:** test on dev or a preview as soon as something exists.
+- **Before release:** run your cases on staging, explore, report, retest.
+- **At release:** a smoke test on production — read-only. Can you load the page, does the API answer, is the data plausible.
+- **After release:** watch for what you missed. Every escaped defect is a case you did not have.
+
+<Exercise
+  prompt="You are asked to sign off a release tested only on staging. What should your sign-off say beyond 'tests passed'?"
+  accept={["not covered", "load", "concurrency", "data volume", "limitations"]}
+  hint="What can staging never tell you?"
+  solution="What staging could not cover: behaviour under real data volume, concurrency between users, real third-party integrations and production-scale performance. Naming the gap is not hedging — it is the difference between an honest sign-off and one that implies more than you checked."
+/>
+
+<Exercise
+  prompt="Why write test cases from the ticket rather than from the finished feature?"
+  accept={["missing", "requirement", "what was asked", "built", "miss"]}
+  hint="What can you never notice if you only look at what exists?"
+  solution="Cases written from the finished feature test what was built, so a requirement that was simply forgotten is invisible — you cannot miss what you never knew to look for. Written from the ticket, a missing requirement shows up as a case that has nothing to run against."
+/>
+
+<Terms items={[
+  { term: "Staging", meaning: "A full copy of production, where testing happens." },
+  { term: "Acceptance criteria", meaning: "What must be true for a ticket to be done. Your test cases in draft." },
+  { term: "Definition of done", meaning: "The team's bar for finished. Worth checking testing is in it." },
+  { term: "Shift left", meaning: "Moving testing earlier, so defects are prevented rather than found." },
+  { term: "Smoke test", meaning: "A quick check that the main things work. Read-only on production." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which kind of bug will staging almost never find?",
+    options: [
+      "A broken button",
+      "A race condition between simultaneous users",
+      "A validation gap",
+      "A wrong label"
+    ],
+    answer: 1,
+    why: "Staging has few users and little data, so concurrency problems simply do not arise there."
+  },
+  {
+    q: "When is the cheapest moment to ask 'what should happen if quantity is zero?'",
+    options: [
+      "During testing",
+      "Before the code is written",
+      "After release",
+      "In the bug report"
+    ],
+    answer: 1,
+    why: "Asked early it costs five minutes and prevents the defect. Asked later it costs a report, a fix and a retest."
+  },
+  {
+    q: "What should a production smoke test be?",
+    options: [
+      "A full regression run",
+      "Read-only: can the page load, does the API answer, is the data plausible",
+      "The same as the staging run",
+      "Skipped entirely"
+    ],
+    answer: 1,
+    why: "Anything that changes data on production risks affecting real customers. Checking without touching is the whole point."
+  }
+]} />
+
+## Tomorrow
+
+The types of testing, each in one line, and how to choose which one a piece of work needs.
