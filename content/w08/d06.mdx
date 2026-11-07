@@ -1,0 +1,132 @@
+The last day of Phase 2. You are going to build something real and hand it over — which is a different standard from building something that works for you.
+
+## The task
+
+Pick an API. Any of these work and none needs a credential:
+
+- **GitHub** — `https://api.github.com`. Rich, well documented, rate limited to 60 calls an hour unauthenticated.
+- **REST Countries** — `https://restcountries.com/v3.1`. Simple, no limits.
+- **JSONPlaceholder** — `https://jsonplaceholder.typicode.com`. Fake data, and it accepts POSTs.
+
+Build a collection that covers **one resource end to end**, and that someone else could pick up and use without asking you anything.
+
+## What it must contain
+
+**Structure.** A collection named after the API, folders per resource, requests named by what they do.
+
+**An environment.** `baseUrl` at minimum, plus any ids you reuse. No hard-coded URLs anywhere.
+
+**A happy path per endpoint.** List, get one, and — if the API allows it — create.
+
+**A negative case per endpoint.** This is the half most people skip and the half that finds bugs:
+
+- An id that does not exist
+- A required field missing
+- A value of the wrong type
+- A value past a boundary: zero, negative, enormous
+
+**An assertion on every request.** At minimum the expected status. Where it is easy, also check a field exists or a value matches what you sent.
+
+**A description on every request.** Two sentences: what it does, what it needs.
+
+**One chain.** Take a value from one response into the next request.
+
+## The handover test
+
+When it runs green, do this:
+
+> Hand it to someone who has never seen the API, and watch them use it without asking you a question.
+
+If they have to ask which environment to pick, your naming is unclear. If a request fails because a variable is unset, your setup is incomplete. If they cannot tell what a request does, your descriptions are missing.
+
+<Callout kind="key">
+This is the same standard as week 9's documentation and week 26's handover, arriving early: **could a stranger use this without you in the room?**
+
+It is also the difference between a collection you made and a collection you built. The first is a set of things you can send; the second is a tool.
+</Callout>
+
+## Then write the gaps
+
+Same as week 6 day 6, and it matters more now because you have actually sent the requests.
+
+While building, note every question the documentation did not answer:
+
+- What are the error codes, as strings, not statuses?
+- What happens on a repeated POST — one record or two?
+- What are the rate limits, and what status do you get?
+- What does an empty result look like?
+- Is every error the same shape?
+
+You will have hit several of these by accident. Write them down while they are fresh.
+
+<Callout kind="job">
+A collection plus a gaps list is a genuinely strong thing to produce in a first week anywhere. It proves you can use the tools, that you think about negative cases, and that you write things down for other people.
+
+It is also, unusually, a portfolio piece you can show without breaching anything — a public API, your own collection, exported with no secrets in it. Check that export before you share it.
+</Callout>
+
+## Run it as a suite
+
+**Collection → Run.** Everything in order, every assertion checked, a pass and fail count at the end.
+
+Run it twice without clearing anything. Does it still pass? If your create request made a record the second run collides with, you have found something — either about the API's idempotency, or about your own test design. Both are worth knowing, and this is exactly the run-twice test from week 6.
+
+<Exercise
+  prompt="Your collection passes on the first run and fails on the second. What are the two possible explanations?"
+  accept={["idempotent", "duplicate", "test design", "state", "leftover"]}
+  hint="One is about the API, one is about you."
+  solution="Either the API is not idempotent and your create request collided with the record the first run made; or your tests depend on state they do not clean up, so they are not independent. The first is a finding about the API, the second is a flaw in your suite — and telling them apart is the skill."
+/>
+
+<Exercise
+  prompt="Why is a negative case per endpoint worth more than a second happy path?"
+  accept={["finds bugs", "server", "validation", "enforce", "edge"]}
+  hint="What does a second happy path tell you that the first did not?"
+  solution="A second happy path confirms what you already knew. A negative case asks whether the server actually enforces its rules, which is where defects live — and it is the only way to find out whether validation exists at all or was only ever in the interface."
+/>
+
+<Quiz questions={[
+  {
+    q: "What is the handover test for a collection?",
+    options: [
+      "It runs green",
+      "Someone who has never seen the API can use it without asking you anything",
+      "It has ten requests",
+      "It is exported"
+    ],
+    answer: 1,
+    why: "Working for its author is a low bar. Being usable by a stranger is what makes it a tool rather than a set of notes."
+  },
+  {
+    q: "Your suite passes once and fails on a second run. What have you possibly found?",
+    options: [
+      "Nothing, just re-run it",
+      "Either the API is not idempotent, or your tests leave state behind",
+      "A network problem",
+      "A Postman bug"
+    ],
+    answer: 1,
+    why: "Both are real and both matter: one is a defect in the API, the other a defect in your tests."
+  },
+  {
+    q: "Before sharing an exported collection publicly, what must you check?",
+    options: [
+      "The file size",
+      "That no variable values contain keys or tokens",
+      "The request order",
+      "The Postman version"
+    ],
+    answer: 1,
+    why: "Exports carry values unless marked secret, so an export can hand over live credentials."
+  }
+]} />
+
+## Phase 2 complete
+
+Forty-eight days. Look at what changed.
+
+You can read any JSON response and state the path to a value precisely. You can tell absent from null from empty from zero, and say which team each points at. You can read an endpoint and predict what it returns, place a value correctly between path, query and body, and compare a request payload with its response to catch a money bug the screen renders perfectly. You know how credentials work — keys, tokens, expiry, OAuth — and how to redact a capture so it proves a bug without becoming one. And you can send requests yourself: in Postman, as cURL, chained together, with assertions, and run as a suite.
+
+Phase 1 taught you to **read** what a system did. Phase 2 taught you to **ask it directly**.
+
+**Next: Phase 3, weeks 9 to 15 — quality assurance.** Everything so far has been the equipment. From here it is the job: test cases, bug reports, regression, API and security testing, and your first automated tests. The Meridian lab has been waiting for you since week 4, and from week 9 it stops being an exercise and starts being the work.

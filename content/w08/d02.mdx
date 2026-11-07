@@ -1,0 +1,159 @@
+One saved request is a note to yourself. A collection with environments is a tool other people can use — and the thing that stops you firing a test at production.
+
+<Video id="postman-env" />
+
+## Collections
+
+A collection is a named folder of requests. Make one per API, with folders inside per resource:
+
+```
+Meridian API
+├── Customers
+│   ├── List customers
+│   ├── Get one customer
+│   └── Create a customer
+├── Payments
+│   ├── Initiate
+│   └── Verify
+└── Health
+    └── Ping
+```
+
+Name requests by **what they do**, not by method and path. "List customers" beats "GET /v1/customers" — you can see the method on the row already, and a human-readable name is what makes a collection browsable by someone who has never seen the API.
+
+## Variables
+
+Hard-coded values are what make a collection disposable. Variables are what make it last.
+
+```
+{{baseUrl}}/v1/customers/{{customerId}}
+```
+
+Four scopes, and you mostly need two:
+
+| Scope | Lives | Use for |
+| --- | --- | --- |
+| **Environment** | Per environment | `baseUrl`, keys, test accounts |
+| **Collection** | With the collection | Things identical everywhere |
+| Global | Across everything | Avoid. Hard to trace |
+| Local | One run | Set by a script, covered on day 4 |
+
+<Video id="postman-vars" />
+
+## Environments, which are the point
+
+An environment is a named set of variables you switch between.
+
+**Sandbox**
+```
+baseUrl    https://api-sandbox.example.com
+apiKey     sk_test_trace_93ba07
+```
+
+**Production**
+```
+baseUrl    https://api.example.com
+apiKey     sk_live_••••••••
+```
+
+Same collection, one dropdown. Every request follows.
+
+<Callout kind="key">
+This is the feature that stops the worst mistake available to you.
+
+With a hard-coded URL, testing against production means editing a request — and forgetting to change it back. With environments, the current one is **named in the corner of the window at all times**, and switching is deliberate.
+
+Make a habit of reading that dropdown before any request that changes something. Out loud, if you are near production.
+</Callout>
+
+## Secrets in Postman
+
+Mark any variable holding a key as **secret** in the environment editor. Postman then masks it in the interface and leaves it out of exports.
+
+Which matters, because:
+
+<Callout kind="watch">
+**Exporting a collection or environment exports the variable values.** Share that JSON in a ticket or commit it to a repository and you have shared your keys.
+
+Mark secrets as secret. Before sharing an export, open it and look. It is a plain JSON file, and reading it takes ten seconds.
+</Callout>
+
+## Documentation for free
+
+Each request has a **Description** field, and Postman turns a collection into a documentation page from them.
+
+Two sentences per request — what it does, what it needs — produces something genuinely useful. When a merchant asks "how do I call this?", a link beats a paragraph, and you wrote it as a side effect of organising your own work.
+
+## Build one
+
+Make a collection for any public API. [api.github.com](https://api.github.com) works and needs no key.
+
+1. A collection called **GitHub**.
+2. An environment **Public**, with `baseUrl` set to `https://api.github.com`.
+3. Three requests using `{{baseUrl}}`: get a repository, list its issues, get a user.
+4. A `{{owner}}` and `{{repo}}` variable so the first two work for any repository.
+5. A one-line description on each.
+
+Then change `{{repo}}` once and watch every request follow. That is the moment collections make sense.
+
+<Exercise
+  prompt="A colleague sends you their exported Postman environment so you can reproduce a bug. What do you check before opening it, and what do you tell them?"
+  accept={["secrets", "keys", "exported", "values", "rotate"]}
+  hint="What does an export contain?"
+  solution="Exports include variable values unless they were marked secret, so it may contain live keys. Check, and if it does, tell them: the keys are now in your inbox and the ticket system and should be rotated, and they should mark those variables as secret before exporting again."
+/>
+
+<Exercise
+  prompt="Why is an environment variable for baseUrl safer than editing the URL when you need to test production?"
+  accept={["visible", "named", "dropdown", "deliberate", "forget"]}
+  hint="What do you have to remember to undo?"
+  solution="Editing a URL is invisible and easy to forget to revert, so the next test silently hits production. An environment is named in the window at all times and switching is a deliberate act you can see, so there is nothing to forget."
+/>
+
+<Terms items={[
+  { term: "Collection", meaning: "A named, organised set of saved requests." },
+  { term: "Environment", meaning: "A named set of variables you switch between." },
+  { term: "{{variable}}", meaning: "A placeholder resolved from the current environment." },
+  { term: "Secret variable", meaning: "Masked in the interface and omitted from exports." },
+  { term: "Collection documentation", meaning: "A shareable page generated from request descriptions." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What is the main safety benefit of environments?",
+    options: [
+      "They encrypt requests",
+      "The current target is always visible and switching is deliberate, so you do not hit production by accident",
+      "They make requests faster",
+      "They validate responses"
+    ],
+    answer: 1,
+    why: "Editing a URL by hand is invisible and easy to forget. A named environment shown in the window is neither."
+  },
+  {
+    q: "You export a collection to share. What must you check first?",
+    options: [
+      "The file size",
+      "Whether variable values, including keys, are in the export",
+      "That every request has a description",
+      "The Postman version"
+    ],
+    answer: 1,
+    why: "Exports carry values unless marked secret, so sharing one can hand over live credentials."
+  },
+  {
+    q: "Which request name is better?",
+    options: [
+      "GET /v1/customers",
+      "List customers",
+      "Request 4",
+      "customers_endpoint_final"
+    ],
+    answer: 1,
+    why: "The method shows on the row already. A human-readable name is what makes a collection usable by someone who did not build it."
+  }
+]} />
+
+## Tomorrow
+
+cURL: the one-line version, and how to read a command someone pastes at you.

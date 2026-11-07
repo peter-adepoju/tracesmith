@@ -1,0 +1,148 @@
+Real flows are several requests in order, where each one needs something the last one produced. Log in, get a token, use the token. Create an order, get its id, pay for it.
+
+Today you stop copying values between requests by hand.
+
+## Why order matters
+
+```
+1. POST /auth/login          → { "token": "eyJ..." }
+2. POST /v1/orders           → { "id": "ORDER-1001" }    (needs the token)
+3. POST /v1/payments/initiate → { "checkout_url": "…" }  (needs the token and the id)
+4. GET  /v1/payments/verify/ORDER-1001                   (needs both again)
+```
+
+Each step depends on the one before. Run them out of order and you get a 401 or a 404 that tells you nothing about the actual system.
+
+<Callout kind="key">
+**A dependency failure looks exactly like a real bug.** A 404 on step 4 might mean verification is broken, or might mean step 2 never ran and there is simply no such order.
+
+So before reporting any failure in a sequence, confirm the earlier steps actually succeeded. "Step 4 returns 404" is not a finding until you can say step 2 returned 201 with that id.
+</Callout>
+
+## Capturing a value
+
+In Postman, the **Scripts → Post-response** tab runs after a response arrives. Three lines do the job:
+
+```js
+const body = pm.response.json();
+pm.environment.set("token", body.token);
+```
+
+Now `{{token}}` is available to every later request. Set it once in the login request and the whole collection follows.
+
+For the order:
+
+```js
+const body = pm.response.json();
+pm.environment.set("orderId", body.id);
+```
+
+And the next request uses `{{baseUrl}}/v1/payments/verify/{{orderId}}`.
+
+That is genuinely all the scripting most testers ever need: read the response, save a value.
+
+## Checking as well as capturing
+
+The same place can assert. This is where API testing starts, and week 13 builds on it:
+
+```js
+pm.test("created", () => pm.response.to.have.status(201));
+
+pm.test("returns an id", () => {
+  pm.expect(pm.response.json().id).to.be.a("string");
+});
+
+pm.test("amount matches what we sent", () => {
+  pm.expect(pm.response.json().amount).to.eql(4850000);
+});
+```
+
+That third one is the field-by-field comparison from week 6, automated. It runs on every send and catches the money bug that a screen renders perfectly.
+
+<Callout kind="job">
+Add one assertion to every request you save: **the status you expect**. It costs ten seconds and turns a collection from a set of things you can send into a set of things that tell you when they break.
+
+Run the whole collection and Postman reports pass and fail per request. That is a smoke test, and you just built one without meaning to.
+</Callout>
+
+## Running a whole collection
+
+**Collection → Run.** Postman sends every request in order and reports the results.
+
+Two things make this genuinely useful:
+
+- It respects the current **environment**, so the same sequence runs against sandbox or production — deliberately, with the target named.
+- It runs in **order**, so chained values flow through.
+
+This is your first automated test suite. It is not Playwright, and it does not need to be: a ten-request collection with a status assertion on each is a real regression check you can run in thirty seconds after any deploy.
+
+## Where chaining goes wrong
+
+**A stale variable.** The token from yesterday is still in the environment and expired overnight. Everything returns 401 and nothing looks wrong. Clearing variables between runs avoids an afternoon of confusion.
+
+**A value that does not exist.** The script reads `body.token` but the response nests it as `body.data.token`, so the variable is set to `undefined` and later requests send the literal string. Log it once to check.
+
+**Assuming order where there is none.** Collection Runner is ordered; your own memory is not. If a request only works after another, say so in its description.
+
+<Exercise
+  prompt="Every request in your collection suddenly returns 401, including ones that worked yesterday. The credentials have not changed. What do you check first?"
+  accept={["token", "stale", "expired", "variable", "re-run login"]}
+  hint="What is stored between runs?"
+  solution="The saved token variable, which has expired overnight. Re-run the login request to refresh it. This is the week 7 expiry lesson arriving in your own tooling, and it is why clearing variables between runs is a good habit."
+/>
+
+<Exercise
+  prompt="Step 4 of a chain returns 404. Before reporting it, what must you confirm?"
+  accept={["step 2", "earlier", "previous", "succeeded", "order exists"]}
+  hint="Does the thing you are asking about exist?"
+  solution="That the earlier steps actually succeeded and the order really was created. A 404 from a missing prerequisite is indistinguishable from a broken endpoint, and reporting the second when it is the first wastes an engineer's morning."
+/>
+
+<Terms items={[
+  { term: "Chaining", meaning: "Using a value from one response in the next request." },
+  { term: "Post-response script", meaning: "Code that runs after a response, to capture or assert." },
+  { term: "pm.environment.set", meaning: "Saves a value as a variable for later requests." },
+  { term: "pm.test", meaning: "One named assertion, reported as pass or fail." },
+  { term: "Collection Runner", meaning: "Runs every request in order. Your first smoke test." },
+  { term: "Stale variable", meaning: "A leftover value, usually an expired token, causing confusing 401s." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Where in Postman do you capture a value from a response?",
+    options: [
+      "The Params tab",
+      "The Post-response script",
+      "The Headers tab",
+      "The Body tab"
+    ],
+    answer: 1,
+    why: "It runs after the response arrives, which is when the value exists to be read and saved."
+  },
+  {
+    q: "What is the minimum assertion worth adding to every saved request?",
+    options: [
+      "The full response body",
+      "The expected status code",
+      "The response time",
+      "Nothing, assertions are for developers"
+    ],
+    answer: 1,
+    why: "Ten seconds of work turns the collection into something that tells you when it breaks, rather than something you have to read."
+  },
+  {
+    q: "A chained request fails with 404. What is the first possibility to rule out?",
+    options: [
+      "The endpoint is broken",
+      "An earlier step did not succeed, so the resource was never created",
+      "The token expired",
+      "The server is down"
+    ],
+    answer: 1,
+    why: "A missing prerequisite produces exactly the same 404 as a broken endpoint, and it is the far more common cause."
+  }
+]} />
+
+## Tomorrow
+
+Webhooks: the request that comes to you, and the retry that charges a customer twice.

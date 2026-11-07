@@ -1,0 +1,144 @@
+Every request so far has gone out from you. Today the arrow points the other way.
+
+<Video id="webhooks" />
+
+## The problem
+
+Your system starts a payment. The customer goes off to pay. That might take four seconds or four minutes, and you have no way to know when it finishes.
+
+**Polling** is asking repeatedly: *done yet? done yet?* It works, and it is wasteful — most calls return nothing, and you still learn late.
+
+**A webhook** flips it. You give the provider a URL, and when something happens, **they call you.**
+
+It is still an ordinary HTTP request. The roles have swapped: their server is the client, yours is the server. Which is why week 2's rule still holds — the server never speaks first; this is a *second* conversation going the other way.
+
+<Video id="webhooks-vs-api" />
+
+## The three signals, and which to trust
+
+You met these in Phase 1. Here they are precisely:
+
+| | Who tells whom | Reliable? |
+| --- | --- | --- |
+| **Callback** | Browser → your page | **No.** The customer can close the tab |
+| **Webhook** | Their server → your server | Yes, with retries |
+| **Verify** | Your server → their server | Yes, and it is you asking |
+
+<Callout kind="key">
+**The callback moves the person. The webhook and verify move the truth.**
+
+Marking an order paid because the browser came back is the single most common integration bug in payments. The customer who closes the tab after paying never triggers it, and anyone can visit the callback URL directly.
+
+The correct pattern: the webhook tells you something happened, and then **you verify it** before acting. Never trust an inbound message alone, because anyone can send you one.
+</Callout>
+
+## Seeing what a webhook contains
+
+Before you can handle one you need to see one. [webhook.site](https://webhook.site) gives you a URL that displays whatever is sent to it — headers, body, everything.
+
+Paste that URL into a provider's webhook settings, trigger a test event, and read exactly what arrives. No code, no server.
+
+<Video id="webhook-site" />
+
+## Why it fails
+
+The provider sends a request and something goes wrong at your end. The failure modes, in the order you will meet them:
+
+**The URL is wrong, or not set.** Nothing arrives. Everything works on the provider's side and the merchant swears payments are broken.
+
+**The URL is unreachable.** It points at `localhost`, or at a staging box behind a firewall. The provider cannot reach it from the internet.
+
+**The wrong environment.** The sandbox webhook URL is configured in production, so live events go to a test system.
+
+**Your endpoint errors.** It returns 500 and the provider retries, which is correct behaviour and leads directly to the next lesson.
+
+<Callout kind="job">
+"The payment went through but my system doesn't know about it" is one of the most common support tickets in payments, and it is nearly always one of those four.
+
+Check in that order. The first two cover most of it, and both are visible in the merchant's own dashboard settings without involving anyone technical.
+</Callout>
+
+## The retry, and the duplicate
+
+A provider that gives up after one failed delivery is useless, so they all retry. And a retry cannot tell the difference between *your server failed* and *your server succeeded but answered too slowly*.
+
+Which produces the bug below. Send the event with your endpoint timing out, and watch the order count.
+
+<WebhookSimulator />
+
+Then tick the idempotency box and send it again.
+
+<Callout kind="watch">
+Read the outcome carefully. **The sender did nothing wrong.** It could not distinguish a slow success from a failure, so it retried — which is exactly the behaviour you want from it.
+
+The duplicate is your endpoint's fault, for acting twice on the same event. The fix is to record the event id and ignore one you have already handled.
+
+This is the same idea as week 1's double-submit and week 6's idempotency question, arriving for the third time. That repetition is not accidental: it is the single most expensive class of bug in systems that move money.
+</Callout>
+
+## Verifying the sender
+
+Anyone can POST to your webhook URL. If your endpoint believes whatever it receives, anyone can tell you a payment succeeded.
+
+Providers sign their webhooks: a header carrying a hash of the body, computed with a shared secret. Your endpoint recomputes it and compares. A mismatch means the message is not from them.
+
+You will not implement this, but you must know to ask: **is the signature being verified?** An endpoint that skips the check is an open door with "mark as paid" written on it.
+
+<Exercise
+  prompt="A merchant says payments succeed on your dashboard but their system never records them. Name the four things you check, in order."
+  accept={["url", "webhook url", "reachable", "environment", "500"]}
+  hint="Start with the one they can check themselves."
+  solution="Is a webhook URL configured at all; is it reachable from the internet rather than localhost or a firewalled box; is it the right environment's URL; and is their endpoint returning an error. The first two are visible in their own dashboard and cover most cases."
+/>
+
+<Exercise
+  prompt="Your endpoint does the work correctly but takes 40 seconds to reply. The provider retries. Whose bug is the duplicate order?"
+  accept={["yours", "endpoint", "mine", "ours", "not the sender"]}
+  hint="Could the sender have known?"
+  solution="Yours. The sender could not tell a slow success from a failure, so retrying was correct. Your endpoint created a second order because it acted on an event it had already handled. Record the event id and ignore repeats — and separately, acknowledge fast and do the work afterwards."
+/>
+
+<Terms items={[
+  { term: "Webhook", meaning: "The provider calling your server when something happens." },
+  { term: "Polling", meaning: "Repeatedly asking whether something has happened. Wasteful and late." },
+  { term: "Callback", meaning: "The browser returning to your page. Moves the person, not the truth." },
+  { term: "Verify", meaning: "Your server asking theirs what really happened. The confirmation." },
+  { term: "Retry", meaning: "Redelivery after a failed or slow response. Correct, and produces duplicates." },
+  { term: "Signature", meaning: "A hash proving the webhook came from the provider." },
+  { term: "Idempotency", meaning: "Handling a repeated event without acting twice." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which signal should never, on its own, mark an order paid?",
+    options: ["The webhook", "The verify call", "The callback", "All three"],
+    answer: 2,
+    why: "The browser returning proves only that a browser returned. The customer may close the tab, and anyone can visit that URL directly."
+  },
+  {
+    q: "Your endpoint succeeds but answers too slowly, and a duplicate order appears. Whose fault?",
+    options: [
+      "The provider's, for retrying",
+      "Yours, for acting twice on the same event",
+      "The customer's",
+      "Nobody's"
+    ],
+    answer: 1,
+    why: "Retrying after no acknowledgement is correct. Handling the same event twice is not."
+  },
+  {
+    q: "Why must a webhook endpoint verify the signature?",
+    options: [
+      "To decrypt the body",
+      "Because anyone can POST to the URL and claim a payment succeeded",
+      "To speed it up",
+      "It is optional"
+    ],
+    answer: 1,
+    why: "The URL is reachable by anyone. Without verification, an unauthenticated stranger can tell your system it has been paid."
+  }
+]} />
+
+## Tomorrow
+
+The last day of Phase 2: build a collection someone else could use.

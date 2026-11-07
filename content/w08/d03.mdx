@@ -1,0 +1,124 @@
+cURL is the same request as a single line of text. You need it for three reasons: developers paste it at you, DevTools produces it, and a line of text goes in a ticket where a screenshot of Postman does not.
+
+<Video id="curl-short" />
+
+## The shape
+
+```bash
+curl -X POST https://api.example.test/v1/payments/initiate \
+  -H "Authorization: pk_test_trace_8f41c2" \
+  -H "Content-Type: application/json" \
+  -d '{"amount":4850000,"currency":"NGN","reference":"ORDER-1001"}'
+```
+
+Five flags cover almost everything:
+
+| Flag | Means |
+| --- | --- |
+| `-X` | The method. Omitted, it is GET — or POST if there is a body |
+| `-H` | One header. Repeat for each |
+| `-d` | The body |
+| `-i` | Include the response headers in the output |
+| `-v` | Verbose: show the whole exchange, request included |
+
+The `\` at the end of a line is a continuation — it is all one command.
+
+<Callout kind="watch">
+Two traps worth knowing before you run one.
+
+**`-d` without `-X` silently makes it a POST.** So a command that looks like a GET with a body is actually a POST, and will not do what it appears to.
+
+**`-k` disables certificate checking.** It makes a TLS error disappear without fixing anything, and a request sent with it may have been intercepted. If you find `-k` in a command aimed at production, that is a finding — someone silenced a warning rather than investigating it.
+</Callout>
+
+## Take one apart
+
+<CurlReader />
+
+Work through all five samples. Notice the last two: the DevTools copy carries a session cookie and a bearer token, and the insecure one carries a production secret key *and* `-k`.
+
+For any command with a credential, the panel shows you a redacted version ready to paste into a ticket. That is the habit from last week, made mechanical.
+
+<Video id="curl" />
+
+## From DevTools to cURL and back
+
+The loop you will use constantly:
+
+1. Reproduce the bug in the browser.
+2. **Right-click the request → Copy → Copy as cURL.**
+3. Paste it into Postman: **Import → Raw text**. Postman fills in everything.
+4. Change one thing, send, see what happens.
+
+That takes a request you could only make by clicking through five screens and makes it something you can send a hundred times with variations. It is how a vague "sometimes checkout fails" becomes "it fails whenever `quantity` exceeds 99".
+
+<Callout kind="key">
+Going the other way matters too. Most APIs document their examples in cURL, so being able to read one means being able to use any documentation page — and Postman will import it directly, which saves transcribing by hand and getting a header wrong.
+</Callout>
+
+## Running it
+
+On Windows, use **Git Bash** or **WSL**. PowerShell has its own `curl` which is an alias for something else entirely and takes different flags — a confusing half-hour if you do not know.
+
+```bash
+curl -i https://api.github.com/repos/vercel/next.js
+```
+
+`-i` shows the response headers, which is where the rate-limit information lives on GitHub's API. Worth looking at: `x-ratelimit-remaining` tells you how many calls you have left.
+
+<Exercise
+  prompt={`A developer sends: curl -k -X POST https://api.example.com/v1/charge -H 'Authorization: sk_live_...' -d '{"amount":1}'. Name the two problems.`}
+  accept={["-k", "insecure", "sk_live", "secret", "production"]}
+  hint="One is a flag, one is a value."
+  solution="The -k disables certificate verification, so the request may have been intercepted and any TLS problem has been silenced rather than fixed. And a live secret key is in a message that has now been shared — it must be rotated. Both are findings; the key is the urgent one."
+/>
+
+<Exercise
+  prompt={`Why might curl https://api.example.com/items -d '{"a":1}' not do what it looks like?`}
+  accept={["post", "becomes a post", "-d makes it post"]}
+  hint="Which flag changes the method?"
+  solution="Using -d without -X makes cURL send a POST, not a GET. So a command that reads like fetching a list is actually creating something — which on a real endpoint could mean creating a record you did not intend."
+/>
+
+<Terms items={[
+  { term: "cURL", meaning: "A command-line tool for sending HTTP requests." },
+  { term: "-H", meaning: "Adds one header. Repeated for each." },
+  { term: "-d", meaning: "Sends a body, and implies POST unless -X says otherwise." },
+  { term: "-k", meaning: "Disables certificate checking. A finding if aimed at production." },
+  { term: "Copy as cURL", meaning: "Turns a browser request into a runnable command. Carries credentials." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What method does curl https://x.test/items -d '{\"a\":1}' use?",
+    options: ["GET", "POST", "PUT", "It fails"],
+    answer: 1,
+    why: "A body without an explicit -X makes it a POST, which is why a command can quietly do something other than it appears."
+  },
+  {
+    q: "You find -k in a command aimed at production. What is it?",
+    options: [
+      "A performance flag",
+      "Certificate checking disabled — a warning silenced rather than fixed",
+      "Keep-alive",
+      "A key flag"
+    ],
+    answer: 1,
+    why: "It makes TLS errors disappear without addressing them, so the request may have been intercepted."
+  },
+  {
+    q: "What is the fastest way to turn a browser request into something you can vary and resend?",
+    options: [
+      "Retype it in Postman",
+      "Copy as cURL from DevTools, then import the raw text into Postman",
+      "Screenshot it",
+      "Save a HAR"
+    ],
+    answer: 1,
+    why: "It carries every header and the body exactly, with no transcription mistakes."
+  }
+]} />
+
+## Tomorrow
+
+Chaining: taking a value out of one response and into the next request.

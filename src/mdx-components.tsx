@@ -8,6 +8,7 @@ import { Video } from "@/components/Video";
 import { AccessibleName } from "@/components/interactive/AccessibleName";
 import { BoxModel } from "@/components/interactive/BoxModel";
 import { ConsoleLab } from "@/components/interactive/ConsoleLab";
+import { CurlReader } from "@/components/interactive/CurlReader";
 import { EndpointBuilder } from "@/components/interactive/EndpointBuilder";
 import { JsonExplorer } from "@/components/interactive/JsonExplorer";
 import { FormLab } from "@/components/interactive/FormLab";
@@ -22,6 +23,7 @@ import { StatusExplorer } from "@/components/interactive/StatusExplorer";
 import { StorageAudit } from "@/components/interactive/StorageAudit";
 import { ViewportSlider } from "@/components/interactive/ViewportSlider";
 import { WaterfallExplorer } from "@/components/interactive/WaterfallExplorer";
+import { WebhookSimulator } from "@/components/interactive/WebhookSimulator";
 
 /**
  * Components every lesson can use without importing anything.
@@ -34,6 +36,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     BoxModel,
     Callout,
     ConsoleLab,
+    CurlReader,
     EndpointBuilder,
     Exercise,
     FormLab,
@@ -53,6 +56,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Video,
     ViewportSlider,
     WaterfallExplorer,
+    WebhookSimulator,
     ...components,
   };
 }

@@ -1,0 +1,126 @@
+Seven weeks of reading requests. Today you start sending them.
+
+This is the week the course turns. Everything after it — API testing, security testing, automation — assumes you can make a request without a browser.
+
+<Video id="postman" />
+
+## Install it
+
+Postman is free for what you need. Download it from postman.com and install the desktop app rather than using the web version, because the desktop app can reach `localhost` and the web one cannot. You will want that from week 13 onwards.
+
+You do not need an account to send requests. Signing in syncs your collections between machines, which is genuinely useful once you have built some.
+
+## Your first request
+
+1. **New** → **HTTP Request**.
+2. Method `GET`, URL `https://api.example.test/v1/ping`.
+3. **Send**.
+
+That address is the sandbox from this course and is not a real host, so you will get a connection error. That is fine — and it is worth doing, because **recognising a connection failure versus an HTTP error is itself a skill.** A DNS failure means nothing left your machine. A 500 means your request arrived and the server fell over. Completely different problems.
+
+For something real, try:
+
+```
+GET https://api.github.com/repos/vercel/next.js
+```
+
+That is a public API needing no credentials. You should get a large JSON response and a 200.
+
+## The panes
+
+**Params** — the query string, as a table. Postman builds the `?a=1&b=2` for you, which means it also handles encoding. One less thing to get wrong.
+
+**Authorization** — a structured way to set the credential. Choosing *Bearer Token* and pasting the token adds the right header for you.
+
+**Headers** — everything else. Postman adds some automatically; click *hidden* to see them, because an auto-added header occasionally explains a mystery.
+
+**Body** — for POST, PUT and PATCH. Pick **raw** and **JSON** for most APIs, which sets `Content-Type: application/json` as well. Choosing raw and leaving it as *Text* is a common cause of a 400 that looks inexplicable.
+
+## Reading the response
+
+The bottom half shows the body, and above it three things worth looking at every time:
+
+- **Status** — you know these.
+- **Time** — slow is a finding.
+- **Size** — a surprisingly large response is a finding too.
+
+The **Headers** tab of the response holds the request id you will quote in escalations.
+
+<Callout kind="key">
+Postman is a browser without a page. Same requests, same headers, same responses — and no interface in the way.
+
+That is the whole value. In a browser you test what the page lets you send. In Postman you test **what the server actually accepts**, which is where the interesting defects are. A form that refuses a negative quantity tells you nothing about whether the server does.
+</Callout>
+
+## Try the sandbox API properly
+
+The course sandbox runs in your browser rather than on a server, so Postman cannot reach it. Use the inspector for that, and Postman for real APIs — including, from week 13, the ones you are testing at work.
+
+<RequestInspector preset="Health check" />
+
+<Callout kind="job">
+Set up one thing today, and it will pay you back all year: a Postman request that calls a public API you care about, saved with a sensible name.
+
+The habit of reaching for Postman instead of guessing is the thing. Most people install it, send one request and never open it again, and then spend the next year arguing about what an API does rather than asking it.
+</Callout>
+
+<Exercise
+  prompt="You send a request in Postman and get 'Error: getaddrinfo ENOTFOUND' rather than a status code. What does that tell you?"
+  accept={["dns", "never left", "did not reach", "no server", "host"]}
+  hint="Was there a response at all?"
+  solution="The hostname could not be resolved, so nothing ever left your machine and no server was contacted. There is no status code because there was no HTTP exchange. Check the URL for a typo, and check you are on the right network or VPN — this is not a server problem."
+/>
+
+<Exercise
+  prompt="Why can Postman find bugs that clicking through the interface cannot?"
+  accept={["server", "bypass", "without the ui", "what the server accepts", "validation"]}
+  hint="What does the form stop you doing?"
+  solution="The interface only lets you send what it permits, so testing through it only tests the polite path. Postman sends whatever you like directly to the server, which is the only way to find out whether the server itself enforces the rules — rather than just the form."
+/>
+
+<Terms items={[
+  { term: "Postman", meaning: "A tool for sending HTTP requests by hand and reading the responses." },
+  { term: "Params tab", meaning: "The query string as a table, with encoding handled for you." },
+  { term: "raw / JSON", meaning: "The body mode for most APIs; also sets the Content-Type." },
+  { term: "Connection error", meaning: "No HTTP exchange happened at all. Different from any status code." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Why install the Postman desktop app rather than using the web version?",
+    options: [
+      "It is faster",
+      "The desktop app can reach localhost; the web version cannot",
+      "The web version costs money",
+      "It has more features"
+    ],
+    answer: 1,
+    why: "Testing anything running on your own machine needs the desktop app, and you will be doing that from week 13."
+  },
+  {
+    q: "A request returns a connection error instead of a status code. What happened?",
+    options: [
+      "The server returned 500",
+      "No HTTP exchange took place at all",
+      "The response was empty",
+      "Authentication failed"
+    ],
+    answer: 1,
+    why: "A status code requires a response. No code means nothing reached a server, so the problem is the address, the network or DNS."
+  },
+  {
+    q: "What is the main advantage of Postman over testing through the interface?",
+    options: [
+      "It is prettier",
+      "You can send what the interface forbids, so you test the server rather than the form",
+      "It is faster to click",
+      "It records video"
+    ],
+    answer: 1,
+    why: "Client-side validation is a convenience. Only sending directly tells you whether the server enforces anything."
+  }
+]} />
+
+## Tomorrow
+
+Collections, environments and variables — the difference between a saved request and something you can hand to someone else.
