@@ -1,0 +1,148 @@
+This is the most valuable thing a tester produces. Not the bug — the report.
+
+The standard is one sentence long: **an engineer should be able to act on it without asking you anything.**
+
+<Video id="bug-report" />
+
+## The shape
+
+```
+Title       Applying the same discount code twice stacks the reduction (cart)
+
+Environment Meridian sandbox, stage 3 · Chrome 131 · desktop · 7 Nov 14:12
+
+Steps       1. Add Harmattan Field Jacket to the cart
+            2. Open the cart
+            3. Enter SAVE10 and click Apply
+            4. Enter SAVE10 again and click Apply
+
+Expected    The second application is refused with a message that the code
+            is already applied; the total stays at NGN 43,650.00
+
+Actual      The second application is accepted and the discount becomes 20%.
+            The total drops to NGN 38,800.00. Repeating reaches NGN 0.00
+            after ten applications.
+
+Evidence    Screenshot of the cart after two applications (attached).
+            Network: POST /api/meridian/orders shows discountMinor growing
+            on each apply. No credentials in the capture.
+
+Severity    Critical          Priority  Highest
+Why         Anyone who notices can take goods for free. No workaround;
+            the only control is not telling customers.
+```
+
+Read it as an engineer: you know what to do, where to go, what you will see, and what it should have been. Nothing is missing, and you did not have to ask.
+
+## The title does most of the work
+
+It is read in a list of a hundred, in a notification, in a stand-up. It should carry the bug on its own.
+
+| Weak | Strong |
+| --- | --- |
+| Discount bug | Same discount code can be applied repeatedly, stacking the reduction |
+| Cart broken | Cart total ignores quantity for items added twice |
+| Payment issue | Double-clicking Place order creates two orders and charges twice |
+| 500 error | POST /v1/payments/initiate returns 500 for amounts over 1,000,000 |
+
+Pattern: **what happens, where, and under what condition.**
+
+## The sentence people leave out
+
+When severity and priority differ, **say why**. One line, and it prevents the argument:
+
+> Critical severity, low priority: only two internal users reach it and exporting in two halves works.
+
+Without it, someone reads "Critical" and "Low" together and comes to ask. With it, the trade-off is visible and agreed.
+
+## Write one and have it checked
+
+<BugReportGrader />
+
+Load the example first to see a complete one, then clear it and write your own for a defect in the Meridian lab.
+
+The checks fall into three kinds, and the component labels each:
+
+- **Structure** — is the section there at all
+- **Language** — hedging and blame
+- **Safety** — did you leave a credential in it
+
+<Callout kind="watch">
+The safety check is the one that matters most, and it is the only one that can make a report **worse than not filing at all**.
+
+Try it deliberately: paste a line like `Authorization: sk_live_9f2a8c41bd77e0` into the evidence field and press Check. The grader stops and tells you to fix that before anything else, because a report that leaks a key means the key must now be rotated and the exposure is permanent.
+
+Better to learn that here than in a public ticket.
+</Callout>
+
+## Tone
+
+You are describing a system, never a person.
+
+| Avoid | Prefer |
+| --- | --- |
+| You broke the discount logic | Applying the same code twice stacks the reduction |
+| Obviously nobody tested this | Not covered by the existing cases; I have added DISC-003 |
+| This is a terrible bug | Critical: the total can be driven to zero |
+| Why does this keep happening? | This is the third discount defect this sprint — worth a look at that area? |
+
+The right-hand column gets fixed faster. Not because engineers are fragile, but because a report that reads as an accusation invites a defence, and a defence is a delay.
+
+<Exercise
+  prompt="Rewrite this title: 'Cart is broken sometimes'."
+  solution={`Something like: "Cart total ignores quantity for items added twice (3 of 20 attempts)". It names what happens, where, and the frequency instead of "sometimes". A reader scanning a list of a hundred now knows whether this is theirs.`}
+/>
+
+<Exercise
+  prompt="Why is a report that leaks a credential worse than no report at all?"
+  accept={["rotate", "exposed", "incident", "permanent", "second"]}
+  hint="What has to happen now that would not otherwise?"
+  solution="Because it creates work and risk that would not otherwise exist: the key is now in a ticket system and its backups, so it must be rotated, and until it is anyone with access can act as that account. The bug would have waited; the exposure does not."
+/>
+
+<Terms items={[
+  { term: "No-follow-up test", meaning: "Could an engineer act on this without asking you anything?" },
+  { term: "Title pattern", meaning: "What happens, where, under what condition." },
+  { term: "Severity rationale", meaning: "One line explaining why the two ratings differ." },
+  { term: "Report the system", meaning: "Describe behaviour, never the author." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What is the standard a bug report has to meet?",
+    options: [
+      "It is short",
+      "An engineer can act on it without asking you anything",
+      "It has a screenshot",
+      "It is filed quickly"
+    ],
+    answer: 1,
+    why: "Every follow-up question is a round trip that delays the fix and costs two people's attention."
+  },
+  {
+    q: "Severity is Critical and priority is Low. What must the report include?",
+    options: [
+      "An apology",
+      "One line explaining why they differ",
+      "A second opinion",
+      "Nothing"
+    ],
+    answer: 1,
+    why: "Without it the combination looks like a mistake and someone comes to ask. With it, the trade-off is visible."
+  },
+  {
+    q: "Why does 'you broke the discount logic' get fixed more slowly than a neutral description?",
+    options: [
+      "It is longer",
+      "It invites a defence, and a defence is a delay",
+      "It is against policy",
+      "It is unclear"
+    ],
+    answer: 1,
+    why: "An accusation shifts the conversation from the defect to the person, which is time nobody spends fixing anything."
+  }
+]} />
+
+## Tomorrow
+
+Three bugs, three reports, graded.

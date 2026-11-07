@@ -1,0 +1,83 @@
+Everything from this week, applied three times. Find three defects, write three reports, grade each one, and fix what the grader catches.
+
+## How today works
+
+Open the lab in one tab and keep this page in another. For each round:
+
+1. Find a defect in Meridian.
+2. Reduce it to the shortest steps that still trigger it.
+3. Capture the evidence, redacted.
+4. Write the report in the grader below.
+5. Fix every finding, then re-check until it passes.
+
+Three rounds. Do not shortcut round three because the first two went well — the third is where the habit forms.
+
+## Round 1 — a visible defect
+
+Pick something you can see on screen: a wrong total, a missing message, a value that does not update.
+
+Target: **every structure check green**. Title, environment, steps, expected, actual, evidence, severity and priority all present.
+
+<BugReportGrader />
+
+## Round 2 — a defect you had to dig for
+
+Now one that does not show on screen. Use the Network panel: a wrong status, a response field that does not match the display, a request fired twice.
+
+Two things to get right this time:
+
+- Your **evidence must narrow ownership** — the response, not just the screen.
+- Your **severity must not follow visibility**. An invisible data defect usually outranks a visible cosmetic one.
+
+<Callout kind="job">
+A reviewer's shortcut for round 2: can they tell from your report alone whether this is a front-end or a back-end ticket? If not, the evidence is not doing its job yet.
+</Callout>
+
+## Round 3 — an intermittent one
+
+Hardest, and the one that most separates a junior report from a competent one.
+
+Find something that does not happen every time — a double-submit, a race under throttling, a stale value after a back navigation. Then:
+
+- **Count it.** "4 of 25 attempts", never "sometimes".
+- Say what you **ruled out**: fresh session, throttling, different product, second browser.
+- If throttling makes it reliable, say so — that is a diagnosis, not just a repro.
+
+An honest "not reliably reproduced, here is the frequency and here is what I eliminated" is a good report. A vague "it sometimes breaks" is not.
+
+## Grading yourself afterwards
+
+The grader checks what a machine can check. These it cannot, so ask them yourself:
+
+- Could someone who has never seen Meridian follow my steps?
+- Does my expected result say where the expectation comes from — a spec, a convention, a comparison?
+- Would I be comfortable if the engineer read this in front of me?
+- Is there anything in my evidence I would not want in a public ticket?
+
+That last one is the only question with a hard answer. If yes, remove it before the report leaves your hands.
+
+<Callout kind="watch">
+Save your three reports somewhere outside this site. You will use them twice: in week 15 you will write automated checks for two of these defects, and when you apply for QA roles, three well-written reports are better evidence of the work than any certificate.
+
+Strip anything environment-specific before you show them to anyone.
+</Callout>
+
+<Exercise
+  prompt="After round 3, write one sentence describing the hardest part of this week for you specifically — reducing, rating, evidence, or wording."
+  solution="There is no right answer. Naming it is the point: whichever you pick is the thing to watch in week 12, when you start testing the web in earnest and the reports get longer."
+/>
+
+<Terms items={[
+  { term: "Round", meaning: "Find, reduce, capture, write, grade, fix, re-check." },
+  { term: "Narrowing evidence", meaning: "Evidence that says front end or back end." },
+  { term: "Counted frequency", meaning: "4 of 25, never 'sometimes'." },
+  { term: "Ruled out", meaning: "What you already tried, so nobody repeats it." },
+]} />
+
+## Week 11 in one line
+
+A bug you found is worth nothing until someone else can act on it without asking you a question.
+
+## Next week
+
+Testing the web properly: forms, navigation, state, responsive behaviour and the things browsers do differently.

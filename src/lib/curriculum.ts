@@ -750,11 +750,11 @@ export const WEEKS: Week[] = [
       },
       {
         n: 6,
-        title: "Practice: three reports from recordings",
+        title: "Practice: three bug reports, written and graded",
         objectives: [
-          "Watch, reproduce and write",
+          "Reproduce each defect in the lab, then write it up",
           "Classify severity and priority honestly",
-          "Have each report graded",
+          "Have each report checked for structure, language and safety",
         ],
       },
     ],

@@ -7,6 +7,7 @@ import { Terms } from "@/components/Terms";
 import { Video } from "@/components/Video";
 import { AccessibleName } from "@/components/interactive/AccessibleName";
 import { BoxModel } from "@/components/interactive/BoxModel";
+import { BugReportGrader } from "@/components/interactive/BugReportGrader";
 import { ConsoleLab } from "@/components/interactive/ConsoleLab";
 import { CurlReader } from "@/components/interactive/CurlReader";
 import { EndpointBuilder } from "@/components/interactive/EndpointBuilder";
@@ -37,6 +38,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
     AccessibleName,
     BoxModel,
+    BugReportGrader,
     Callout,
     ConsoleLab,
     CurlReader,

@@ -1,0 +1,128 @@
+Steps let someone reproduce the bug. Evidence lets them believe it before they try, and tells them where to look when they do.
+
+## What counts
+
+**A screenshot.** The fastest evidence there is. Annotate it — a red box or an arrow — so the reader's eye goes to the thing rather than hunting. Capture enough context that the screen is identifiable; a cropped rectangle of a number proves nothing about where it came from.
+
+Use **Ctrl+Shift+P → capture full size screenshot** in DevTools rather than an OS grab. You get the whole page including what is scrolled out of view, at proper resolution.
+
+**A short recording.** For anything about sequence, timing or animation. Ten to twenty seconds. A two-minute video of you finding the bug is not evidence, it is homework for the reader — trim to the moment.
+
+**The network request.** Often the strongest evidence you have, because it shows what the server actually said rather than what the screen chose to display. Status, path, and the relevant part of the response.
+
+**The console error.** A red line with its stack, named file and line.
+
+**The data.** A query result, a row, a value from the API. For money bugs this is usually the decisive piece.
+
+<Callout kind="key">
+**Evidence that distinguishes front end from back end is worth more than evidence that shows the symptom.**
+
+A screenshot of a blank total says something is wrong. A screenshot *plus* the response showing `"totalMinor": 9700000` says the data arrived correctly and the page failed to render it — which assigns the ticket and saves a round trip.
+
+Always ask: does my evidence narrow who owns this?
+</Callout>
+
+## How much
+
+Enough to prove it and locate it. Not a HAR of your whole session.
+
+A good default:
+
+- One annotated screenshot of the wrong thing
+- The one request that matters, with its status and the relevant response field
+- The console error, if there is one
+
+Three artefacts. If you are attaching ten, you have not decided what matters, and the reader has to do that work instead.
+
+## Redact. Every time.
+
+<Callout kind="watch">
+Everything useful as evidence is also where credentials live.
+
+- A screenshot of the Headers tab shows the `Authorization` header in full
+- A Copy as cURL carries every header
+- A HAR carries the entire session
+- A recording captures whatever scrolled past
+- A response body may hold personal data
+
+Remove: keys, tokens, cookies, passwords, card numbers, one-time codes, and customer names and emails — use the customer id instead.
+
+Keep: the method, the path, the status, the error code, the request id, amounts and references.
+</Callout>
+
+The balance matters in both directions, so practise it:
+
+<RedactionDrill />
+
+Over-redacting is scored too. A capture with the endpoint and error code blacked out proves nothing, and the reader has to come back and ask.
+
+## Where evidence goes
+
+**In the ticket**, attached and referenced from the relevant line. "Expected NGN 97,000.00, actual NGN 48,500.00 (screenshot 1); the response carried the correct value (screenshot 2)."
+
+**Not** in a chat message that scrolls away. If a conversation produced the evidence, attach it to the ticket afterwards — the ticket is what someone reads in three weeks.
+
+## Naming
+
+`bug-cart-total-wrong-01.png` beats `Screenshot 2026-11-07 at 14.32.11.png`. Thirty seconds now, and it is still findable when the ticket is reopened in February.
+
+<Exercise
+  prompt="A page shows a blank total. What single additional piece of evidence most improves the report, and why?"
+  accept={["response", "network", "request", "api response"]}
+  hint="What decides whose bug it is?"
+  solution="The response from the request that supplied the total. If the value is there, the data is fine and the page failed to render it — a front-end bug. If it is absent, the server never sent it — back-end. One artefact assigns the ticket, which is worth more than any number of screenshots of the symptom."
+/>
+
+<Exercise
+  prompt="You are about to attach a HAR file because it contains everything. What is wrong, and what do you do instead?"
+  accept={["session", "credentials", "cookies", "too much", "redact"]}
+  hint="Everything includes things it should not."
+  solution="It contains your entire session: every header, cookie and token, plus any personal data in the bodies. Attach the two or three relevant requests with headers redacted instead, and say why you have not attached the HAR. If it is genuinely needed, share it through a secure internal channel rather than a ticket."
+/>
+
+<Terms items={[
+  { term: "Annotation", meaning: "A box or arrow pointing at the problem in a screenshot." },
+  { term: "Full size screenshot", meaning: "DevTools captures the whole page, including what is scrolled out of view." },
+  { term: "Narrowing evidence", meaning: "Evidence that assigns ownership, not just shows the symptom." },
+  { term: "Over-redaction", meaning: "Removing so much that the evidence proves nothing." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which evidence is usually most valuable for a wrong-value bug?",
+    options: [
+      "A screenshot of the screen",
+      "The API response showing what the server actually sent",
+      "A screen recording",
+      "The browser version"
+    ],
+    answer: 1,
+    why: "It separates a data problem from a rendering problem, which is what decides who fixes it."
+  },
+  {
+    q: "You attach ten screenshots to a bug report. What is the likely problem?",
+    options: [
+      "Nothing, more is better",
+      "You have not decided what matters, so the reader has to",
+      "The file size",
+      "They will be compressed"
+    ],
+    answer: 1,
+    why: "Selecting the two or three that prove and locate the bug is part of the work, not optional extra."
+  },
+  {
+    q: "Which should stay in a redacted capture?",
+    options: [
+      "The Authorization header",
+      "The customer's email",
+      "The request id and error code",
+      "The session cookie"
+    ],
+    answer: 2,
+    why: "They are exactly what an engineer needs to find the failure, and neither is a credential or personal data."
+  }
+]} />
+
+## Tomorrow
+
+Putting it together: a report an engineer can act on without asking you a single question.

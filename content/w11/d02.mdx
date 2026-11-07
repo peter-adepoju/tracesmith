@@ -1,0 +1,138 @@
+Two questions that sound like one.
+
+**Severity: how much damage does this do?**
+**Priority: how soon must it be fixed?**
+
+They are independent, and merging them is the mistake almost every beginner makes.
+
+<Video id="severity-priority" />
+
+## Severity
+
+A property of the defect itself. Roughly:
+
+| | Means |
+| --- | --- |
+| **Critical** | Data loss or corruption, money wrong, a security hole, or the product unusable |
+| **High** | A major feature broken with no reasonable workaround |
+| **Medium** | Something broken with a workaround, or affecting a subset |
+| **Low** | Cosmetic, or a minor inconvenience |
+
+Severity is largely objective. Two testers looking at the same defect should mostly agree.
+
+## Priority
+
+A business decision about ordering. Who is affected, how visible is it, what else is competing, is there a deadline, is there a workaround for now.
+
+Priority is **not** yours alone to set. You propose it; a product owner may change it, and that is the system working.
+
+## The four corners
+
+<SeverityGrid />
+
+Place all six, then check. The two awkward corners are the real test.
+
+**High severity, low priority.** A crash in an admin bulk export when the range exceeds five years. A crash, so severity is high. Only staff hit it, only on an unusual input, and there is a workaround — export in two halves. Genuinely bad, genuinely can wait.
+
+**Low severity, high priority.** The wrong logo on the checkout page. Nothing breaks, no data is wrong, severity is low. Every paying customer sees it and it looks like a scam site, so it is fixed today.
+
+<Callout kind="key">
+**Judge by damage, not by how loud the bug is.**
+
+The page that loads scrolled past its own top is obvious and harmless. The endpoint returning every customer's email is invisible and critical.
+
+New testers systematically over-rate what they can see and under-rate what they had to dig for. Correcting that bias is most of what this lesson is for.
+</Callout>
+
+## Why both, and not one number
+
+A single "importance" field collapses two different conversations.
+
+With both, you can say: *"this is critical severity but low priority because only two internal users are affected and there is a workaround"* — and everyone understands the trade. With one number you argue about the number instead of about the trade.
+
+When your two differ sharply, **say why in the report**. That sentence is often the most useful thing in it.
+
+## Never cry wolf
+
+<Callout kind="watch">
+If everything you file is Critical, nothing is.
+
+The word has to be earned, because a true Critical should get dropped-everything attention — and it only gets that if people trust your labels. A tester who inflates severity is ignored exactly when it matters most.
+
+The reverse is also a failure, and quieter. Under-rating a data leak because it is invisible on screen means it sits in a backlog for a month.
+</Callout>
+
+## Mapping to support priorities
+
+If your team also runs P1 to P4 for support tickets, the two systems usually line up like this:
+
+| Bug | Support | Meaning |
+| --- | --- | --- |
+| Critical + highest | **P1** | Money or data wrong, or many users down |
+| High + high | **P2** | Blocked with no workaround |
+| Medium | **P3** | Broken, workaround exists |
+| Low | **P4** | Cosmetic or a question |
+
+Phase 4 uses the P-scale properly. The judgement is the same one.
+
+<Exercise
+  prompt="A crash in an admin-only report, only when the date range exceeds five years, with a workaround. Severity and priority?"
+  accept={["high severity", "low priority", "high and low"]}
+  hint="A crash is a crash. Who hits it?"
+  solution="High severity, low priority. It is a crash, which is severe by definition. But only staff reach it, only on an unusual input, and exporting in two halves works — so it can wait behind things affecting customers. This corner is the one that proves you have understood the distinction."
+/>
+
+<Exercise
+  prompt="You find an API returning other customers' email addresses. Nothing on screen looks wrong. How do you rate it, and what is the bias to resist?"
+  accept={["critical", "highest", "both high"]}
+  hint="What is the damage, regardless of visibility?"
+  solution="Critical severity, highest priority. It is a data leak affecting every user and is reportable to a regulator. The bias to resist is rating it lower because it is invisible — new testers consistently over-rate what they can see and under-rate what they had to dig for."
+/>
+
+<Terms items={[
+  { term: "Severity", meaning: "How much damage the defect does. Largely objective." },
+  { term: "Priority", meaning: "How soon it must be fixed. A business decision you propose." },
+  { term: "High severity, low priority", meaning: "Bad, but rare, internal or worked around." },
+  { term: "Low severity, high priority", meaning: "Harmless, but seen by everyone." },
+  { term: "Crying wolf", meaning: "Inflating severity until the word stops meaning anything." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "The wrong logo appears on the checkout page. How do you rate it?",
+    options: [
+      "High severity, high priority",
+      "Low severity, high priority",
+      "Low severity, low priority",
+      "High severity, low priority"
+    ],
+    answer: 1,
+    why: "Nothing breaks and no data is wrong, so severity is low. Every paying customer sees it and it looks fraudulent, so it is fixed today."
+  },
+  {
+    q: "What bias do new testers most reliably show when rating severity?",
+    options: [
+      "Rating everything low",
+      "Over-rating what is visible and under-rating what they had to dig for",
+      "Rating by how long the fix takes",
+      "Copying the developer's view"
+    ],
+    answer: 1,
+    why: "An obvious cosmetic flaw feels worse than an invisible data leak, and the opposite is true."
+  },
+  {
+    q: "Why keep severity and priority as two fields?",
+    options: [
+      "Convention",
+      "They are different questions, and one number hides the trade-off being made",
+      "Different people own them",
+      "Tools require it"
+    ],
+    answer: 1,
+    why: "'Critical severity, low priority, because only two internal users are affected and there is a workaround' is a sentence a single number cannot express."
+  }
+]} />
+
+## Tomorrow
+
+Reproducing: turning "it sometimes breaks" into steps that work every time.

@@ -1,0 +1,128 @@
+A bug does not simply get fixed. It travels through stages, and knowing them tells you what you should be doing at each point — including the one stage that is yours alone.
+
+<Video id="bug-lifecycle" />
+
+## The stages
+
+**New** — you found it and wrote it up.
+
+**Triaged** — confirmed by someone, given a severity and a priority, and assigned. Some teams call this Open or Confirmed.
+
+**Assigned** — an engineer owns it.
+
+**In progress** — they are working on it.
+
+**Fixed** — they believe it is done. **This is not the end**, and treating it as the end is the single most common process mistake.
+
+**Retest** — you check. Yours.
+
+**Closed** — you verified the fix.
+
+**Reopened** — you verified and it is still broken, so back it goes.
+
+Two outcomes that are not failures:
+
+**Rejected / Not a bug** — working as designed, or a misunderstanding. If this happens often to your reports, the problem is usually unclear acceptance criteria rather than you.
+
+**Deferred / Won't fix** — real, acknowledged, not worth fixing now. A legitimate business decision, and worth recording so it is not rediscovered every quarter.
+
+<Callout kind="key">
+**Only QA closes a bug.** The person who fixed it cannot grade their own homework, and not because they are untrustworthy — because they test the thing they just changed, in the state they just left it in.
+
+You test it fresh: on a clean environment, following your own steps, as a user would. That is a different test, and it catches fixes that work only on the developer's machine.
+</Callout>
+
+## Retesting properly
+
+When something lands in Retest, do three things, in order:
+
+1. **Run your original steps exactly.** Not approximately. The steps that found it are the steps that prove it gone.
+2. **Check around it.** A fix is a change, and a change can break something adjacent. If the discount calculation was fixed, check the total, the tax line and the receipt.
+3. **Try to break it again, differently.** The fix may handle your exact case and miss the general one. If applying a code twice is now blocked, try three times, try two different codes, try applying and removing and applying.
+
+That third step is what separates retesting from re-running.
+
+<Callout kind="watch">
+**Never close a bug you have not personally retested.**
+
+Not because a developer said so, not because the ticket moved, not because the deploy went out. A closed bug is a claim that you checked, and that claim gets relied on.
+
+And always retest on a **clean state**. A fix that works because your browser still holds yesterday's session is not a fix.
+</Callout>
+
+## Reopening without friction
+
+Reopening can feel confrontational. It is not, and the wording is what keeps it that way.
+
+> Retested on staging with a fresh session, following the original steps. The second application of SAVE10 is now refused, so that path is fixed. Applying two *different* codes still stacks: SAVE10 then WELCOME5 gives 15%. Reopening for that case — happy to split it into a new ticket if you would rather.
+
+That does four things: says exactly what you tested, credits what was fixed, states precisely what is still wrong, and offers a way forward. Nobody can take offence at it, and nobody has to ask you a follow-up question.
+
+## On the board
+
+Most teams track this on a Jira or Linear board with columns roughly matching the stages. Two habits worth having:
+
+- **Move your own items.** A board nobody updates is worse than no board, because it is confidently wrong.
+- **Read the board before standing up.** Knowing what is in Retest means you arrive with something to say.
+
+<Exercise
+  prompt="A developer marks a bug Fixed and asks you to close it. The deploy went out this morning. What do you do?"
+  accept={["retest", "test it", "verify", "check"]}
+  hint="Who is allowed to close it?"
+  solution="Retest it yourself, on a clean state, following your original steps — then check around it and try to break it a second way. Only then close it. A deploy going out is not evidence the defect is gone, and closing on someone else's word means your closures mean nothing."
+/>
+
+<Exercise
+  prompt="Your retest shows the exact reported case is fixed but a near variant still fails. Reopen, or raise a new bug?"
+  accept={["either", "depends", "reopen", "new", "ask"]}
+  hint="What matters more than which you choose?"
+  solution="Either is defensible, and the team usually has a convention. What matters is that you say precisely what now works and what still does not, and offer the choice rather than deciding silently. Reopening with 'the original case is fixed, this variant is not, happy to split it' is never wrong."
+/>
+
+<Terms items={[
+  { term: "Triage", meaning: "Confirming a bug and assigning severity, priority and an owner." },
+  { term: "Retest", meaning: "QA verifying a fix. The one stage only you can do." },
+  { term: "Reopened", meaning: "A fix that failed retest, sent back." },
+  { term: "Rejected", meaning: "Working as designed, or a misunderstanding." },
+  { term: "Deferred", meaning: "Real, acknowledged, not worth fixing now." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Why can the developer who fixed a bug not close it?",
+    options: [
+      "They are not trusted",
+      "They test the thing they just changed in the state they left it in; you test it fresh",
+      "It is against the rules",
+      "They lack permissions"
+    ],
+    answer: 1,
+    why: "It is about the conditions, not the person. A clean environment and the original steps are a genuinely different test."
+  },
+  {
+    q: "What is the third thing to do when retesting, after running the original steps and checking around it?",
+    options: [
+      "Close it",
+      "Try to break it again in a different way",
+      "Ask the developer",
+      "Run the whole suite"
+    ],
+    answer: 1,
+    why: "A fix often handles the reported case and misses the general one, and only a different attempt finds that."
+  },
+  {
+    q: "What makes a reopen non-confrontational?",
+    options: [
+      "Apologising",
+      "Saying exactly what you tested, crediting what was fixed, and naming precisely what still fails",
+      "Lowering the severity",
+      "Raising it privately"
+    ],
+    answer: 1,
+    why: "Specifics leave nothing to take personally, and they remove the follow-up question entirely."
+  }
+]} />
+
+## Tomorrow
+
+Severity against priority: how bad, and how soon. Two different questions, and the pair beginners most often merge.

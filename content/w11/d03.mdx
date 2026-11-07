@@ -1,0 +1,124 @@
+A bug you cannot reproduce is a bug that will not be fixed. Not because anyone is lazy — because a developer cannot fix what they cannot see, and cannot know when they have.
+
+## Reproduction steps are the product
+
+Of everything in a report, the steps matter most. They are what turns your discovery into something another person can hold.
+
+The bar: **someone who has never seen this product follows your steps and sees the same thing.**
+
+## Reducing
+
+You found it after twenty minutes of clicking. Nobody will follow twenty minutes. Reduce it.
+
+Work backwards and remove things:
+
+1. Write down everything you did, roughly.
+2. Remove a step. Does it still happen?
+3. Keep removing until taking anything else away makes it stop.
+4. What remains is the minimal reproduction.
+
+This is worth the effort twice over. A four-step repro gets fixed faster than a twenty-step one — **and reducing it usually teaches you what the bug actually is.** When you discover the search filter was irrelevant and the quantity was everything, you have gone from "something is wrong in checkout" to "quantity above 99 breaks the total".
+
+<Callout kind="job">
+Reducing is also how you stop reporting two bugs as one. If removing a step changes the symptom rather than removing it, you probably have two defects interacting, and they need separate tickets.
+</Callout>
+
+## When it is intermittent
+
+"Sometimes" is the hardest word in a bug report, and the wrong response is to give up.
+
+**Count it.** "Three times in twenty attempts" is a fact. "Sometimes" is a feeling, and the difference is the difference between a report that gets investigated and one that gets closed.
+
+Then look for the hidden variable. Intermittent nearly always means something is varying that you have not noticed:
+
+- **Timing.** Fast clicks versus slow. Does it fail only when you are quick?
+- **Order.** Did you do something else first?
+- **State.** Fresh session versus one that has been open an hour.
+- **Data.** A specific product, a specific customer, an empty cart.
+- **Environment.** One server in a pool misbehaving — you met this in week 7 with clock skew.
+- **Concurrency.** Two tabs, or two people at once.
+
+<Callout kind="key">
+**Throttling turns many intermittent bugs into reliable ones.** Set the Network panel to Slow 4G and the window in which a race condition lives widens from milliseconds to seconds.
+
+If a bug appears under throttling and vanishes without it, you have not only reproduced it — you have diagnosed it. That is a timing bug, and the report should say so.
+</Callout>
+
+## When you genuinely cannot
+
+It happens. Report it anyway, honestly, and make it useful:
+
+> **Intermittent, not yet reliably reproduced.** Seen 3 times in roughly 40 checkout attempts on staging, 6–7 Nov. Each time: the cart total was correct on the cart page and NGN 0.00 on the confirmation. Console clean. `POST /api/meridian/orders` returned 201 with the correct `totalMinor`, so the data was right and the confirmation rendered it wrong. Not reproducible on demand; tried throttling, double-submits and a fresh session without success.
+
+That is a genuinely useful report. It gives frequency, a precise symptom, evidence that narrows it to the front end, and a list of what has already been ruled out — so nobody repeats your work.
+
+## Recording the conditions
+
+Capture these every time, because any of them can turn out to be the variable:
+
+- Environment and URL
+- Account and role
+- Browser and version, desktop or mobile
+- Date and time, with timezone — needed to find it in a log
+- What you did immediately before
+- Whether the session was fresh
+
+<Exercise
+  prompt="You found a bug after twenty minutes of exploring. Before writing it up, what is the single most valuable thing to do, and what does it often give you besides shorter steps?"
+  accept={["reduce", "minimal", "remove steps", "shorten"]}
+  hint="Take things away."
+  solution="Reduce it to the minimal reproduction by removing one step at a time until it stops happening. Besides shorter steps, it usually tells you what the bug actually is — discovering the filter was irrelevant and the quantity was everything turns a vague area into a specific cause."
+/>
+
+<Exercise
+  prompt="Rewrite 'the page sometimes shows the wrong total' into the opening line of a useful report."
+  solution={`Something like: "Confirmation page shows NGN 0.00 instead of the cart total — 3 occurrences in ~40 attempts, staging, 6-7 Nov." Frequency instead of "sometimes", the specific wrong value instead of "wrong", and where and when. It can now be investigated rather than closed as unreproducible.`}
+/>
+
+<Terms items={[
+  { term: "Reproduction steps", meaning: "The exact actions that make the bug happen." },
+  { term: "Minimal reproduction", meaning: "The shortest sequence that still triggers it." },
+  { term: "Intermittent", meaning: "Not every time. Count it rather than saying 'sometimes'." },
+  { term: "Hidden variable", meaning: "The thing varying that you have not noticed. Usually timing, state or data." },
+  { term: "Throttling", meaning: "Slowing the network to widen the window a race condition lives in." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What should replace the word 'sometimes' in a bug report?",
+    options: [
+      "'Often'",
+      "A count: three times in twenty attempts",
+      "'Intermittent'",
+      "Nothing, it is accurate"
+    ],
+    answer: 1,
+    why: "A frequency is a fact that can be investigated. 'Sometimes' is a feeling, and reports containing it get closed."
+  },
+  {
+    q: "A bug appears under Slow 4G throttling and never without it. What have you learned?",
+    options: [
+      "The user's connection is bad",
+      "It is a timing bug — throttling widened the window a race condition lives in",
+      "Nothing useful",
+      "The server is slow"
+    ],
+    answer: 1,
+    why: "You have reproduced it and diagnosed it at once, and the report should say so."
+  },
+  {
+    q: "Besides shorter steps, what does reducing a reproduction usually give you?",
+    options: [
+      "A faster fix",
+      "An understanding of what the bug actually is",
+      "A lower severity",
+      "Fewer screenshots"
+    ],
+    answer: 1,
+    why: "Discovering which steps were irrelevant tells you where the real cause lives, turning a vague area into a specific claim."
+  }
+]} />
+
+## Tomorrow
+
+Evidence: the screenshot, the capture, and the thing you must remove before sharing either.

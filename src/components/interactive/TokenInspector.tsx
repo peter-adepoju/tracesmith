@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 /**
  * Decode a JSON Web Token in the page.
@@ -26,9 +26,19 @@ function make(payload: Record<string, unknown>): string {
   ].join(".");
 }
 
-const now = Math.floor(Date.now() / 1000);
+/**
+ * A fixed instant for the first render.
+ *
+ * The samples are built relative to "now" so that the expired one really is
+ * expired, but reading the clock during render makes the server and the
+ * client disagree by a second or two and React throws a hydration mismatch.
+ * So: render against this fixed epoch, then switch to the real clock in an
+ * effect, which only ever runs on the client.
+ */
+const BASE_NOW = 1800000000;
 
-const SAMPLES: Sample[] = [
+function buildSamples(now: number): Sample[] {
+  return [
   {
     label: "A normal token",
     note: "Valid for another hour. Read the claims — none of this is hidden from anyone holding the token.",
@@ -76,7 +86,8 @@ const SAMPLES: Sample[] = [
       exp: now + 3600,
     }),
   },
-];
+  ];
+}
 
 function decode(part: string): unknown {
   const padded = part.replace(/-/g, "+").replace(/_/g, "/");
@@ -84,10 +95,11 @@ function decode(part: string): unknown {
   return JSON.parse(text);
 }
 
-function when(seconds: unknown): string | null {
+/** Formatted in UTC, not the local locale: the server's locale is not yours. */
+function when(seconds: unknown, now: number): string | null {
   if (typeof seconds !== "number") return null;
   const date = new Date(seconds * 1000);
-  const diff = seconds - Math.floor(Date.now() / 1000);
+  const diff = seconds - now;
   const mins = Math.round(Math.abs(diff) / 60);
   const rel =
     Math.abs(diff) < 60
@@ -95,12 +107,19 @@ function when(seconds: unknown): string | null {
       : diff > 0
         ? `in ${mins} minute${mins === 1 ? "" : "s"}`
         : `${mins} minute${mins === 1 ? "" : "s"} ago`;
-  return `${date.toLocaleString()} (${rel})`;
+  return `${date.toISOString().replace("T", " ").slice(0, 19)} UTC (${rel})`;
 }
 
 export function TokenInspector() {
-  const [token, setToken] = useState(SAMPLES[0].token);
-  const [note, setNote] = useState(SAMPLES[0].note);
+  const [now, setNow] = useState(BASE_NOW);
+  useEffect(() => setNow(Math.floor(Date.now() / 1000)), []);
+
+  const samples = useMemo(() => buildSamples(now), [now]);
+  const [index, setIndex] = useState(0);
+  const [edited, setEdited] = useState<string | null>(null);
+
+  const token = edited ?? samples[index].token;
+  const note = samples[index].note;
 
   const parsed = useMemo(() => {
     const parts = token.trim().split(".");
@@ -120,7 +139,7 @@ export function TokenInspector() {
   }, [token]);
 
   const exp = parsed.ok ? parsed.payload.exp : null;
-  const expired = typeof exp === "number" && exp < Math.floor(Date.now() / 1000);
+  const expired = typeof exp === "number" && exp < now;
 
   return (
     <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
@@ -129,16 +148,15 @@ export function TokenInspector() {
           Token inspector
         </span>
         <select
-          defaultValue="0"
+          value={index}
           onChange={(event) => {
-            const sample = SAMPLES[Number(event.target.value)];
-            setToken(sample.token);
-            setNote(sample.note);
+            setIndex(Number(event.target.value));
+            setEdited(null);
           }}
           className="ml-auto max-w-[12rem] rounded border border-border bg-bg px-1.5 py-1 text-xs"
           aria-label="Load a sample token"
         >
-          {SAMPLES.map((sample, index) => (
+          {samples.map((sample, index) => (
             <option key={sample.label} value={index}>
               {sample.label}
             </option>
@@ -154,7 +172,7 @@ export function TokenInspector() {
 
       <textarea
         value={token}
-        onChange={(event) => setToken(event.target.value)}
+        onChange={(event) => setEdited(event.target.value)}
         spellCheck={false}
         rows={3}
         className="w-full resize-y border-b border-border bg-[var(--code-bg)] p-3 font-mono text-[0.6875rem] leading-relaxed break-all text-[var(--code-text)] outline-none"
@@ -196,7 +214,7 @@ export function TokenInspector() {
                 }`}
               >
                 <strong>{expired ? "Expired" : "Expires"}: </strong>
-                {when(exp)}
+                {when(exp, now)}
               </p>
             ) : null}
           </div>
