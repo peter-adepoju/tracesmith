@@ -1,0 +1,137 @@
+Yesterday's question was whether a low role can act high. Today's is narrower and finds more: **can one customer see another customer's data?**
+
+The test is one character long.
+
+<Video id="idor" />
+
+## IDOR
+
+**Insecure Direct Object Reference.** The product puts a record's real identifier in a URL or a body, and the server fetches whatever you ask for without checking whose it is.
+
+```
+GET /api/orders/ORD-1001      ← yours
+GET /api/orders/ORD-1004      ← not yours
+```
+
+If the second returns `200`, you have found it.
+
+## Try all four
+
+<IdorProbe />
+
+Four endpoints, protected four different ways. Send your own id, then someone else's, on each one. Only the first is genuinely safe, and the other three are the three mistakes that look like protection.
+
+Pay attention to what the **safe** one does: another customer's order and an order that does not exist return *the same* `404`. That is deliberate. A `403` would confirm the record exists, which tells an attacker their guess was right.
+
+<Callout kind="key">
+**A long random id is not access control.**
+
+Unguessable ids are worth having — they raise the cost of blind enumeration. But ids leak constantly: in referrer headers, server logs, analytics, screenshots, shared links, support tickets and the browser history on a shared machine.
+
+Obscurity reduces the chance of a stranger finding it. Only a server-side ownership check decides whether they can use it once they have.
+</Callout>
+
+## Multi-tenancy
+
+Many products serve several organisations from one database, with a `tenant_id` or `organisation_id` on every row. **Tenant isolation** is the promise that one organisation can never see another's data.
+
+It is the most serious version of this bug. A customer seeing one stranger's order is bad; a company seeing a competitor's entire account is a company-ending incident, and usually a contractual breach as well.
+
+Where it breaks: a query that filters by the record's id and forgets `AND tenant_id = ?`. One missing clause in one handler, and the other forty handlers being correct does not help.
+
+## Where to look
+
+Not only ids in URLs:
+
+- **Path** — `/orders/ORD-1004`
+- **Query** — `?customerId=cus_03`
+- **Body** — `{"customerId": "cus_03"}` on a POST
+- **Headers** — a tenant id passed in a custom header, which is worse, because the client is being trusted to say which tenant it is
+- **Files** — `/invoices/INV-1004.pdf`, very often served with no check at all
+- **Nested** — `/orders/ORD-1001/items/9982`, where the parent is checked and the child is not
+
+That last one is a favourite. The outer object is scoped correctly, the inner one is fetched by its own id, and nobody noticed.
+
+<Callout kind="job">
+**Export endpoints and file downloads are where this hides.** They are written late, by someone in a hurry, and they return the richest data in the product.
+
+If you only have time for one IDOR test, test the PDF or CSV download.
+</Callout>
+
+## Writing it up
+
+> **Any signed-in customer can read any other customer's order (orders API).** Signed in as `cus_01`, `GET /api/orders/ORD-1004` returns `200` with order ORD-1004, which belongs to `cus_03`. The response carries that customer's email address and delivery address. Expected `404`. Verified with one request only; no further ids were tried. Critical: every order in the system is readable by changing four digits, and this is personal data under the NDPA.
+
+Four things that report does deliberately:
+
+- **One proof**, and it says so. You established the finding and stopped.
+- **Names the fields** leaked, without pasting them.
+- **No actual personal data** in the report — `cus_03`, not the person's name.
+- **Names the regulation**, which moves it from "bug" to "obligation".
+
+<Callout kind="watch">
+Report a finding like this through the channel your team uses for security, not a public ticket, not a group chat, and not a screenshot in a channel the whole company can read.
+
+The report itself describes how to exploit it. Treat it the way you would treat the credential it is equivalent to.
+</Callout>
+
+<Exercise
+  prompt="An endpoint returns 403 for another customer's order and 404 for one that does not exist. Why is returning the same 404 for both better?"
+  accept={["exists", "confirm", "enumerate", "leak"]}
+  hint="What does the difference between the two responses tell someone?"
+  solution="Because the difference itself leaks information: a 403 confirms that the record exists, so an attacker can enumerate valid ids without ever reading one. Returning 404 for both means a guess reveals nothing at all. Same protection, no side channel."
+/>
+
+<Exercise
+  prompt="A team says ids are UUIDs now, so the IDOR is fixed. What is wrong with that?"
+  accept={["leak", "guess", "obscurity", "not a control", "logs"]}
+  hint="How else does someone get an id?"
+  solution="UUIDs make blind guessing impractical; they do not stop anyone who obtains an id another way — logs, referrer headers, analytics, a shared link, a screenshot in a support ticket. The bug is that the server does not check ownership, and that is still true. Lower severity, same finding, still open."
+/>
+
+<Terms items={[
+  { term: "IDOR", meaning: "The server fetches the id you asked for without checking whose it is." },
+  { term: "Tenant isolation", meaning: "One organisation can never see another's data." },
+  { term: "Enumeration", meaning: "Walking ids to find valid ones. Stop at one proof." },
+  { term: "Security by obscurity", meaning: "Hard to guess, not hard to use. Not a control." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Signed in as cus_01, GET /api/orders/ORD-1004 returns 200 with cus_03's order. What is this?",
+    options: [
+      "A UI bug",
+      "An IDOR — broken access control, critical",
+      "Expected, since you are signed in",
+      "A caching issue"
+    ],
+    answer: 1,
+    why: "Authentication was checked and ownership was not, so every record is readable by changing the id."
+  },
+  {
+    q: "Which endpoint is most worth testing if you only have time for one?",
+    options: [
+      "The home page",
+      "A PDF or CSV export",
+      "The login form",
+      "A search box"
+    ],
+    answer: 1,
+    why: "Exports carry the richest data and are written late by someone in a hurry, very often with no ownership check at all."
+  },
+  {
+    q: "After proving an IDOR with one request, what do you do?",
+    options: [
+      "Pull a hundred records to size it",
+      "Stop and report it through the security channel",
+      "Post a screenshot in the team chat",
+      "Test it on production"
+    ],
+    answer: 1,
+    why: "The finding is established. Further requests add nothing and the report itself is exploit instructions, so it goes through the right channel."
+  }
+]} />
+
+## Tomorrow
+
+Reading a response for things that should never have been in it.

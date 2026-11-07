@@ -1,0 +1,129 @@
+You are not going to become a penetration tester this week. You are going to learn **five questions** that an ordinary tester can ask of an ordinary product, without special tools, that between them find most of what is seriously wrong.
+
+<Video id="owasp-top-10" />
+
+## The five
+
+1. **Can a low role do a high action?** — today
+2. **Can one customer see another's data?** — tomorrow
+3. **Is there anything in the response that should not be there?** — day 3
+4. **Is every door actually locked?** — day 4
+5. **Does the server validate what the browser refused?** — day 5
+
+Broken access control is number one on the OWASP list, and questions 1, 2 and 4 are all forms of it. That is not a coincidence: it is the most common serious defect on the web, and testers are unusually well placed to find it.
+
+<Callout kind="watch">
+**Test only what you are authorised to test.**
+
+Your employer's staging environment, with an account they gave you, inside your job: fine, and expected. Someone else's product, or production without a written agreement, is not a test — it is unauthorised access, and in Nigeria it falls under the Cybercrimes Act.
+
+When you do find something, **stop at proof**. One request that demonstrates it. Do not enumerate every record to see how far it goes; you have already established the finding, and going further turns a good report into a problem.
+</Callout>
+
+## Authentication is not authorisation
+
+The distinction the whole week rests on:
+
+- **Authentication** — *who are you?* Signing in.
+- **Authorisation** — *what are you allowed to do?* Checked per action.
+
+<Video id="authn-vs-authz" />
+
+The classic failure is a server that checks the first and forgets the second. You are signed in, so the request is honoured — and nobody asked whether *this* user may do *this* thing to *this* record.
+
+It happens because authentication is one piece of shared middleware written once, while authorisation is a decision that must be made again in every single handler. One of those is easy to forget.
+
+## RBAC
+
+**Role-based access control**: permissions attach to roles, people get roles.
+
+A shop might have: guest, customer, support, admin. Support can read any order and issue a refund; it cannot change prices or export the customer list.
+
+The tester's artefact is a **matrix** — every action down one side, every role across the top, and a yes or no in each cell.
+
+<AccessMatrix />
+
+Fill it in from the rules first, then reveal what the server does. Six actions, four roles, twenty-four cells, and three of them are wrong.
+
+## How to run the test
+
+1. Get **one account per role**. Ask for them on day one of any job; this is the single most useful thing you can have.
+2. Sign in as the **lowest** role.
+3. Send the **highest** actions directly, by API — because the interface will not offer you the buttons, and their absence proves nothing.
+4. Expect **403 Forbidden**. Anything in the 2xx range is a finding.
+
+<Callout kind="key">
+**Hiding a button is not access control.**
+
+Removing the Delete button for customers changes what is easy, not what is possible. The request still exists, the endpoint still answers, and DevTools is free.
+
+So the test can never be run through the interface. It has to be run against the endpoint, which is exactly why this week follows the API week.
+</Callout>
+
+## Both directions
+
+The matrix catches the quiet failure too: a role that *should* be able to do something and cannot. That is not a security hole, it is a broken feature — and nobody reports it, because the person affected assumes they are not supposed to have it.
+
+Same test, same grid, and you get it for free.
+
+<Exercise
+  prompt="A customer account calls GET /admin/orders and receives 200 with every customer's orders. Which check failed, and which one passed?"
+  accept={["authorisation", "authorization", "authz", "permission"]}
+  hint="Two separate questions."
+  solution="Authentication passed — the server knew who they were and accepted the session. Authorisation failed: nobody asked whether this role may read admin data. Critical severity, because it exposes every customer's personal data to anyone who can register an account."
+/>
+
+<Exercise
+  prompt="A developer says the bug is not real because the Delete button is hidden for customers. Answer them in two sentences."
+  accept={["devtools", "api", "request", "client", "hidden"]}
+  hint="What does the server see?"
+  solution="The button is a property of the page, and the server has no idea whether a button was clicked — it only sees a request, which anyone can send from DevTools or curl. Until the endpoint itself returns 403 for that role, the control does not exist."
+/>
+
+<Terms items={[
+  { term: "Authentication", meaning: "Who are you. Checked once." },
+  { term: "Authorisation", meaning: "What may you do. Checked every time." },
+  { term: "RBAC", meaning: "Permissions attach to roles; people get roles." },
+  { term: "Privilege escalation", meaning: "A low role performing a high action." },
+  { term: "Access matrix", meaning: "Actions by roles. The tester's artefact." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "A signed-in customer successfully calls an admin endpoint. What failed?",
+    options: [
+      "Authentication",
+      "Authorisation",
+      "Both",
+      "Neither — they were signed in"
+    ],
+    answer: 1,
+    why: "Being signed in is authentication. Whether this role may perform this action is a separate check, made per handler, and it was skipped."
+  },
+  {
+    q: "Why can an access control test not be run through the interface?",
+    options: [
+      "It is slower",
+      "The interface will not offer the buttons, and their absence proves nothing about the endpoint",
+      "The browser blocks it",
+      "It can be"
+    ],
+    answer: 1,
+    why: "The server never sees a button. It sees a request, and the request can be sent by anyone."
+  },
+  {
+    q: "You find that any customer can read any order. What do you do next?",
+    options: [
+      "Enumerate every order to measure the scope",
+      "Stop at one proof and report it",
+      "Try it on production",
+      "Fix it yourself"
+    ],
+    answer: 1,
+    why: "One request establishes the finding. Going further adds no information and turns a good report into a problem of its own."
+  }
+]} />
+
+## Tomorrow
+
+Tenant isolation: changing one number in a URL.

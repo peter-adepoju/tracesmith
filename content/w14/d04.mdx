@@ -1,0 +1,128 @@
+Most endpoints in a product require a signed-in user. Most. The question is which ones were forgotten, and the test is to take the authentication off and send the request anyway.
+
+<Video id="access-tokens" />
+
+## The core test
+
+For every endpoint you know about:
+
+1. Capture a working request — **Copy as cURL** from the Network panel.
+2. **Delete the `Authorization` header and the cookies.**
+3. Send it.
+4. Expect **401 Unauthorized**. Anything else is a finding.
+
+That is the whole test, and on a product of any size it usually finds something — a health endpoint that grew features, an internal admin route nobody listed, a webhook receiver, a file download, a new endpoint added last sprint behind the one piece of middleware it was not wired into.
+
+<Callout kind="job">
+Ask a developer for the route list, or read the API documentation, and test **every** route rather than the ones the interface happens to call.
+
+The forgotten endpoint is by definition one the interface does not use. You will not find it by clicking.
+</Callout>
+
+## The variations
+
+**No credentials at all.** The base case above.
+
+**An expired token.** Should be `401`. A server that accepts an expired token has effectively issued permanent credentials, and the whole point of expiry is gone.
+
+<TokenInspector />
+
+Load the expired sample and read the `exp` claim. In a real test you would send exactly this and check for a `401`.
+
+**A tampered token.** Decode the payload, change `"role": "customer"` to `"role": "admin"`, re-encode, send. The signature no longer matches, so the server must reject it. A server that does not verify signatures — or honours `"alg": "none"` — is catastrophic, because anyone can mint any identity.
+
+**Another user's valid token.** Legitimate credentials, wrong person. This is yesterday's test, from the authentication side.
+
+**A deactivated account.** The one teams most often miss. Deactivate a user, then send a request with the token they already held. If it still works, deactivation is cosmetic — and that is the token you issued to the person who was dismissed this morning.
+
+**After signing out.** Sign out, then replay a request captured before. The server should have invalidated the session.
+
+<Callout kind="key">
+**Deactivation and sign-out are server-side facts or they are nothing.**
+
+A product that clears the token from the browser and calls it signing out has not signed anyone out. The token still exists, it is still valid, and the server will still honour it — it just happens not to be in that browser any more.
+
+Test it by replaying a captured request after signing out. It takes thirty seconds and it is a finding people genuinely miss.
+</Callout>
+
+## Password and session hygiene
+
+Checks that need no tools:
+
+- Does **sign-in failure** say the same thing for a wrong password and an unknown email? Different messages let anyone test whether an address is registered. *(You met this from the other side when Tracesmith's own sign-in was failing.)*
+- Is there **rate limiting** on sign-in? Ten wrong passwords in five seconds should start being refused with `429`.
+- Does the **password reset** link expire, work only once, and become invalid after the password changes?
+- Does **changing the password** invalidate other sessions? It should.
+- Is the session cookie `HttpOnly`, `Secure` and `SameSite`? Check in the Application panel. `HttpOnly` is the one that stops JavaScript reading it.
+
+<StorageAudit />
+
+A session token in `localStorage` is readable by any script on the page, including one that arrives through a compromised dependency. A cookie marked `HttpOnly` is not.
+
+## Reporting an open endpoint
+
+> **`GET /api/admin/export/customers` requires no authentication.** Sending the request with no `Authorization` header and no cookies returns `200` and a CSV of every customer: name, email, phone, delivery address. Expected `401`. Verified once, with a single request; the file was not retained. Critical: every customer record in the product is downloadable by anyone who knows the path, with no account and no trace in any access log tied to a user. NDPA applies.
+
+Report it the way you would report a leaked credential — through the security channel, immediately, not in a sprint backlog. An unauthenticated data export is the kind of finding that gets a release stopped, which is exactly what should happen.
+
+<Exercise
+  prompt="You deactivate a user, then replay a request with the token they already held. It returns 200. Why is this worse than it looks?"
+  accept={["still valid", "no access", "dismissed", "revoke", "until expiry"]}
+  hint="Who gets deactivated, and why?"
+  solution="Because deactivation is what the business does when someone must stop having access — a departing employee, a compromised account, a fraudulent customer. If the existing token keeps working until it expires, the person retains full access for that window, and everyone believes the access was removed. The fix is server-side revocation, not just refusing new sign-ins."
+/>
+
+<Exercise
+  prompt="Sign-in says 'No account with that email' for an unknown address and 'Incorrect password' for a known one. What is the problem?"
+  accept={["enumerate", "enumeration", "exists", "registered"]}
+  hint="What can someone learn without ever signing in?"
+  solution="User enumeration: anyone can discover which email addresses are registered, one request at a time, without a password. That list feeds credential stuffing and targeted phishing. Both cases must return the same message — which is also why a real sign-in failure can be confusing to debug, as Tracesmith's own login proved."
+/>
+
+<Terms items={[
+  { term: "401 vs 403", meaning: "Not authenticated, versus authenticated but not allowed." },
+  { term: "Token revocation", meaning: "Server-side invalidation. The only real sign-out." },
+  { term: "User enumeration", meaning: "Learning which accounts exist from differing responses." },
+  { term: "HttpOnly", meaning: "A cookie flag that stops JavaScript reading it." },
+  { term: "Rate limiting", meaning: "Refusing repeated attempts. 429." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "You remove the Authorization header and the endpoint returns 200. What is the verdict?",
+    options: [
+      "Fine if the UI always sends it",
+      "A finding — the endpoint is unauthenticated",
+      "Only a bug for admin routes",
+      "Expected for GET"
+    ],
+    answer: 1,
+    why: "The server is the only thing that can require authentication, and it is not requiring any."
+  },
+  {
+    q: "Signing out clears the token from the browser but the server still honours it. Is that signing out?",
+    options: [
+      "Yes",
+      "No — the token is still valid and will be honoured for anyone holding it",
+      "Only on mobile",
+      "Depends on the framework"
+    ],
+    answer: 1,
+    why: "Sign-out has to be a server-side fact. Otherwise it only tidied up one browser."
+  },
+  {
+    q: "Why must sign-in return the same message for an unknown email and a wrong password?",
+    options: [
+      "It is simpler",
+      "Different messages let anyone discover which addresses are registered",
+      "It is faster",
+      "It does not matter"
+    ],
+    answer: 1,
+    why: "That is user enumeration, and the resulting list feeds credential stuffing and targeted phishing."
+  }
+]} />
+
+## Tomorrow
+
+Input validation and uploads: what the server does with what the browser refused.

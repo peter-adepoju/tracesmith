@@ -6,14 +6,17 @@ import { RequestInspector } from "@/components/RequestInspector";
 import { Terms } from "@/components/Terms";
 import { Video } from "@/components/Video";
 import { AccessibleName } from "@/components/interactive/AccessibleName";
+import { AccessMatrix } from "@/components/interactive/AccessMatrix";
 import { AssertionLab } from "@/components/interactive/AssertionLab";
 import { BoxModel } from "@/components/interactive/BoxModel";
 import { BugReportGrader } from "@/components/interactive/BugReportGrader";
 import { ConsoleLab } from "@/components/interactive/ConsoleLab";
 import { CurlReader } from "@/components/interactive/CurlReader";
 import { EndpointBuilder } from "@/components/interactive/EndpointBuilder";
+import { IdorProbe } from "@/components/interactive/IdorProbe";
 import { JsonExplorer } from "@/components/interactive/JsonExplorer";
 import { KeyboardPass } from "@/components/interactive/KeyboardPass";
+import { ExposureScan } from "@/components/interactive/ExposureScan";
 import { FormLab } from "@/components/interactive/FormLab";
 import { HidingDemo } from "@/components/interactive/HidingDemo";
 import { LivePlayground } from "@/components/interactive/LivePlayground";
@@ -42,6 +45,7 @@ import { WebhookSimulator } from "@/components/interactive/WebhookSimulator";
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
     AccessibleName,
+    AccessMatrix,
     AssertionLab,
     BoxModel,
     BugReportGrader,
@@ -50,8 +54,10 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     CurlReader,
     EndpointBuilder,
     Exercise,
+    ExposureScan,
     FormLab,
     HidingDemo,
+    IdorProbe,
     JsonExplorer,
     KeyboardPass,
     LivePlayground,

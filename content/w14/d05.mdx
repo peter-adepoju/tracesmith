@@ -1,0 +1,135 @@
+Week 12 said client-side validation is convenience, not a control. This is the lesson where that matters most, because the input the browser refused is exactly the input an attacker will send.
+
+<Video id="broken-access-control" />
+
+## The principle
+
+**Every input is attacker-controlled.** Not just the obvious ones — the form fields, but also the query string, the headers, the cookies, the file name of an upload, and any field your client sends that you assumed it would send correctly.
+
+The server must assume all of it is hostile, because from its position it cannot tell the difference between your form and a script.
+
+## The test
+
+For every validated field:
+
+1. Watch what the form sends. **Copy as cURL.**
+2. Change the value to the thing the form refused.
+3. Send it.
+4. Expect the same refusal, from the server.
+
+<FormLab />
+
+Remove a field's `name` and watch it vanish from the payload while the screen looks unchanged. That is the gap: the payload is the truth, and the payload is editable.
+
+## Fields the client is trusted with
+
+The most valuable thing to look for. Anywhere the client sends a value the server should have decided:
+
+| Field in the request | Why it is a finding |
+| --- | --- |
+| `"price": 48500.00` | Change it to `1`. The server must price from its own catalogue |
+| `"role": "customer"` | Change it to `admin` |
+| `"customerId": "cus_01"` | Change it to someone else's — the server knows who you are from the token |
+| `"discountPercent": 10` | Change it to `100` |
+| `"isVerified": false` | Change it to `true` |
+
+The rule: **if the server could have worked it out itself, it should have.** Anything the client asserts about identity, price or permission is a question waiting to be asked.
+
+<Callout kind="key">
+A **mass assignment** bug is the quiet version. The server takes the whole JSON body and writes it to the record, so a field the form never sends — `"role"`, `"isAdmin"`, `"balance"` — gets written anyway because nobody listed which fields are allowed.
+
+The test: add a plausible extra field to a legitimate request and see whether it sticks. Send it, then fetch the record back.
+</Callout>
+
+## The classic injections, as a tester sees them
+
+You do not need to exploit these. You need to recognise the signal.
+
+**SQL injection.** Put `O'Brien` in a text field. A legitimate Irish surname, and if it produces a `500` or a database error, the input is reaching SQL unescaped. That is the finding — report it there and stop.
+
+**Cross-site scripting.** Put `<b>test</b>` in a name field and look at where it is displayed. If it renders **bold**, the value is being inserted as HTML rather than text, which means a script tag would run too. Again: bold text is proof enough, and the report is complete without going further.
+
+**Path traversal.** In any field that becomes a file name, send `../../etc/passwd`. Anything other than a flat refusal is a finding.
+
+<Callout kind="watch">
+Use the mildest payload that demonstrates the problem. `<b>test</b>` renders bold and proves the same thing as a script that steals a session, without you having written something that steals a session.
+
+The mild version is also what makes the report safe to attach, and it keeps you unambiguously on the right side of what you were authorised to do.
+</Callout>
+
+## Uploads
+
+A file upload is the highest-risk feature in most products, because it accepts a file from a stranger and puts it on a server.
+
+What to test:
+
+- **Wrong type.** Upload a `.exe` renamed to `.jpg`. If the server checks only the extension, it accepted an executable. Proper checking reads the file's actual contents.
+- **No type.** A file with no extension.
+- **Too large.** A 500MB file. Is there a limit, and does hitting it produce a clean error or a crash?
+- **Zero bytes.** An empty file.
+- **A hostile name.** `../../../evil.jpg`, or a name with a null byte, or 300 characters.
+- **A double extension.** `photo.jpg.php`.
+- **An image that is not an image.** Rename a text file to `.png` and upload it. What happens when something tries to resize it?
+- **Where does it land?** If the uploaded file is served back from the same domain, an uploaded HTML file becomes a page on your site. Uploads should be served from a separate domain, or with headers that force a download.
+- **Who can read it?** Upload as one account, then fetch the URL signed out. This is yesterday's and the day before's test, applied to files — and it very often fails.
+
+<Exercise
+  prompt={'A checkout request includes "priceMinor": 4850000. You change it to 1 and the order is created for NGN 0.01. How severe, and what is the underlying rule?'}
+  accept={["critical", "server", "catalogue", "own price"]}
+  hint="Who should decide the price?"
+  solution="Critical. The rule is that the server must price from its own catalogue using the product id — the client should not be sending a price at all, because anything the client asserts can be changed. This is directly exploitable for free goods by anyone who can open DevTools, and it needs no special knowledge."
+/>
+
+<Exercise
+  prompt="You type O'Brien into a name field and get a 500. What have you found, and what do you do next?"
+  accept={["sql", "injection", "escap", "unescaped"]}
+  hint="Which character broke it?"
+  solution="The apostrophe is reaching SQL unescaped, which indicates a SQL injection vulnerability. You stop there — the 500 on a legitimate surname is proof enough, and it is also a functional bug in its own right since real people are called O'Brien. Report it as high or critical; do not try to extract data to prove it further."
+/>
+
+<Terms items={[
+  { term: "Attacker-controlled input", meaning: "Everything the client sends. All of it." },
+  { term: "Mass assignment", meaning: "The server writes the whole body, including fields the form never sends." },
+  { term: "Content sniffing", meaning: "Checking what a file actually is, not what it is called." },
+  { term: "Mildest payload", meaning: "Prove it with <b>test</b>, not with an exploit." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "A request body includes the price. What is the finding?",
+    options: [
+      "Nothing, the client knows the price",
+      "The server must price from its own catalogue — anything the client asserts can be changed",
+      "It should be encrypted",
+      "It should be in the query string"
+    ],
+    answer: 1,
+    why: "If the server can work it out itself, it must. A client-supplied price is free goods for anyone with DevTools."
+  },
+  {
+    q: "You enter <b>test</b> in a name field and it renders bold. What does that prove?",
+    options: [
+      "Nothing",
+      "Input is inserted as HTML rather than text, so a script tag would run too",
+      "The font is wrong",
+      "Markdown is enabled"
+    ],
+    answer: 1,
+    why: "That is cross-site scripting, and bold text proves it without writing anything harmful."
+  },
+  {
+    q: "Why is checking an upload's extension not enough?",
+    options: [
+      "Extensions are case sensitive",
+      "Anyone can rename a file; the server must check the actual contents",
+      "It is slow",
+      "It is enough"
+    ],
+    answer: 1,
+    why: "An executable renamed to .jpg passes an extension check and is still an executable."
+  }
+]} />
+
+## Tomorrow
+
+All five checks, run on one product, in one sitting.

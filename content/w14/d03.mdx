@@ -1,0 +1,123 @@
+The page shows a name and a city. The response that fed it carried a password hash, a card number and a staff note about the customer.
+
+This finding costs nothing to look for. Open the Network panel, click the response, and read it.
+
+## The skill is noticing
+
+<ExposureScan />
+
+Fourteen lines of ordinary-looking JSON. Mark every one that should not be in a response going to the customer's own browser, then check.
+
+Notice what the over-marking costs you. `cardLast4` and the customer's own email are fine, and reporting them alongside the five real findings makes a reader discount all of it.
+
+## What must never reach a browser
+
+**Credentials and secrets** — password hashes, API keys, tokens for other services, webhook signing secrets, anything named `secret` or `key`.
+
+**Full payment details** — the card number, the CVV, the expiry. Last four digits and a brand are the correct way to show a card.
+
+**Other people's data** — any field belonging to a different customer, however small.
+
+**Internal fields** — risk scores, fraud flags, segment labels, staff notes, `isTestAccount`, the margin on a product.
+
+**Infrastructure** — hostnames, internal IPs, file paths, database names, stack traces, framework versions.
+
+**More than the screen needs** — the quiet one. An endpoint that returns the whole user row because it was easier than selecting columns.
+
+<Callout kind="key">
+**"The UI does not display it" is not a defence, and it is the sentence you will hear.**
+
+The response reaches the browser. It is in the Network panel, in the page's memory, in any logging the browser does, and in the response cache. Whether a `<div>` renders it is irrelevant.
+
+The correct fix is that the server does not send it.
+</Callout>
+
+## Where to look
+
+- The **list** endpoint, which often returns full objects where the UI shows three fields
+- **`/me`** or **`/profile`**, which tend to return the whole row
+- **Error responses**, which leak stack traces and SQL
+- **Search results**, which may match on fields they should not return
+- **Anything you did not expect** — an endpoint the page calls that you did not know about
+
+<JsonExplorer />
+
+Use the path, not a description, when you report: `body.data[0].passwordHash`.
+
+## Reporting without leaking it again
+
+This is the awkward part. The report has to describe the problem, and the problem *is* the data.
+
+> **`GET /api/customers/me` returns fields that must not reach a browser.** The response includes `passwordHash` (bcrypt), `cardNumber` (full PAN), `internalRiskScore`, `supportNotes` and `dbHost`. Reproduced signed in as any customer; the page renders none of them. Field names and types only below — no values are included in this report, and the capture is attached through the security channel rather than here. Critical: the hash is offline-crackable and the full card number is a PCI DSS violation independent of any breach.
+
+The rules:
+
+- **Field names and types, never values.** "Returns a `passwordHash`" — not the hash.
+- **One example account**, and your own where possible.
+- **Never paste the raw response** into a ticket, a chat or an email.
+- **Say where the evidence is**, through whatever secure channel your team uses.
+- **Name the consequence**, and the regulation if you know it. For a full card number, PCI DSS; for personal data in Nigeria, the NDPA.
+
+<Callout kind="watch">
+A ticket is forever. It is backed up, indexed, exported and often visible to contractors and new joiners for years.
+
+Pasting a password hash into a bug report converts a serious defect into a permanent, searchable copy of the thing. The redaction drill from week 11 applies here at its strictest.
+</Callout>
+
+<RedactionDrill />
+
+<Exercise
+  prompt="A developer says the risk score is fine because the page never renders it. Answer in two sentences."
+  accept={["network", "browser", "devtools", "reaches"]}
+  hint="Where is the response before the page decides what to draw?"
+  solution="The response reaches the browser regardless of what the page draws — it sits in the Network panel, in memory and in the cache, where anyone can read it in two clicks. Whether a div renders a field has nothing to do with whether the field was disclosed."
+/>
+
+<Exercise
+  prompt="You need to report that a response contains a password hash. What exactly goes in the ticket?"
+  accept={["field name", "no value", "not the hash", "names"]}
+  hint="Describe the shape, never the content."
+  solution="The endpoint, the field name and its type — 'the response includes passwordHash, a bcrypt hash' — plus the account you used, the consequence, and a note saying the capture is available through the security channel. The value itself never appears, because a ticket is permanent, indexed and widely readable."
+/>
+
+<Terms items={[
+  { term: "Over-fetching", meaning: "Returning the whole row because selecting columns was more work." },
+  { term: "PAN", meaning: "The full card number. Last four digits only, ever." },
+  { term: "Internal field", meaning: "Scores, flags and staff notes the customer is not meant to see." },
+  { term: "Field names, not values", meaning: "How to report a disclosure without repeating it." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which is safe to return to a customer's own browser?",
+    options: ["passwordHash", "cardLast4", "internalRiskScore", "dbHost"],
+    answer: 1,
+    why: "Last four digits are the standard safe way to identify a card. The other three are credentials, internal data and infrastructure."
+  },
+  {
+    q: "Why is 'the UI does not display it' not a defence?",
+    options: [
+      "It is rude",
+      "The response reaches the browser regardless, where anyone can read it in the Network panel",
+      "The UI might change",
+      "It is a defence"
+    ],
+    answer: 1,
+    why: "Disclosure happens when the server sends it, not when a page decides whether to draw it."
+  },
+  {
+    q: "What goes in the ticket when a response leaks a password hash?",
+    options: [
+      "The hash, so the developer can confirm it",
+      "The field name and type, with the capture through a secure channel",
+      "A screenshot of the Network panel",
+      "Nothing, tell them verbally"
+    ],
+    answer: 1,
+    why: "A ticket is permanent and widely readable, so pasting the value makes a durable copy of the thing you are reporting."
+  }
+]} />
+
+## Tomorrow
+
+Authentication: checking that every door is actually locked.

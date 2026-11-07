@@ -1,0 +1,142 @@
+Ninety minutes, one product, five checks. This sweep is a real deliverable — it is the thing you can offer to do in a job where nobody is currently doing it, and it is a genuinely strong thing to have done when you are interviewing.
+
+## Before you start
+
+<Callout kind="watch">
+**Written authorisation, every time.** A Slack message from your lead saying "yes, run your security checks on staging" is enough and takes ten seconds to ask for. Without it, do not start.
+
+Then: **staging, never production.** One proof per finding. No enumeration. Nothing destructive. If you find something serious, stop testing that area and report it immediately rather than finishing the sweep first.
+</Callout>
+
+Use the Meridian lab for the practice run. Everything below is also exactly what you would do on a real product you were asked to check.
+
+## Check 1 — access control (20 min)
+
+Build the matrix. Every role down the side, every significant action across the top.
+
+<AccessMatrix />
+
+Sign in as the lowest role and send the highest actions **by API**. Expect `403`. Record every cell.
+
+## Check 2 — tenant isolation (20 min)
+
+For every endpoint that takes an id, send someone else's.
+
+<IdorProbe />
+
+Cover all six places an id hides: path, query, body, header, file download, nested child resource. Test the export endpoint first if you are short of time.
+
+## Check 3 — sensitive data (15 min)
+
+Open the Network panel and read the responses the product is actually sending.
+
+<ExposureScan />
+
+Check `/me`, any list endpoint, any search, and one error response. You are looking for credentials, full card numbers, other people's data, internal fields and infrastructure.
+
+## Check 4 — authentication (20 min)
+
+Copy as cURL, strip the `Authorization` header and cookies, send. Expect `401`.
+
+Then the variations: expired token, tampered token, deactivated account, after signing out. And the hygiene checks — identical sign-in failure messages, rate limiting, cookie flags.
+
+## Check 5 — input validation (15 min)
+
+For every field the form validates, send the refused value directly. Then look for anything the client is trusted with — price, role, customer id, discount — and change it.
+
+If there is an upload, test wrong type, too large, hostile name, and whether the file is readable signed out.
+
+## The summary
+
+This goes to someone who decides whether to release. Write it for them.
+
+```
+SECURITY SWEEP — Meridian checkout and orders
+Scope       Orders, checkout, customer profile, admin orders.
+            Staging only. Authorised by [name], 7 Nov.
+Method      Five-check sweep, manual, API-level. One proof per
+            finding; no enumeration; nothing destructive.
+
+CRITICAL
+  SEC-01  Any signed-in customer can read any order by changing
+          the id (GET /api/orders/{id}). Personal data of all
+          customers exposed. NDPA applies.
+  SEC-02  GET /api/admin/export/customers requires no
+          authentication at all.
+
+HIGH
+  SEC-03  Customer role can call GET /admin/orders and receives
+          every customer's orders.
+  SEC-04  GET /api/customers/me returns passwordHash and a full
+          card number. Field names only in this report.
+
+MEDIUM
+  SEC-05  Support role can change product prices. Contradicts the
+          stated permissions; not reachable from the interface.
+
+NOT FOUND
+  No unauthenticated write endpoints. Sign-in failure messages
+  are identical. Session cookie is HttpOnly and Secure.
+
+NOT TESTED
+  Upload handling — no upload feature in scope.
+  Rate limiting — needs a load tool I do not have.
+  Production — out of scope by agreement.
+
+ASSESSMENT
+  Do not release. SEC-01 and SEC-02 each expose every customer's
+  personal data to anyone with an account or a URL, with no
+  workaround and no detection. Both are reportable breaches if
+  they reach production.
+```
+
+<Callout kind="key">
+**Rank by damage, not by how clever the bug is.**
+
+An unauthenticated CSV export is boring and catastrophic. A subtle token-handling flaw is interesting and may be unreachable. The boring one goes first, every time.
+
+And include the **Not found** section. It is the part that tells a reader what your sweep actually covered, and it is what makes the findings believable rather than a list of everything you happened to notice.
+</Callout>
+
+## Handling what you find
+
+- **Security channel, not a public ticket.** The report is exploit instructions.
+- **Immediately, not at the end of the sprint.** A critical finding is an interrupt.
+- **No values, only field names.** Week 11's redaction rules at their strictest.
+- **Do not fix it yourself**, and do not discuss it outside the people who need to know.
+- **Do not test it on production** to see whether it is "really" there.
+
+<Callout kind="job">
+This sweep is a career move as much as a technical exercise.
+
+Most small teams have nobody doing it. Walking into a QA role and saying "I can run a five-check security sweep on any feature, here is the format, here is one I did" puts you above a great many candidates — and the five checks are all things an ordinary tester can genuinely do.
+</Callout>
+
+<Exercise
+  prompt="You find an unauthenticated customer export twenty minutes into the sweep. What do you do?"
+  accept={["report", "stop", "immediately", "escalate"]}
+  hint="Does it wait for the other three checks?"
+  solution="Stop and report it immediately, through the security channel. A critical finding is an interrupt, not a line item — the hour it spends in your notes while you finish checks 3, 4 and 5 is an hour the data is exposed. Finish the sweep afterwards, and say in the summary that it was reported before the sweep completed."
+/>
+
+<Exercise
+  prompt="Why does the summary include a 'Not found' section?"
+  accept={["covered", "scope", "credib", "what was tested"]}
+  hint="What does a reader learn from an absence?"
+  solution="It says what the sweep actually covered, which is what makes the findings mean something — five findings with no scope could be five out of five or five out of fifty. It also records the things that were checked and were correct, so nobody re-checks them, and it makes the 'Not tested' section honest rather than evasive."
+/>
+
+<Terms items={[
+  { term: "Five-check sweep", meaning: "Access control, isolation, exposure, authentication, input." },
+  { term: "Authorisation to test", meaning: "In writing, before you start. Every time." },
+  { term: "One proof", meaning: "Enough to establish it. Never enumeration." },
+  { term: "Rank by damage", meaning: "Boring and catastrophic beats clever and unreachable." },
+]} />
+
+## Week 14 in one line
+
+Five questions, ninety minutes, no special tools — and they find the defects that stop a release.
+
+## Next week
+
+The last week of Phase 3: automated testing, where the cases you have been running by hand start running themselves.

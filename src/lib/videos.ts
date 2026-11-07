@@ -540,6 +540,27 @@ export const VIDEOS = {
     length: "4:54",
     why: "Five minutes on the distinction beginners most often get wrong.",
   },
+  "owasp-top-10": {
+    id: "wUaeKEl1RCw",
+    title: "OWASP Top 10 Web Application Security Risks",
+    channel: "Telusko",
+    length: "14:58",
+    why: "The industry's list of what actually goes wrong, in plain language. Access control is number one for a reason.",
+  },
+  "broken-access-control": {
+    id: "vUFVxoV5y_I",
+    title: "Broken Access Control Explained: OWASP Top 10 A01 Explained with Examples",
+    channel: "Aikido Security",
+    length: "7:04",
+    why: "The single most common serious finding, and the one a tester is best placed to catch.",
+  },
+  "idor": {
+    id: "rloqMGcPMkI",
+    title: "Insecure Direct Object Reference (IDOR) Explained",
+    channel: "PwnFunction",
+    length: "8:14",
+    why: "Changing one number in a URL, and why that is sometimes all it takes.",
+  },
   "regression-testing": {
     id: "xmQuLTarGI4",
     title: "What is Regression Testing? A Software Testing FAQ - Why? How? When?",
