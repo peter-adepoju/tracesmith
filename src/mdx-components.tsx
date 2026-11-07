@@ -17,6 +17,7 @@ import { IdorProbe } from "@/components/interactive/IdorProbe";
 import { JsonExplorer } from "@/components/interactive/JsonExplorer";
 import { KeyboardPass } from "@/components/interactive/KeyboardPass";
 import { ExposureScan } from "@/components/interactive/ExposureScan";
+import { FlakyRunner } from "@/components/interactive/FlakyRunner";
 import { FormLab } from "@/components/interactive/FormLab";
 import { HidingDemo } from "@/components/interactive/HidingDemo";
 import { LivePlayground } from "@/components/interactive/LivePlayground";
@@ -26,6 +27,7 @@ import { RegressionPicker } from "@/components/interactive/RegressionPicker";
 import { RequestJourney } from "@/components/interactive/RequestJourney";
 import { RunTwice } from "@/components/interactive/RunTwice";
 import { RiskMatrix } from "@/components/interactive/RiskMatrix";
+import { SelectorLab } from "@/components/interactive/SelectorLab";
 import { SeverityGrid } from "@/components/interactive/SeverityGrid";
 import { TestCaseBuilder } from "@/components/interactive/TestCaseBuilder";
 import { TokenInspector } from "@/components/interactive/TokenInspector";
@@ -55,6 +57,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     EndpointBuilder,
     Exercise,
     ExposureScan,
+    FlakyRunner,
     FormLab,
     HidingDemo,
     IdorProbe,
@@ -69,6 +72,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     RequestJourney,
     RiskMatrix,
     RunTwice,
+    SelectorLab,
     SeverityGrid,
     SpecificityScorer,
     SqlConsole,

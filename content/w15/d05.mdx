@@ -1,0 +1,234 @@
+A test that runs and asserts nothing useful is a slow way of visiting a page. Today: what to assert, how to get the state you need, and how to make the whole thing run without you.
+
+## Assert on what a user can see
+
+```ts
+// Weak — passes on an empty page with a 500 in the console
+await page.goto("/orders/ORD-1001");
+
+// Weak — an implementation detail
+await expect(page.locator(".order-total-wrapper")).toHaveClass(/loaded/);
+
+// Strong — the outcome a person cares about
+await expect(page.getByText("Order placed")).toBeVisible();
+await expect(page.getByTestId("total")).toHaveText("NGN 48,500.00");
+```
+
+The question for every assertion: **if this fails, has something a user would notice gone wrong?** If no, it is maintenance cost without value.
+
+The three levels from week 13 still apply, now through a browser: did it happen at all, is the shape right, is the value right. Most UI tests stop at the first and should not.
+
+## Assert the negative too
+
+```ts
+await expect(page.getByText("Error")).toBeHidden();
+await expect(page.getByRole("alert")).toHaveCount(0);
+```
+
+And the side effect, which is where the real defects are:
+
+```ts
+await page.getByRole("button", { name: "Place order" }).click();
+await expect(page.getByText("Order placed")).toBeVisible();
+
+// The screen says so. Does the server agree?
+const response = await page.request.get("/api/meridian/orders");
+const { data } = await response.json();
+expect(data).toHaveLength(1);
+expect(data[0].totalMinor).toBe(4850000);
+```
+
+`page.request` sends real HTTP with the browser's cookies, so you can check the API from inside a UI test. Week 13's lesson, available in one line.
+
+## Catch console errors for free
+
+```ts
+test.beforeEach(async ({ page }) => {
+  page.on("console", (message) => {
+    if (message.type() === "error") {
+      throw new Error(`Console error: ${message.text()}`);
+    }
+  });
+});
+```
+
+Every test now also checks that the page threw nothing. Week 6's lesson, automated — and it finds things no assertion you wrote was looking for.
+
+## Fixtures: set up and tear down
+
+Every test needs a starting state, and the rule from yesterday stands: **each test creates what it needs.**
+
+```ts
+import { test as base, expect } from "@playwright/test";
+
+type Fixtures = { orderId: string };
+
+export const test = base.extend<Fixtures>({
+  orderId: async ({ request }, use) => {
+    // Set up: create an order over the API, which is far faster
+    // and far more reliable than clicking through checkout.
+    const response = await request.post("/api/meridian/orders", {
+      data: {
+        items: [{ productId: "mer-05", quantity: 1 }],
+        email: `test-${Date.now()}@example.com`,
+      },
+    });
+    const order = await response.json();
+
+    await use(order.id);          // the test runs here
+
+    // Tear down: runs even when the test fails.
+    await request.delete(`/api/meridian/orders/${order.id}`);
+  },
+});
+
+test("an order appears in history", async ({ page, orderId }) => {
+  await page.goto("/orders");
+  await expect(page.getByText(orderId)).toBeVisible();
+});
+```
+
+<Callout kind="key">
+**Set state up through the API, not the interface.**
+
+A test about order history should not spend forty seconds clicking through checkout to get an order. It is slow, and worse, it now fails whenever *checkout* breaks — so a single defect turns thirty tests red and tells you nothing about any of them.
+
+Click through the thing you are testing. Everything else, create directly.
+</Callout>
+
+The `Date.now()` in that email is deliberate: every run gets its own data, so tests cannot collide when they run in parallel.
+
+## Signing in once
+
+Re-signing-in for every test is the commonest waste in a suite. Do it once and reuse the storage state:
+
+```ts
+// auth.setup.ts
+import { test as setup } from "@playwright/test";
+
+setup("sign in", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByLabel("Email").fill(process.env.TEST_EMAIL!);
+  await page.getByLabel("Password").fill(process.env.TEST_PASSWORD!);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page.getByText("Signed in")).toBeVisible();
+
+  await page.context().storageState({ path: ".auth/user.json" });
+});
+```
+
+Every later test starts already signed in. One sign-in instead of two hundred.
+
+<Callout kind="watch">
+**No credentials in the code. Ever.**
+
+`process.env.TEST_EMAIL`, never the literal. The repository is forever: a password committed once lives in the history even after you delete the line, and anyone who clones the repo has it.
+
+Add `.auth/` and `.env` to `.gitignore` before you write the first test, not after — `storageState` writes a real session token to disk, and that file is a live credential.
+
+This is exactly the rule you met in week 11 for bug reports, and it bites harder here because a commit is harder to take back than a ticket.
+</Callout>
+
+## Running on every push
+
+`.github/workflows/test.yml`:
+
+```yaml
+name: tests
+on: [push, pull_request]
+
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: npx playwright test
+        env:
+          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+```
+
+Two lines deserve attention. `secrets.*` is how credentials reach CI without being in the repository. `if: always()` uploads the report **even when the tests failed** — which is the only time you wanted it.
+
+<Callout kind="job">
+A suite nobody runs is a suite that does not exist. Three things make it real:
+
+- It runs on **every push**, not nightly and not on request.
+- A **red build blocks the merge**. Otherwise it is advisory, and advisory becomes ignored.
+- It finishes in **under ten minutes**. Past that, people stop waiting and start merging anyway.
+
+If your suite cannot meet the third, that is an argument for moving tests down the pyramid, not for a faster runner.
+</Callout>
+
+<Exercise
+  prompt="Why create an order through the API rather than by clicking through checkout, in a test about order history?"
+  accept={["faster", "checkout", "coupl", "unrelated", "slow"]}
+  hint="What happens to this test when checkout breaks?"
+  solution="Speed is the small reason. The real one is coupling: a test that clicks through checkout fails whenever checkout breaks, so one defect turns thirty unrelated tests red and none of their failures tells you anything. Click through the thing you are testing; create everything else directly."
+/>
+
+<Exercise
+  prompt="Name two things that must be in .gitignore before you write your first Playwright test, and why."
+  accept={["auth", "env", "storage", "credential"]}
+  hint="Both are live credentials on disk."
+  solution=".env, which holds the test account's email and password, and .auth/, which holds the storageState file — a real session token. Both are live credentials, and a repository is forever: committing one puts it in the history even after the line is deleted, and everyone who clones the repo has it."
+/>
+
+<Terms items={[
+  { term: "Fixture", meaning: "Set up before, tear down after, even on failure." },
+  { term: "storageState", meaning: "A saved session. Sign in once, reuse everywhere." },
+  { term: "page.request", meaning: "Real HTTP with the browser's cookies, inside a UI test." },
+  { term: "CI secret", meaning: "How a credential reaches the runner without entering the repo." },
+  { term: "if: always()", meaning: "Upload the report on failure — the only time you wanted it." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which is the strongest assertion after placing an order?",
+    options: [
+      "The page navigated",
+      "A wrapper div has a 'loaded' class",
+      "The confirmation is visible AND the API shows one order with the right total",
+      "No exception was thrown"
+    ],
+    answer: 2,
+    why: "It checks the outcome a user sees and the side effect on the server, which is where the expensive defects live."
+  },
+  {
+    q: "Where do test credentials belong?",
+    options: [
+      "In the spec file",
+      "In environment variables, with CI secrets, and the files gitignored",
+      "In the config",
+      "In a comment"
+    ],
+    answer: 1,
+    why: "A repository is forever: a committed password stays in the history after the line is deleted."
+  },
+  {
+    q: "Why does the CI workflow use `if: always()` on the artifact upload?",
+    options: [
+      "To run faster",
+      "So the report is uploaded even when tests failed — the only time you need it",
+      "It is required",
+      "To save storage"
+    ],
+    answer: 1,
+    why: "By default the step is skipped after a failure, which loses exactly the trace and screenshots you came for."
+  }
+]} />
+
+## Tomorrow
+
+The whole thing, on a login flow: one success and three failures, credentials out of the code, green twice in a row.

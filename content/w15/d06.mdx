@@ -1,0 +1,158 @@
+The last day of Phase 3. One automated suite over a login flow, written by you, green twice in a row.
+
+Login is the right choice: every product has one, it is high risk, it is stable, and it has clear failure paths. It is also the thing an interviewer is most likely to ask you to automate.
+
+## What to build
+
+Four tests.
+
+**1. Success.** Valid credentials sign in and the signed-in state is visible.
+
+**2. Wrong password.** An error appears, it is readable, and you are still signed out.
+
+**3. Unknown email.** The same message as wrong password — week 14's enumeration rule, now enforced by a test.
+
+**4. Empty fields.** Submitting nothing is refused with a message naming the field.
+
+## The suite
+
+```ts
+import { test, expect } from "@playwright/test";
+
+const EMAIL = process.env.TEST_EMAIL!;
+const PASSWORD = process.env.TEST_PASSWORD!;
+
+test.describe("sign in", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/login");
+  });
+
+  test("valid credentials sign in", async ({ page }) => {
+    await page.getByLabel("Email").fill(EMAIL);
+    await page.getByLabel("Password").fill(PASSWORD);
+    await page.getByRole("button", { name: "Sign in" }).click();
+
+    await expect(page.getByRole("link", { name: "Review" })).toBeVisible();
+    await expect(page).not.toHaveURL(/\/login/);
+  });
+
+  test("wrong password is refused", async ({ page }) => {
+    await page.getByLabel("Email").fill(EMAIL);
+    await page.getByLabel("Password").fill("definitely-not-the-password");
+    await page.getByRole("button", { name: "Sign in" }).click();
+
+    await expect(page.getByRole("alert")).toBeVisible();
+    await expect(page).toHaveURL(/\/login/);
+  });
+
+  test("unknown email gives the same message as a wrong password", async ({
+    page,
+  }) => {
+    await page.getByLabel("Email").fill(`nobody-${Date.now()}@example.com`);
+    await page.getByLabel("Password").fill(PASSWORD);
+    await page.getByRole("button", { name: "Sign in" }).click();
+
+    const message = await page.getByRole("alert").textContent();
+    // Week 14: differing messages let anyone discover which
+    // addresses are registered.
+    expect(message).not.toMatch(/no account|not found|unknown/i);
+  });
+
+  test("empty fields are refused", async ({ page }) => {
+    await page.getByRole("button", { name: "Sign in" }).click();
+
+    await expect(page.getByRole("alert")).toBeVisible();
+    await expect(page).toHaveURL(/\/login/);
+  });
+});
+```
+
+## What that suite does well
+
+**No credentials in it.** `process.env`, and `.env` in `.gitignore`.
+
+**Role-based locators throughout.** No classes, no XPath, nothing that breaks on a restyle.
+
+**No sleeps.** Every wait is an auto-retrying assertion.
+
+**Asserts the negative.** Test 2 checks you are *still on the login page* — without it, a product that shows an error and signs you in anyway would pass.
+
+**A unique email per run.** Test 3 cannot collide with itself or with another test.
+
+**Encodes a security rule.** Test 3 is week 14 made permanent. Nobody can reintroduce user enumeration without turning the build red.
+
+<Callout kind="key">
+**Test 3 is the most valuable test in the suite**, and it is the one nobody writes.
+
+Tests 1, 2 and 4 check that the feature works. Test 3 checks a property the team *decided on* — and a decision that is not encoded in a test gets quietly reversed in eighteen months by someone trying to make the error message more helpful.
+
+Look for these. Every security or correctness rule your team agreed is a test waiting to be written, and they are the tests that justify a suite's existence.
+</Callout>
+
+## Make it pass twice
+
+```bash
+npx playwright test login.spec.ts --repeat-each=5
+```
+
+Twenty runs, all green, or it is not finished.
+
+If any fail: read the trace from a *failing* run, find what you were really waiting for, assert on that. Do not add a timeout, and do not add a retry.
+
+<Callout kind="watch">
+**A test that only passes on retry is a failing test.**
+
+Retries in CI exist to absorb genuine infrastructure noise, not to launder your own flakiness. If you find yourself relying on them, the suite is already teaching people that red means nothing.
+</Callout>
+
+## Then wire it up
+
+1. `.env` and `.auth/` in `.gitignore`. **Before the first commit.**
+2. `TEST_EMAIL` and `TEST_PASSWORD` as repository secrets.
+3. The workflow from yesterday, on every push.
+4. Push, and watch it run.
+5. Break something deliberately — change an expected string — and confirm the build goes red and the report is uploaded.
+
+Step 5 is not optional. **A suite you have never seen fail is a suite you have no reason to trust.** Every passing run so far is equally consistent with a suite that cannot fail at all.
+
+## Phase 3 is done
+
+Fifteen weeks. You can now plan a test effort, write cases, run a feature pass, report a defect an engineer can act on, test an API, read the database behind it, run five security checks, and automate a flow so it checks itself on every push.
+
+That is a hireable QA tester. Not a junior who has watched tutorials — someone who has done each of these things and has the artefacts to show: the bug reports from week 11, the feature pass from week 12, the twenty API cases from week 13, the security sweep from week 14, and this suite.
+
+<Callout kind="job">
+Put the suite in a public repository with a short README: what it tests, how to run it, and one paragraph on why the locators and waits are the way they are.
+
+That last paragraph is what distinguishes you. Plenty of candidates can paste a Playwright test. Explaining *why* `getByRole` over a CSS class, and *why* no `waitForTimeout`, shows you understand the cost of maintenance — and that is what a lead is actually hiring for.
+</Callout>
+
+<Exercise
+  prompt="Why does the wrong-password test assert that you are still on /login, when it already checks that an error is visible?"
+  accept={["signed in", "still", "both", "anyway"]}
+  hint="What could happen that shows an error and is still broken?"
+  solution="Because a product could show an error message and sign you in anyway — and the error-visible assertion alone would pass. Asserting the negative outcome, that you are still signed out and still on the login page, is what makes the test about the actual security behaviour rather than about a message appearing."
+/>
+
+<Exercise
+  prompt="You have never seen your suite fail. Why is that a problem rather than good news?"
+  accept={["never fail", "cannot fail", "trust", "verify", "broken"]}
+  hint="What else would produce the same green?"
+  solution="Because a suite that cannot fail produces exactly the same green as a suite that passes correctly — a missing await, a locator that matches nothing with no assertion on it, a test that silently skipped. Break something deliberately and confirm it goes red. Until you have watched it fail, you have no evidence it is testing anything."
+/>
+
+<Terms items={[
+  { term: "describe block", meaning: "A group of related tests with shared setup." },
+  { term: "Asserting the negative", meaning: "Checking the bad outcome did not happen." },
+  { term: "Encoded decision", meaning: "A team rule made permanent as a test." },
+  { term: "--repeat-each", meaning: "Prove it twice before you call it done." },
+  { term: "Deliberate break", meaning: "Watch it go red, or you cannot trust the green." },
+]} />
+
+## Week 15 in one line
+
+Automation does not find bugs; it holds onto what you already know, cheaply enough to check on every push.
+
+## Next week
+
+Phase 4 begins: technical support. The other half of the job, and the one you are already doing at TGIPay.

@@ -1,0 +1,207 @@
+You do not need to become a developer. You need to read and write a particular, small kind of JavaScript: sequences of actions with checks between them.
+
+That is maybe six concepts, and you already met several of them in week 6.
+
+## Values and variables
+
+```js
+const email = "ada@example.com";   // never reassigned — use this by default
+let attempts = 0;                  // will change
+attempts = attempts + 1;
+```
+
+Use `const` unless you have a reason. Never `var`.
+
+## Functions
+
+```js
+function money(minor) {
+  return "NGN " + (minor / 100).toFixed(2);
+}
+
+money(4850000);   // "NGN 48500.00"
+```
+
+The arrow form, which you will see constantly in test code:
+
+```js
+const money = (minor) => "NGN " + (minor / 100).toFixed(2);
+```
+
+Same thing. Lift any three lines you write twice.
+
+## Arrays
+
+```js
+const products = ["mer-01", "mer-02", "mer-03"];
+
+products.length;            // 3
+products[0];                // "mer-01"
+products.includes("mer-02") // true
+
+for (const id of products) {
+  console.log(id);
+}
+```
+
+Three array methods earn their keep in tests:
+
+```js
+const prices = [4850000, 2750050, 985000];
+
+prices.map((p) => p / 100);          // transform each
+prices.filter((p) => p > 1000000);   // keep some
+prices.find((p) => p < 1000000);     // the first match, or undefined
+```
+
+## Objects
+
+```js
+const order = {
+  id: "ORD-1001",
+  totalMinor: 7600050,
+  items: [{ productId: "mer-02", quantity: 1 }],
+};
+
+order.id;                     // "ORD-1001"
+order.items[0].productId;     // "mer-02"
+order.customer?.name;         // undefined, and no crash
+```
+
+That `?.` is **optional chaining**, and it matters: `order.customer.name` throws when `customer` is missing, which turns a useful assertion failure into a confusing crash.
+
+## Truthiness, and the trap
+
+```js
+if (order.totalMinor) { … }
+```
+
+Looks reasonable. But `0`, `""`, `null` and `undefined` are all falsy, so an order with a total of **zero** takes the else branch — and a total of zero is exactly the defect you were testing for.
+
+```js
+if (order.totalMinor !== undefined) { … }   // say what you mean
+```
+
+Use `===`, never `==`. `"1" == 1` is true, and that will cost you an afternoon.
+
+## Async, which is most of it
+
+Test code is full of `await`, because everything takes time — a page load, a click, a request.
+
+```js
+const response = await fetch("/api/meridian/products");
+const data = await response.json();
+console.log(data.length);
+```
+
+**`await` means: wait for this to finish, then continue.** Without it you get a `Promise` — an object representing a result that has not arrived — and comparisons against it fail in baffling ways.
+
+```js
+const data = fetch(url);           // a Promise. Not your data.
+const data = await fetch(url);     // the Response
+```
+
+`await` only works inside a function marked `async`:
+
+```js
+async function checkProducts() {
+  const response = await fetch("/api/meridian/products");
+  const data = await response.json();
+  return data.length;
+}
+```
+
+Playwright writes this for you. You mostly need to recognise it and not forget `await` — because a forgotten `await` is the single most common cause of a mysteriously flaky test.
+
+<Callout kind="key">
+**`Promise { <pending> }` in your output means a missing `await`.**
+
+Learn that one line by sight. It is the error you will hit most often in your first month, and it is always the same fix.
+</Callout>
+
+## Reading an error
+
+```
+TypeError: Cannot read properties of undefined (reading 'name')
+    at checkOrder (test.js:14:23)
+```
+
+Read it in three parts:
+
+1. **The type** — `TypeError`: you used a value in a way its type does not allow.
+2. **The message** — something was `undefined` and you asked it for `.name`. So the thing *before* `.name` does not exist.
+3. **The location** — `test.js`, line 14, column 23. Start there.
+
+Here that almost always means a field you expected is missing from the response — which may itself be the bug. Print the object before you assume your code is wrong:
+
+```js
+console.log(JSON.stringify(order, null, 2));
+```
+
+## Try it
+
+<ConsoleLab />
+
+Write the `money` function above and call it. Then deliberately make an error — ask for `.name` on something undefined — and read what comes back.
+
+<Exercise
+  prompt="Your test prints 'Promise { <pending> }' instead of a product list. What is wrong?"
+  accept={["await", "missing await", "async"]}
+  hint="One keyword."
+  solution="A missing await. fetch returns a Promise; without await you have the wrapper rather than the result, so every assertion against it fails in a confusing way. Add await, and make sure the enclosing function is declared async."
+/>
+
+<Exercise
+  prompt="Why is `if (order.totalMinor)` a dangerous check in a test?"
+  accept={["zero", "0", "falsy"]}
+  hint="Which value is both valid and falsy?"
+  solution="Because 0 is falsy, so an order with a total of zero is treated as if the field were missing — and a total of zero is precisely the money defect you are testing for. Write what you mean: order.totalMinor !== undefined, or assert the value directly."
+/>
+
+<Terms items={[
+  { term: "const / let", meaning: "const by default. Never var." },
+  { term: "Optional chaining", meaning: "?. returns undefined instead of throwing." },
+  { term: "Falsy", meaning: "0, \"\", null, undefined, NaN, false. The 0 is the trap." },
+  { term: "Promise", meaning: "A result that has not arrived. await unwraps it." },
+  { term: "Stack trace", meaning: "Type, message, location. Read all three." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What does `await` do?",
+    options: [
+      "Pauses for a fixed time",
+      "Waits for the operation to finish, then continues with its result",
+      "Retries on failure",
+      "Runs code in parallel"
+    ],
+    answer: 1,
+    why: "It unwraps the Promise. It is not a sleep and it has no fixed duration."
+  },
+  {
+    q: "Why use === rather than ==?",
+    options: [
+      "It is faster",
+      "== converts types, so \"1\" == 1 is true and comparisons lie to you",
+      "== is deprecated",
+      "No difference"
+    ],
+    answer: 1,
+    why: "Type coercion produces comparisons that look right and are not, which is a bad property in an assertion."
+  },
+  {
+    q: "'TypeError: Cannot read properties of undefined (reading \"totalMinor\")' most likely means:",
+    options: [
+      "The total is zero",
+      "The object you read it from does not exist — often a field missing from the response",
+      "The server is down",
+      "A syntax error"
+    ],
+    answer: 1,
+    why: "The thing before the dot is undefined. Print the object; the missing field may be the actual bug."
+  }
+]} />
+
+## Tomorrow
+
+Playwright: installed, running, and a first script.

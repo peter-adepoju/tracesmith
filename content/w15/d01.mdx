@@ -1,0 +1,141 @@
+The last week of Phase 3, and the one that changes what you are worth on the market. But it starts with the honest part, because the industry's enthusiasm for automation has a cost nobody mentions in the job advert.
+
+## Automation is not free
+
+Writing a test is the cheap bit. Then:
+
+- It has to be **maintained**. Every change to the product may break it.
+- It has to be **trusted**. A test that fails randomly is worse than no test.
+- It has to be **run**, in CI, and someone must look when it is red.
+- It **finds nothing new**. An automated test only ever checks what you told it to, forever. It never notices that the page looks wrong.
+
+<Callout kind="key">
+**Automation does not find bugs. It finds regressions.**
+
+A human exploring finds bugs. An automated suite tells you that the things you already knew about still work. Those are different jobs, and a team that replaces the first with the second stops finding anything new.
+
+The value is in the repetition: running 200 checks in four minutes on every push, which no person can do, so the person is free to go and look for what nobody has thought of yet.
+</Callout>
+
+## What to automate
+
+Score a candidate on four questions:
+
+**How often does it run?** A smoke test on every push, dozens of times a day, is the strongest case there is. Something run once a quarter is not.
+
+**How stable is it?** A checkout flow that has worked the same way for two years will keep passing. A screen being redesigned next sprint will cost you a rewrite before it has ever caught anything.
+
+**How costly is the failure?** Payment, sign-in and data integrity justify effort that a footer link does not.
+
+**How deterministic is it?** Does it give the same answer every time? If the result depends on timing, third-party services or the date, you are signing up for maintenance.
+
+The obvious yes: **smoke tests, regression suites, API checks, boundary values, cross-browser repeats of one critical flow.**
+
+## What to keep manual
+
+Three things, and be able to say them in an interview:
+
+**Exploratory testing.** The whole point is that nobody knew what to look for. Automation can only check what was already imagined.
+
+**Usability and visual judgement.** "Is this confusing?" has no assertion. A machine can tell you a button is 4px lower; it cannot tell you the flow makes no sense.
+
+**Anything changing fast.** A feature in active design costs more to keep green than it returns. Automate it when it settles.
+
+And a fourth worth adding: **a one-off check.** If this will be run twice, run it twice by hand.
+
+<Callout kind="job">
+When an interviewer asks what to automate, the weak answer is "everything". The strong answer names the trade-off: repetition and stability against maintenance cost, plus the three things you deliberately keep manual and why.
+
+That answer alone separates a tester who has automated something from one who has read about it.
+</Callout>
+
+## The pyramid, and why it is shaped that way
+
+```
+        /\        A few end-to-end tests
+       /  \       Slow, realistic, flaky, expensive to maintain
+      /----\
+     /      \     More API tests
+    /        \    Fast, stable, no browser
+   /----------\
+  /            \  Many unit tests
+ /______________\ Milliseconds, written by developers
+```
+
+Each layer up is slower, more brittle and more expensive. So: test a thing at the **lowest layer that can see it** — the same rule as week 13.
+
+The common failure is the **ice cream cone**: a hundred end-to-end tests and almost nothing below. It takes forty minutes to run, fails for unrelated reasons twice a week, and the team learns to re-run it rather than read it.
+
+<Callout kind="watch">
+**A flaky suite is worse than no suite.** Not slightly worse — actively harmful.
+
+Once people learn that red sometimes means nothing, they stop reading red. The suite still runs, still costs money, and no longer protects anything; and the day it catches a real defect, somebody re-runs it and ships.
+
+So: a test that cannot be made reliable should be deleted, not tolerated. That is a real decision you will have to argue for.
+</Callout>
+
+## Choosing, with the risk you already know
+
+<RiskMatrix />
+
+The same ranking as week 12. High impact and high change rate is where automation pays for itself fastest — and the bottom-left corner is where a suite quietly accumulates tests nobody needed.
+
+<Exercise
+  prompt="Name three things you would deliberately keep manual, with a reason for each."
+  solution="Exploratory testing, because automation can only check what was already imagined and the point is finding what nobody thought of. Usability and visual judgement, because 'is this confusing?' has no assertion. Anything in active redesign, because it costs more to keep green than it returns before it has caught anything. A fourth: a check that will only ever be run once or twice."
+/>
+
+<Exercise
+  prompt="A team has 120 end-to-end tests, no API tests, and the suite fails for unrelated reasons about twice a week. What is the problem called, and what is the real damage?"
+  accept={["ice cream", "inverted", "cone", "flaky"]}
+  hint="The pyramid, upside down."
+  solution="An ice cream cone. The real damage is not the run time — it is that the team has learned red does not necessarily mean broken, so nobody reads failures any more. The suite costs money, protects nothing, and will be re-run past the one real defect it ever catches. The fix is pushing coverage down to the API layer and deleting the end-to-end tests that duplicate it."
+/>
+
+<Terms items={[
+  { term: "Regression suite", meaning: "Checks that what worked still works. Not a bug finder." },
+  { term: "Test pyramid", meaning: "Many unit, fewer API, few end-to-end." },
+  { term: "Ice cream cone", meaning: "The pyramid inverted. Slow, flaky, ignored." },
+  { term: "Flaky test", meaning: "Passes and fails without the product changing. Fix or delete." },
+  { term: "Maintenance cost", meaning: "The part nobody budgets for." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What does an automated suite actually give you?",
+    options: [
+      "It finds new bugs",
+      "It tells you that what already worked still works, cheaply and often",
+      "It replaces manual testing",
+      "It proves the product is correct"
+    ],
+    answer: 1,
+    why: "It can only check what someone already thought of. The value is the repetition, which frees a person to go looking for what nobody imagined."
+  },
+  {
+    q: "Why is a flaky suite worse than no suite?",
+    options: [
+      "It is slower",
+      "People learn that red means nothing, so they stop reading failures",
+      "It costs money",
+      "It is not worse"
+    ],
+    answer: 1,
+    why: "A suite that cries wolf is re-run rather than read, including on the day it catches something real."
+  },
+  {
+    q: "Which is the weakest automation candidate?",
+    options: [
+      "The checkout smoke test",
+      "API boundary checks",
+      "A screen being redesigned next sprint",
+      "Sign-in"
+    ],
+    answer: 2,
+    why: "It will need rewriting before it has ever caught anything. Automate it once it settles."
+  }
+]} />
+
+## Tomorrow
+
+The JavaScript you actually need — about two hours of it.

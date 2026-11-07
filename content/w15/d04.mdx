@@ -1,0 +1,167 @@
+Every test you will ever write has to find things on a page. How it finds them decides whether the suite is an asset in six months or a chore nobody wants.
+
+## The ladder
+
+Best first:
+
+```ts
+page.getByRole("button", { name: "Place order" })   // 1. role + name
+page.getByLabel("Email")                            // 2. form fields
+page.getByTestId("checkout-submit")                 // 3. a dedicated hook
+page.getByText("Order placed")                      // 4. for static copy
+page.locator(".btn-primary")                        // 5. last resort
+page.locator("//div[2]/form/button[1]")             // never
+```
+
+`getByRole` is the default for a reason beyond stability: it finds the element **the way a screen reader does**. If `getByRole('button', { name: 'Place order' })` cannot find your button, that is an accessibility finding — you met exactly this in week 12, and now your test suite reports it for free.
+
+## Watch them break
+
+<SelectorLab />
+
+All five find the button today. Apply the four changes a developer might plausibly make and see which survive.
+
+The lesson is in the last two rows. The test id survives everything — and `getByRole` breaks on exactly the two changes a *user* would also notice. That is a failure worth having: your test went red because the product genuinely changed.
+
+A test that breaks when nothing a user cares about changed is the one that teaches a team to ignore red.
+
+<Callout kind="key">
+**A brittle selector costs more than it saves.**
+
+The saving is the thirty seconds you did not spend finding a better locator. The cost is every future developer who renames a class and breaks eleven tests, discovers the failures are meaningless, and learns that the suite's opinion is not worth having.
+
+That lesson, once learned by a team, is almost impossible to unlearn.
+</Callout>
+
+## Narrowing properly
+
+When a locator matches two things, do not reach for `.first()`:
+
+```ts
+page.getByRole("button", { name: "Place order" }).first()   // hides the problem
+```
+
+Scope it to a region instead:
+
+```ts
+page.getByRole("dialog")
+    .getByRole("button", { name: "Place order" });
+
+page.getByRole("listitem")
+    .filter({ hasText: "Harmattan Field Jacket" })
+    .getByRole("button", { name: "Add to cart" });
+```
+
+`.first()` means "I do not know which one I am clicking", and the day the order changes, the test clicks the wrong thing and still passes.
+
+## Flakiness
+
+A flaky test passes and fails without the product changing. The commonest cause by far is **waiting badly**.
+
+<FlakyRunner />
+
+Run it several times. The sleeps change their pass rate between runs; the auto-waiting one does not.
+
+Read the second row carefully. A one-second sleep is both **slower and less reliable** than auto-waiting — slower because it always waits the full second even when the page was ready in 80ms, less reliable because the day the page takes 1100ms it fails anyway. It is the worst trade in test automation, and it is everywhere.
+
+<Callout kind="watch">
+**Never `waitForTimeout` in a test you intend to keep.**
+
+Playwright's own documentation says it is for debugging only. Every sleep is a guess about someone else's machine on a day you cannot predict.
+
+If you genuinely need to wait for something, wait for the thing:
+
+```ts
+await expect(page.getByTestId("total")).toHaveText("NGN 48,500.00");
+await page.waitForResponse((r) => r.url().includes("/api/meridian/orders"));
+await expect(page.getByRole("progressbar")).toBeHidden();
+```
+</Callout>
+
+## The other causes
+
+**Test order dependence.** Test B passes only after test A ran. It fails the moment the suite runs in parallel. Each test must create what it needs.
+
+**Shared data.** Two tests using the same account, racing. Give each run its own data — an email with a timestamp in it costs nothing.
+
+**Time.** A test that passes until midnight, or in another timezone, or on the 31st. You met clock skew in week 7; this is the same bug in your own code.
+
+**Animation.** Asserting while something is still moving. Playwright waits for stability, which handles most of it; a CSS transition on a toast can still catch you.
+
+**Real third parties.** A test that calls a live payment sandbox fails when the sandbox does. Mock it, or accept the flakiness knowingly.
+
+## Fixing one properly
+
+1. **Run it twenty times** — `npx playwright test flaky.spec.ts --repeat-each=20`. First establish the rate, exactly as you did with "sometimes" in week 11.
+2. **Read the trace** from a failing run, not a passing one.
+3. **Find the real wait.** What were you actually waiting for?
+4. **Replace the guess** with that condition.
+5. **Run twenty more** to prove it.
+
+<Callout kind="job">
+When you fix one, say so in the commit, with the rate: *"was failing 3 in 20, now 0 in 40; replaced a 1s sleep with a toHaveText assertion on the total."*
+
+Teams rarely measure this. A tester who turns "the suite is a bit flaky" into a number and then a fix is doing work that is visible to everyone.
+</Callout>
+
+<Exercise
+  prompt="Why is `await page.waitForTimeout(1000)` both slower and less reliable than an auto-retrying assertion?"
+  accept={["always waits", "fixed", "full second", "still fails"]}
+  hint="Two separate failures."
+  solution="Slower because it always waits the full second, even when the page was ready in 80ms — multiplied across a suite, that is minutes per run for nothing. Less reliable because it is a fixed guess: the day the page takes 1100ms it fails anyway. An auto-retrying assertion returns as soon as the condition holds and keeps waiting when it does not."
+/>
+
+<Exercise
+  prompt="Your locator matches two buttons. Why is .first() the wrong fix?"
+  accept={["which", "wrong", "order", "silent"]}
+  hint="What does it assert about which one?"
+  solution="Because it says you do not know which one you are clicking, and it will keep passing when it clicks the wrong one — the day the order changes, the test is green and testing nothing. Scope to a region instead: getByRole('dialog').getByRole('button', …), or filter a list item by its text."
+/>
+
+<Terms items={[
+  { term: "getByRole", meaning: "The default. Finds elements as a screen reader does." },
+  { term: "Test id", meaning: "An attribute that exists only for tests, so nothing else changes it." },
+  { term: "Auto-waiting", meaning: "Polls until actionable, then acts. Not a sleep." },
+  { term: "Flaky", meaning: "Passes and fails without the product changing." },
+  { term: "--repeat-each", meaning: "Run it twenty times. Measure before you fix." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which locator should you reach for first?",
+    options: [
+      "A CSS class",
+      "getByRole with an accessible name",
+      "An XPath",
+      "getByText"
+    ],
+    answer: 1,
+    why: "It survives restyling and restructuring, and it fails exactly when a user-visible name changes — which is a failure worth having."
+  },
+  {
+    q: "What is the commonest cause of flaky tests?",
+    options: [
+      "Slow networks",
+      "Waiting badly — fixed sleeps instead of waiting for a condition",
+      "Browser bugs",
+      "Too many tests"
+    ],
+    answer: 1,
+    why: "A sleep is a guess about someone else's machine on a day you cannot predict."
+  },
+  {
+    q: "First step in fixing a flaky test?",
+    options: [
+      "Increase the timeout",
+      "Run it twenty times to establish the failure rate",
+      "Delete it",
+      "Add a retry"
+    ],
+    answer: 1,
+    why: "Same discipline as 'sometimes' in a bug report: measure first, then you can prove the fix worked."
+  }
+]} />
+
+## Tomorrow
+
+Assertions worth making, fixtures, and running the suite on every push.

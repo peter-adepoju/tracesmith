@@ -1,0 +1,213 @@
+Playwright drives a real browser from code. Today you install it, run a test, and read a failure properly.
+
+<Video id="playwright-course" />
+
+Treat the video as a reference to return to. Today's lesson is the path through it.
+
+## Install
+
+In a new folder:
+
+```bash
+npm init -y
+```
+
+```bash
+npm install --save-dev @playwright/test
+```
+
+```bash
+npx playwright install chromium
+```
+
+The third command downloads the browser itself. It is a few hundred megabytes, so do it on a connection you do not pay by the megabyte.
+
+## Configure
+
+`playwright.config.ts`:
+
+```ts
+import { defineConfig } from "@playwright/test";
+
+export default defineConfig({
+  testDir: "./tests",
+  // A failing test is retried once locally, twice in CI. Retries hide
+  // flakiness, so treat a test that only passes on retry as broken.
+  retries: process.env.CI ? 2 : 0,
+  use: {
+    baseURL: "http://localhost:3000",
+    // Keep the evidence, but only for failures.
+    screenshot: "only-on-failure",
+    video: "retain-on-failure",
+    trace: "retain-on-failure",
+  },
+});
+```
+
+Those last three lines are the reason a tester should like this tool: when something fails in CI at two in the morning, you get a screenshot, a video and a full trace without having asked.
+
+## The first test
+
+`tests/products.spec.ts`:
+
+```ts
+import { test, expect } from "@playwright/test";
+
+test("the shop lists products", async ({ page }) => {
+  await page.goto("/meridian");
+
+  await expect(
+    page.getByRole("heading", { name: "Meridian" }),
+  ).toBeVisible();
+
+  await expect(page.getByRole("article")).toHaveCount(8);
+});
+```
+
+Read it as English: go to the page, the heading is visible, there are eight products.
+
+```bash
+npx playwright test
+```
+
+## Four things to know immediately
+
+**`page`** is the browser tab, handed to each test fresh. No leftover state between tests, which removes a whole category of problem.
+
+**`await` everything.** Every Playwright call returns a Promise. A forgotten `await` produces a test that passes when it should fail.
+
+**`expect(...)` auto-retries.** `await expect(x).toBeVisible()` keeps checking for a few seconds before failing. This is the single most important thing about the tool, and tomorrow's lesson is built on it.
+
+**Tests run in parallel** by default, in separate browser contexts. Fast, and it forces tests to be independent — which they should be anyway.
+
+## The actions
+
+```ts
+await page.goto("/meridian");
+await page.getByRole("button", { name: "Add to cart" }).click();
+await page.getByLabel("Email").fill("ada@example.com");
+await page.getByLabel("Quantity").fill("2");
+await page.getByRole("combobox").selectOption("Bags");
+await page.getByRole("checkbox", { name: "Gift wrap" }).check();
+await page.keyboard.press("Enter");
+```
+
+Note `fill`, not "type". `fill` clears the field first, which is almost always what you meant.
+
+## The assertions
+
+```ts
+await expect(page.getByText("Order placed")).toBeVisible();
+await expect(page.getByTestId("total")).toHaveText("NGN 48,500.00");
+await expect(page.getByRole("article")).toHaveCount(8);
+await expect(page.getByRole("button", { name: "Pay" })).toBeEnabled();
+await expect(page).toHaveURL(/\/orders\/ORD-/);
+```
+
+Always `await expect(...)` for page state. A bare `expect(value)` on a plain value does not retry, and does not need to.
+
+## Reading a failure
+
+```
+1) tests/checkout.spec.ts:12:3 › places an order ───────────────
+
+    Error: expect(locator).toBeVisible()
+
+    Locator:  getByText('Order placed')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  5000ms
+
+      14 |   await page.getByRole('button', { name: 'Place order' }).click();
+    > 15 |   await expect(page.getByText('Order placed')).toBeVisible();
+         |                                                ^
+      16 | });
+
+    attachment #1: screenshot ──────────────────────────────────
+    test-results/checkout-places-an-order/test-failed-1.png
+```
+
+Four questions, in order:
+
+1. **Which locator?** `getByText('Order placed')`.
+2. **Expected what?** Visible.
+3. **Got what?** Not found at all — so either it never appeared, or the text differs.
+4. **Open the screenshot.** It is already saved, and nine times out of ten it answers the question instantly.
+
+Then:
+
+```bash
+npx playwright show-trace test-results/.../trace.zip
+```
+
+The trace viewer gives you every step, a DOM snapshot at each one, and the network log. For a CI failure you cannot reproduce locally, it is the difference between an hour and two minutes.
+
+<Callout kind="job">
+Two commands worth memorising on day one:
+
+`npx playwright test --ui` — an interactive runner where you watch tests execute and step through them. The best way to learn the tool.
+
+`npx playwright codegen localhost:3000` — records your clicks and writes the code. Never ship what it produces unedited, but it is an excellent way to discover the right locator for an awkward element.
+</Callout>
+
+<Exercise
+  prompt="Why does `await expect(locator).toBeVisible()` rarely need a sleep before it?"
+  accept={["retries", "retry", "waits", "polls"]}
+  hint="What does expect do while it waits?"
+  solution="Because it retries. It re-checks the condition repeatedly until it holds or the timeout expires, so it returns as soon as the element appears rather than after a fixed delay. A sleep before it is both slower and less reliable."
+/>
+
+<Exercise
+  prompt="A test fails with 'Received: <element(s) not found>' for getByText('Order placed'). Name two possible causes."
+  accept={["text", "wording", "never appeared", "different", "error"]}
+  hint="Either it is not there, or it is not that."
+  solution="Either the confirmation genuinely never appeared — the order failed, which is a real bug worth checking before touching the test — or the text differs from what you asserted: different wording, different case, or split across elements. The saved screenshot distinguishes the two in about five seconds."
+/>
+
+<Terms items={[
+  { term: "spec file", meaning: "A file of tests. tests/*.spec.ts." },
+  { term: "page", meaning: "A fresh browser tab per test." },
+  { term: "Auto-retrying assertion", meaning: "await expect(...) re-checks until it holds or times out." },
+  { term: "Trace", meaning: "A recording of every step, with DOM snapshots and network." },
+  { term: "codegen", meaning: "Records your clicks into code. Edit before shipping." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What does `fill` do that typing does not?",
+    options: [
+      "It is faster",
+      "It clears the field first",
+      "It triggers validation",
+      "It works on buttons"
+    ],
+    answer: 1,
+    why: "Which is almost always what you meant, and avoids appending to a value left by a previous step."
+  },
+  {
+    q: "A test passes when it should fail. What is the first thing to suspect?",
+    options: [
+      "The browser",
+      "A missing await, so the assertion never actually ran",
+      "The config",
+      "A slow network"
+    ],
+    answer: 1,
+    why: "Without await the assertion returns a pending Promise and the test moves on, so nothing was checked."
+  },
+  {
+    q: "What is the fastest way to understand a CI failure you cannot reproduce?",
+    options: [
+      "Re-run it",
+      "Open the saved screenshot, then the trace",
+      "Add logging",
+      "Increase the timeout"
+    ],
+    answer: 1,
+    why: "Both are captured automatically on failure, and the trace carries every step with DOM snapshots and the network log."
+  }
+]} />
+
+## Tomorrow
+
+Selectors that survive next sprint, and the flaky test you will inherit.
