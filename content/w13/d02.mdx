@@ -1,0 +1,123 @@
+An assertion is a claim your test makes about the response. Get the claims wrong and your suite is green while the product is broken — which is worse than having no suite, because now everyone believes it.
+
+## Three levels
+
+**Status.** Did the call do the kind of thing it should? `200`, `201`, `422`, `404`.
+
+**Schema.** Is the shape right? The fields that must exist, exist; their types are right; money is an integer in minor units, not a float.
+
+**Value.** Are the numbers and strings actually correct? Does `totalMinor` equal `subtotalMinor` minus `discountMinor`?
+
+They are a ladder. Status alone tells you almost nothing — **`200 OK` means the request was handled, not that the answer was right.**
+
+<Callout kind="key">
+**The most dangerous test result in software is a green run over a broken build.**
+
+A suite that only asserts on status is exactly that machine. It is fast, it is stable, it never fails, and it tells you nothing — because almost every interesting defect returns `200`.
+</Callout>
+
+## Prove it to yourself
+
+<AssertionLab />
+
+Start with only *Status is 2xx* selected and run all four scenarios. Three of the four come back green. Then add the schema and value assertions and run them again.
+
+Scenario two is the one to sit with: a correct status, a perfectly correct shape, and a total of zero on a 4,450,000 order. Every structural check passes. Only a value assertion catches it.
+
+## Assertions that fail usefully
+
+A failure should tell you what is wrong without opening anything.
+
+| Weak | Strong |
+| --- | --- |
+| `assert response.ok` | `expected status 201, got 422 (validation_failed: email)` |
+| `assert total > 0` | `expected totalMinor 4450000, got 0` |
+| `assert "id" in body` | `expected body.id to be a non-empty string, got undefined` |
+
+The pattern: **expected X, got Y, for this field.** If your failure message does not contain the actual value, you will be re-running the test by hand to find out what it was.
+
+## What to assert on, every time
+
+A reasonable default for any endpoint:
+
+1. **Status** — the exact one documented, not merely 2xx
+2. **Required fields present**, with the right types
+3. **Money is an integer** in minor units
+4. **The arithmetic** — totals, counts, sums
+5. **Identifiers** are non-empty and in the documented format
+6. **Timestamps** are valid and in the documented timezone
+7. **The side effect** — did the thing actually get created, changed or removed?
+
+Seven claims. Most of them are two lines each.
+
+<Callout kind="watch">
+**Do not assert on everything.** A test that asserts on all forty fields of a response fails every time anyone adds a field, and a test that cries wolf gets ignored or deleted.
+
+Assert on what the endpoint promises and what this test is about. A test named *rejects an invalid email* should not fail because an unrelated field was renamed.
+</Callout>
+
+## Reading the body
+
+<JsonExplorer />
+
+Before you can assert on a value you have to be able to name its path — `body.items[0].productId`, not "the product bit". The path is what goes in the assertion and in the bug report.
+
+<Exercise
+  prompt="A test asserts only that the status is 200. The response is 200 with totalMinor: 0 on an order of 4,450,000. What does your run report, and what is the real cost?"
+  accept={["pass", "green", "nothing"]}
+  hint="What does the suite say?"
+  solution="It passes. The real cost is not the missed bug but the false signal: a green run is taken as evidence the build is fine, so nobody looks. A suite that cannot fail is worse than no suite, because no suite at least leaves people cautious."
+/>
+
+<Exercise
+  prompt="Rewrite this failure message so it is useful: 'Assertion failed: total'."
+  solution="Something like: 'POST /api/meridian/orders — expected body.totalMinor to equal subtotalMinor - discountMinor (4450000), got 0'. Endpoint, field path, expected, actual. Nobody has to re-run anything to understand what happened."
+/>
+
+<Terms items={[
+  { term: "Assertion", meaning: "A claim the test makes about the response." },
+  { term: "Status assertion", meaning: "The weakest level. Necessary, never sufficient." },
+  { term: "Schema assertion", meaning: "Fields and types, including money as an integer." },
+  { term: "Value assertion", meaning: "The actual numbers. Where money bugs are caught." },
+  { term: "False green", meaning: "A passing run over a broken build." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Why is a status-only suite dangerous rather than merely weak?",
+    options: [
+      "It is slow",
+      "It produces a green run that is taken as evidence the build is fine",
+      "It uses too much CPU",
+      "It is hard to write"
+    ],
+    answer: 1,
+    why: "A missing test leaves people cautious. A passing test tells them to stop looking."
+  },
+  {
+    q: "Which assertion catches money stored as a float?",
+    options: [
+      "Status is 200",
+      "The body has a totalMinor field",
+      "Every amount is an integer",
+      "The response is under 500ms"
+    ],
+    answer: 2,
+    why: "A float passes a presence check and a status check. Only the type claim catches it, and it catches it before the rounding errors start."
+  },
+  {
+    q: "What belongs in a good failure message?",
+    options: [
+      "That it failed",
+      "The endpoint, the field path, the expected value and the actual one",
+      "A stack trace",
+      "The test author"
+    ],
+    answer: 1,
+    why: "Without the actual value you will re-run the test by hand to find out what it was."
+  }
+]} />
+
+## Tomorrow
+
+Negative testing: what a server should refuse, and what it does instead.

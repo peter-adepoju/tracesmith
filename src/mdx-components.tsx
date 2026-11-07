@@ -6,6 +6,7 @@ import { RequestInspector } from "@/components/RequestInspector";
 import { Terms } from "@/components/Terms";
 import { Video } from "@/components/Video";
 import { AccessibleName } from "@/components/interactive/AccessibleName";
+import { AssertionLab } from "@/components/interactive/AssertionLab";
 import { BoxModel } from "@/components/interactive/BoxModel";
 import { BugReportGrader } from "@/components/interactive/BugReportGrader";
 import { ConsoleLab } from "@/components/interactive/ConsoleLab";
@@ -20,11 +21,13 @@ import { PanelPicker } from "@/components/interactive/PanelPicker";
 import { RedactionDrill } from "@/components/interactive/RedactionDrill";
 import { RegressionPicker } from "@/components/interactive/RegressionPicker";
 import { RequestJourney } from "@/components/interactive/RequestJourney";
+import { RunTwice } from "@/components/interactive/RunTwice";
 import { RiskMatrix } from "@/components/interactive/RiskMatrix";
 import { SeverityGrid } from "@/components/interactive/SeverityGrid";
 import { TestCaseBuilder } from "@/components/interactive/TestCaseBuilder";
 import { TokenInspector } from "@/components/interactive/TokenInspector";
 import { SpecificityScorer } from "@/components/interactive/SpecificityScorer";
+import { SqlConsole } from "@/components/interactive/SqlConsole";
 import { StatusExplorer } from "@/components/interactive/StatusExplorer";
 import { StorageAudit } from "@/components/interactive/StorageAudit";
 import { ViewportSlider } from "@/components/interactive/ViewportSlider";
@@ -39,6 +42,7 @@ import { WebhookSimulator } from "@/components/interactive/WebhookSimulator";
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
     AccessibleName,
+    AssertionLab,
     BoxModel,
     BugReportGrader,
     Callout,
@@ -58,8 +62,10 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     RequestInspector,
     RequestJourney,
     RiskMatrix,
+    RunTwice,
     SeverityGrid,
     SpecificityScorer,
+    SqlConsole,
     StatusExplorer,
     StorageAudit,
     Terms,

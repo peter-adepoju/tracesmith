@@ -1,0 +1,153 @@
+Anyone can check that a valid request works. The job is finding out what happens when the request is wrong — because on the open internet, most of them eventually are.
+
+## The shape of a negative test
+
+Three parts, and the third is the one people miss:
+
+1. The server **refuses** it.
+2. With the **right status** and a usable error body.
+3. And **nothing was written**.
+
+A server that returns a beautiful 422 and still creates the order has failed the test.
+
+## What to send
+
+Work through these against any endpoint:
+
+**Missing** — required field absent. Expect `422`, naming the field.
+
+**Empty** — `""` where a value is required. Not the same as missing, and plenty of servers treat them differently.
+
+**Wrong type** — `"two"` where a number is expected, `"yes"` for a boolean, a string where an array belongs.
+
+**Out of range** — quantity `0`, `-5`, `999999`. The boundary work from week 12, sent directly.
+
+**Too long** — a 10,000-character name. Does it truncate, reject, or fall over?
+
+**Malformed JSON** — a trailing comma, an unclosed brace. Expect `400`, not a `500`.
+
+**Wrong content type** — send form data where JSON is expected. Expect `415`.
+
+**Unknown fields** — `{"admin": true}` alongside the real fields. Ignored is usually fine; *accepted* is a finding.
+
+**Nonexistent references** — `productId: "mer-99"`. Expect `422` or `404`, never a `500`.
+
+**No authentication**, then **the wrong user's** — covered properly in week 14, but worth a pass now.
+
+<Callout kind="key">
+**A 500 is almost always a bug, whatever you sent.**
+
+`500` means the server did not anticipate this and crashed somewhere inside. Even for deliberately absurd input, the correct answer is a `4xx` saying what was wrong.
+
+So: any input that produces a 500 is a finding, and you do not need to argue about whether the input was reasonable.
+</Callout>
+
+## Status codes for refusals
+
+| Code | Means |
+| --- | --- |
+| `400` | The request itself is malformed — broken JSON |
+| `401` | Not authenticated. You have not said who you are |
+| `403` | Authenticated, but not allowed |
+| `404` | No such thing |
+| `409` | Conflict — it already exists, or the state is wrong for this |
+| `415` | Wrong content type |
+| `422` | Well-formed, but the values are invalid |
+| `429` | Too many requests |
+
+<StatusExplorer />
+
+The `400` versus `422` distinction is the one teams argue about. `400` for *I cannot parse this*, `422` for *I parsed it and the values are wrong*. Some APIs use `400` for both; what matters is that it is consistent and documented.
+
+## Read the error body
+
+The status says what kind of problem. The body should say which field and why:
+
+```json
+{
+  "error": "validation_failed",
+  "message": "A valid email address is required.",
+  "fields": ["email"]
+}
+```
+
+Test the body, not just the code. Three things make it a finding:
+
+- **No field named.** The client cannot highlight anything, so the user is told "something is wrong" and left to guess.
+- **A machine-unreadable error.** A free-text message with no stable `error` code means the client has to match on English, which breaks the first time someone improves the wording.
+- **Too much detail.** A stack trace, a SQL fragment, a file path, a table name. That is an information leak and a security finding, not a helpfulness feature.
+
+<Callout kind="watch">
+`Error: duplicate key value violates unique constraint "customers_email_key"` tells an attacker your database engine, your table naming, and that the address is already registered.
+
+The user needs *"That email is already in use."* The stack trace belongs in your logs with a request id, and the response should carry that id so support can find it.
+</Callout>
+
+<CurlReader />
+
+## Reporting a server that accepts nonsense
+
+> **The orders endpoint accepts a negative quantity.** `POST /api/meridian/orders` with `{"items":[{"productId":"mer-05","quantity":-3}]}` returns `201` and creates order ORD-1042 with `totalMinor: -5550000`. Expected `422` naming `items`. The form will not let you type a negative, so this is reachable only through the API — which means anyone with DevTools. Critical: a negative total is a refund the customer never paid for.
+
+Note what that report does. It names the exact body, the actual status, the created id, why the UI did not catch it, and the consequence in money.
+
+<Exercise
+  prompt="You send deliberately broken JSON — a trailing comma — and get a 500. Is that a bug, given the input was nonsense?"
+  accept={["yes", "bug", "500"]}
+  hint="What does a 500 mean about the server?"
+  solution="Yes. A 500 means the server crashed on input it did not anticipate, and the input being nonsense is exactly the case it must anticipate. The correct response is 400 with an error saying the body could not be parsed. Any input that produces a 500 is a finding, and you never have to defend the input."
+/>
+
+<Exercise
+  prompt={'An error response reads: ERROR: null value in column "email" of relation "orders" violates not-null constraint. Name two separate findings.'}
+  accept={["leak", "security", "unreadable", "internal"]}
+  hint="One is about the user, one is about an attacker."
+  solution="First, it is unusable: no stable error code and no field the client can highlight, so the user is told nothing actionable. Second, it leaks internals — the database engine, the table and column names, and the constraint. That is a security finding on its own. The fix is a coded, field-naming error for the client and the real detail in the logs behind a request id."
+/>
+
+<Terms items={[
+  { term: "Negative test", meaning: "Input the server should refuse. Assert refusal, status, and no write." },
+  { term: "400 vs 422", meaning: "Cannot parse it, versus parsed it and the values are wrong." },
+  { term: "Information leak", meaning: "An error that reveals internals. A security finding." },
+  { term: "Request id", meaning: "The safe way to connect a user's error to your logs." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "An endpoint returns 500 for malformed JSON. What is the verdict?",
+    options: [
+      "Fine, the input was invalid",
+      "A bug — malformed input should return 400, never a crash",
+      "Depends on the framework",
+      "Only a bug if a user could do it"
+    ],
+    answer: 1,
+    why: "A 500 says the server did not anticipate this. Malformed input is the case it most has to anticipate."
+  },
+  {
+    q: "Besides the status, what must a negative test assert?",
+    options: [
+      "The response time",
+      "That nothing was written on the server",
+      "The content length",
+      "The server version"
+    ],
+    answer: 1,
+    why: "A tidy 422 with the row written anyway is a worse bug than a 500, because nothing looks wrong."
+  },
+  {
+    q: "Why is a database constraint message in an error response a security finding?",
+    options: [
+      "It is too long",
+      "It reveals the engine, table and column names to anyone who can send a request",
+      "It is badly worded",
+      "It is not"
+    ],
+    answer: 1,
+    why: "Internals in an error body are reconnaissance. The detail belongs in the logs, reachable by a request id."
+  }
+]} />
+
+## Tomorrow
+
+Idempotency: what happens when the same request arrives twice.

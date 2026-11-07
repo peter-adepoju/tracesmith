@@ -1,0 +1,126 @@
+Everything you have tested so far, you tested through a screen. This week you go underneath it — because the screen is a rendering of the truth, and a rendering can be wrong in both directions.
+
+<Video id="api-intro" />
+
+## What the screen hides
+
+A page showing the right number is not proof the data is right.
+
+**The screen can be right while the data is wrong.** A page that formats `null` as `NGN 0.00` looks fine and is reporting a missing value as a free order.
+
+**The data can be right while the screen is wrong.** The response carries `totalMinor: 9700000` and the page renders a blank. A UI bug, not a data one — and you cannot tell which from the screen alone.
+
+<Callout kind="key">
+Through the UI you are testing **two things at once** — the server and the page — and when it fails you cannot say which one failed.
+
+Testing the endpoint separates them. That is the whole argument for API testing, and it is enough on its own.
+</Callout>
+
+## What else API testing buys you
+
+**Speed.** An API call is milliseconds; a UI flow is seconds. The same coverage in a fraction of the time.
+
+**Stability.** Tests through the UI break when a button moves. The endpoint's contract changes far less often.
+
+**Reach.** Some things have no screen at all: a webhook, a scheduled job, an admin endpoint, an error path the UI will not let you trigger. And you can send what the form refuses to type — which is how you find out whether the server validates at all.
+
+**Earlier.** The API is usually finished before the screen that consumes it. You can be testing on Tuesday instead of Friday.
+
+## Which layer does a test belong in?
+
+The useful rule: **test a thing at the lowest layer that can see it.**
+
+| Question | Layer |
+| --- | --- |
+| Is the discount arithmetic right? | API |
+| Does a bad email get rejected? | API — and the UI, separately |
+| Is the error message readable by a person? | UI |
+| Does the button become disabled while submitting? | UI |
+| Does the stock drop after an order? | API, or the database |
+| Can a customer complete a purchase? | UI, end to end |
+
+Validation appears twice on purpose. The API test asks *does the server refuse it*; the UI test asks *is the person told what to fix*. Different questions, different layers, and you need both.
+
+## An API test case
+
+Same structure as any test case, with request and response in place of steps and screen:
+
+```
+ID          API-ORD-004
+Title       Order rejects an email with no @ sign
+Precondition  Meridian sandbox, stage 3
+
+Request     POST /api/meridian/orders
+            Content-Type: application/json
+            { "items": [{"productId":"mer-05","quantity":1}],
+              "email": "notanemail" }
+
+Expected    422 Unprocessable Content
+            body.error  == "validation_failed"
+            body.fields contains "email"
+            No order is created (GET /orders count unchanged)
+```
+
+That last line is the one beginners leave out. **Assert on the side effect, not only the response.** A server can return a tidy 422 and still have written the row.
+
+## Where values go
+
+<EndpointBuilder />
+
+Path, query or body — getting this wrong is the commonest mistake in a first API test, and it produces a 404 that looks like a server bug.
+
+<Exercise
+  prompt="A page shows NGN 0.00 for an order that should be NGN 97,000.00. Name the single request that tells you whose bug it is."
+  accept={["response", "get", "order", "api"]}
+  hint="Ask the server the same question the page asked."
+  solution="The GET for that order. If the response carries the correct totalMinor, the data is right and the page failed to render it — front end. If the response carries 0, the server is wrong and the page is faithfully displaying a bad value. One call, and the ticket is assigned."
+/>
+
+<Exercise
+  prompt="Why does 'does a bad email get rejected?' appear at both the API and the UI layer?"
+  accept={["different", "two questions", "message", "server"]}
+  hint="They are not the same question."
+  solution="The API test asks whether the server refuses it, which is the actual control — client validation can be removed by anyone with DevTools. The UI test asks whether the person is told which field is wrong and what to do about it. One is correctness, the other is usability, and neither covers the other."
+/>
+
+<Terms items={[
+  { term: "Layer", meaning: "Where a test runs: unit, API, UI, end to end." },
+  { term: "Contract", meaning: "What an endpoint promises: path, inputs, status, shape." },
+  { term: "Side effect", meaning: "What changed on the server. Assert on it, not only the response." },
+  { term: "Lowest layer that can see it", meaning: "The rule for choosing where a test belongs." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What is the strongest argument for testing an endpoint rather than the screen?",
+    options: [
+      "It is faster",
+      "A UI test exercises the server and the page at once, so a failure does not say which broke",
+      "It needs no browser",
+      "Developers prefer it"
+    ],
+    answer: 1,
+    why: "Speed and stability are real benefits, but separating the two systems is what changes what a failure tells you."
+  },
+  {
+    q: "An API test asserts a 422 for a bad email. What else should it assert?",
+    options: [
+      "The response time",
+      "That no order was created",
+      "The HTTP version",
+      "Nothing"
+    ],
+    answer: 1,
+    why: "A server can return a correct error and still have written the row. The side effect is the part that costs money."
+  },
+  {
+    q: "Where does 'is the error message readable by a person?' belong?",
+    options: ["API", "UI", "Database", "Neither"],
+    answer: 1,
+    why: "The API can only show you the error code and body; whether a human understands it is a property of the screen."
+  }
+]} />
+
+## Tomorrow
+
+Assertions: status, schema and value — and the passing test run that ships a money bug.

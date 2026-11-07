@@ -1,0 +1,159 @@
+The screen is a rendering. The API is a view. The database is where the truth lives, and a tester who can read it stops having to take anyone's word for anything.
+
+You do not need to be a database engineer. You need `SELECT`, and about an hour.
+
+<Video id="sql-what" />
+
+## The shape of a query
+
+```sql
+SELECT   name, price_minor      -- which columns
+FROM     products               -- which table
+WHERE    category = 'Bags'      -- which rows
+ORDER BY price_minor DESC       -- in what order
+LIMIT    10;                    -- how many
+```
+
+Always in that order. `SELECT *` gives you every column, which is fine while exploring and noise in a report.
+
+## WHERE
+
+```sql
+WHERE status = 'paid'
+WHERE total_minor > 5000000
+WHERE email LIKE '%@example.com'
+WHERE city IN ('Lagos', 'Abuja')
+WHERE created_at >= '2026-10-01'
+WHERE discount_code IS NULL
+WHERE status = 'paid' AND total_minor > 5000000
+```
+
+Three traps worth knowing before they cost you an hour:
+
+- **Strings take single quotes.** `'Lagos'`, never `"Lagos"`.
+- **`NULL` is not a value.** `= NULL` matches nothing, ever. Use `IS NULL`.
+- **`LIKE` wildcards** are `%` for any run of characters and `_` for exactly one.
+
+## JOIN
+
+Orders hold a `customer_id`, not a name. To see both, join:
+
+```sql
+SELECT o.id, c.name, o.total_minor
+FROM orders o
+JOIN customers c ON c.id = o.customer_id
+WHERE o.status = 'paid';
+```
+
+`JOIN` keeps only rows that match on both sides. `LEFT JOIN` keeps every row from the left table and fills the right with `NULL` where there is no match — which is how you find orphans:
+
+```sql
+SELECT o.id
+FROM orders o
+LEFT JOIN customers c ON c.id = o.customer_id
+WHERE c.id IS NULL;        -- orders whose customer does not exist
+```
+
+That query is a data-integrity check, and finding a row is a real bug.
+
+## Counting and grouping
+
+```sql
+SELECT COUNT(*) FROM orders WHERE status = 'paid';
+
+SELECT c.name, COUNT(*) AS n
+FROM orders o
+JOIN customers c ON c.id = o.customer_id
+GROUP BY c.id
+ORDER BY n DESC;
+```
+
+`WHERE` filters rows before grouping; `HAVING` filters groups after. That distinction is what the last task below is built on.
+
+## Run it for real
+
+<SqlConsole />
+
+This is SQLite compiled to WebAssembly — a real database engine, with real error messages. Work through the five tasks. The last one is the reason a tester learns SQL at all: one order's stored total does not match the sum of its items, and no screen anywhere will tell you that.
+
+<Callout kind="key">
+**The query that confirms a bug is often the bug report's strongest evidence.**
+
+"The confirmation page showed NGN 0.00" is a symptom. "`SELECT total_minor FROM orders WHERE id = 'ORD-1008'` returns 5100000 while its items sum to 4450000" is a located defect with the data to prove it.
+</Callout>
+
+## The rules for touching real data
+
+<Callout kind="watch">
+You will eventually be given access to a real database. Before you are:
+
+1. **Read-only, always.** Ask for a read-only account. If you are handed one that can write, say so and ask for the right one — it protects you as much as the data.
+2. **Never UPDATE or DELETE in production.** Not to set up a test, not "just this row". If a test needs data, ask for a seeding script or a sandbox.
+3. **`SELECT` before anything else.** If you ever do have to change something on a non-production database, run the `SELECT` with the same `WHERE` first and look at exactly which rows come back.
+4. **`LIMIT` while exploring.** A `SELECT *` over fifty million rows will hurt a production database, and that is an outage you caused.
+5. **Personal data is personal data.** The same redaction rules as week 11. Customer names and emails do not go in a ticket; the customer id does.
+</Callout>
+
+A `DELETE` with a mistyped `WHERE` is the classic career-defining accident, and it is nearly always someone who meant well and was in a hurry.
+
+<Exercise
+  prompt="Write the query that finds every order with no matching customer."
+  accept={["left join", "is null", "left outer"]}
+  hint="Keep every order, then look for the ones with nothing on the other side."
+  solution="SELECT o.id FROM orders o LEFT JOIN customers c ON c.id = o.customer_id WHERE c.id IS NULL. The LEFT JOIN keeps every order and fills the customer columns with NULL where there is no match, so IS NULL is exactly the set of orphans. Any row returned is a data-integrity bug."
+/>
+
+<Exercise
+  prompt="Why does WHERE discount_code = NULL return nothing, even when rows have no discount code?"
+  accept={["is null", "not a value", "unknown", "comparison"]}
+  hint="NULL means unknown, and unknown compares to nothing."
+  solution="Because NULL means 'unknown', and a comparison with unknown is itself unknown rather than true — so no row ever matches. You have to use IS NULL. It is the single most common beginner mistake in SQL, and it fails silently by returning zero rows rather than erroring."
+/>
+
+<Terms items={[
+  { term: "SELECT … FROM … WHERE", meaning: "Which columns, which table, which rows." },
+  { term: "JOIN", meaning: "Rows matching on both sides. LEFT JOIN keeps unmatched left rows." },
+  { term: "GROUP BY / HAVING", meaning: "Aggregate rows, then filter the groups." },
+  { term: "IS NULL", meaning: "The only way to test for NULL. = NULL matches nothing." },
+  { term: "Read-only account", meaning: "What a tester should be given, and should insist on." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which finds orders whose customer no longer exists?",
+    options: [
+      "JOIN customers ON … WHERE c.id IS NULL",
+      "LEFT JOIN customers ON … WHERE c.id IS NULL",
+      "WHERE customer_id = NULL",
+      "GROUP BY customer_id"
+    ],
+    answer: 1,
+    why: "An inner JOIN drops unmatched rows entirely, so the thing you are hunting is removed before you can see it."
+  },
+  {
+    q: "What does WHERE filter, compared with HAVING?",
+    options: [
+      "Nothing, they are the same",
+      "WHERE filters rows before grouping; HAVING filters groups after",
+      "WHERE is faster",
+      "HAVING works only on text"
+    ],
+    answer: 1,
+    why: "Which is why a condition on COUNT(*) or SUM(...) has to go in HAVING."
+  },
+  {
+    q: "You are given a database account that can write to production. What do you do?",
+    options: [
+      "Use it carefully",
+      "Say so and ask for a read-only account",
+      "Only run SELECT and hope",
+      "Share it with the team"
+    ],
+    answer: 1,
+    why: "A read-only account protects you as much as the data: you cannot be the cause of an accident you are not able to have."
+  }
+]} />
+
+## Tomorrow
+
+Twenty API cases against Meridian, and two real defects reported.

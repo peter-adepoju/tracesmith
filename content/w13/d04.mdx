@@ -1,0 +1,136 @@
+A request arriving twice is not an edge case. It is Tuesday.
+
+A customer double-clicks. A phone loses signal mid-request and the app retries. A load balancer resends. A webhook provider retries because your `200` was slow. In each case the server receives the same intention twice, and what it does next is either nothing or a second charge.
+
+## The definition
+
+**An operation is idempotent if doing it twice leaves the system in the same state as doing it once.**
+
+Not *returns the same response* — leaves the same **state**. A second `DELETE` may return `404` while still being perfectly idempotent, because the end state is identical either way.
+
+## By method
+
+<RunTwice />
+
+Press Send twice on each method and read what the second press did.
+
+- **GET** — safe and idempotent. Reads nothing into existence.
+- **PUT** — idempotent. It states the result: *status is paid*. Saying it again changes nothing.
+- **DELETE** — idempotent. The second call returns `404`, which looks like failure and is not.
+- **POST** — **not** idempotent. Every send creates another one and charges again.
+
+PUT against PATCH is worth the distinction. `PUT {"status":"paid"}` sets a value and is idempotent. `PATCH {"op":"increment","field":"quantity"}` applies a delta, so twice is twice — not idempotent, and a good place to look for bugs.
+
+## Protecting POST
+
+Since POST cannot be idempotent by nature, it is made idempotent by agreement: the client sends an **idempotency key**, a unique value it generates per intention.
+
+```
+POST /api/meridian/orders
+Idempotency-Key: 7f2a1c40-9b3e-4a11-9a2b-6c1d0f4e8a55
+Content-Type: application/json
+```
+
+The server stores the key with the response. A second request carrying the same key gets the **stored response replayed**, and nothing new is created.
+
+Turn the key on in the figure above and send twice. One order, one charge, two `200`s.
+
+<Callout kind="key">
+**The key belongs to the intention, not to the request.**
+
+Same key on a retry — that is the same intention, and it must not charge twice. A *new* key for a genuine second order — a different intention, and it must create a second order.
+
+Getting that backwards is itself a bug: a client that reuses one key forever will silently fail to place the customer's second order, and nothing will look broken.
+</Callout>
+
+## The run-twice test
+
+Add it to every endpoint that writes:
+
+```
+ID          API-IDEM-001
+Title       A replayed order request creates exactly one order
+
+Steps       1. GET  /orders — record the count as N
+            2. POST /orders with Idempotency-Key: K
+            3. POST /orders with the SAME key K and the same body
+            4. GET  /orders — record the count
+
+Expected    Call 2: 201, body.id present
+            Call 3: 200 or 201, SAME body.id as call 2
+            Count is N + 1, not N + 2
+            Exactly one charge of the same amount
+```
+
+Step 4 is the assertion that matters. The two responses can look perfectly reasonable while two rows sit in the table.
+
+<Callout kind="watch">
+Test the **unhappy** replays too, because this is where the real defects live:
+
+- Same key, **different body**. The server must refuse it — `409` or `422`. Silently replaying the first response means the customer's amended order was discarded without a word.
+- Same key after the first attempt **failed**. A retry should be allowed to succeed.
+- Two identical requests **at the same instant**, not one after the other. Race conditions hide in the gap between *check the key* and *store the key*, and only concurrency finds them.
+</Callout>
+
+## Why it matters most for money
+
+A duplicate read is invisible. A duplicate charge is a refund, an apology, a support ticket, a chargeback fee, and a customer who does not come back.
+
+This is also the defect most likely to escape testing, because manual testing almost never produces it — a person clicks once, waits, and sees one order. It takes a deliberate double-click, a throttled network, or a `for` loop.
+
+<Exercise
+  prompt="A second DELETE returns 404. Is the endpoint idempotent?"
+  accept={["yes", "idempotent", "same state"]}
+  hint="Idempotency is about state, not the response."
+  solution="Yes. Idempotency is a property of the resulting state, not of the response body. After one DELETE the thing is gone; after two it is still gone. The 404 is honest — there was nothing to delete. Many teams return 204 both times to stop people filing this as a bug."
+/>
+
+<Exercise
+  prompt="A client sends the same idempotency key with a DIFFERENT body. What should the server do, and why is replaying the first response wrong?"
+  accept={["reject", "409", "422", "error"]}
+  hint="Two different intentions wearing one label."
+  solution="Reject it, with 409 or 422. Replaying the first response means the second, different order was silently discarded while the client received a success — so the customer's amended order never existed and nobody has any reason to look. The key identifies one intention; a different body is a different intention."
+/>
+
+<Terms items={[
+  { term: "Idempotent", meaning: "Doing it twice leaves the same state as doing it once." },
+  { term: "Safe", meaning: "Changes nothing at all. GET and HEAD." },
+  { term: "Idempotency key", meaning: "A client-generated value identifying one intention." },
+  { term: "Replay", meaning: "Returning the stored response instead of acting again." },
+  { term: "Run-twice test", meaning: "Send it twice, then count the rows." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which method is NOT idempotent by definition?",
+    options: ["GET", "PUT", "DELETE", "POST"],
+    answer: 3,
+    why: "POST creates something new each time, which is exactly why it needs an idempotency key."
+  },
+  {
+    q: "What is the critical assertion in a run-twice test?",
+    options: [
+      "Both responses are 200",
+      "The count of rows afterwards is N + 1, not N + 2",
+      "The second is faster",
+      "The key was accepted"
+    ],
+    answer: 1,
+    why: "Both responses can look perfectly reasonable while two rows sit in the table."
+  },
+  {
+    q: "Why does this defect escape manual testing so reliably?",
+    options: [
+      "It is rare in production",
+      "A person clicks once, waits, and sees one order — it takes a deliberate double-click or a retry",
+      "It needs special tools",
+      "It only affects GET"
+    ],
+    answer: 1,
+    why: "Normal human pacing never produces the collision. Retries, flaky networks and impatient double-clicks do."
+  }
+]} />
+
+## Tomorrow
+
+SQL: asking the database directly whether the screen was telling the truth.

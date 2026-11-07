@@ -1,0 +1,148 @@
+Twenty cases against the Meridian API, written and run by you. This is the week's deliverable, and it is also a portfolio piece — twenty well-formed API cases is a thing you can show an interviewer.
+
+## Before you start
+
+Open the lab in a second tab. You will send requests with `fetch` from the browser console, which needs no tool and no account:
+
+```js
+const r = await fetch("/api/meridian/orders", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "x-meridian-defects": "email-unvalidated",
+  },
+  body: JSON.stringify({
+    items: [{ productId: "mer-05", quantity: 1 }],
+    email: "ada@example.com",
+  }),
+});
+console.log(r.status, await r.json());
+```
+
+The `x-meridian-defects` header switches planted defects on. Leave it off for the honest build.
+
+<Callout kind="job">
+Keep every request in a scratch file as you go, one `fetch` per case, with the case id in a comment above it. By the end of the day you have a runnable file — which is three quarters of the way to the automated suite you will write in week 15.
+</Callout>
+
+## The twenty
+
+**Positive — the endpoint doing its job (5)**
+
+1. `GET /products` returns 200 and an array of 8
+2. `GET /orders/{id}` for a real order returns 200 and that id
+3. `POST /orders` with one valid item returns 201 with an id
+4. `POST /orders` totals correctly: `totalMinor == subtotalMinor - discountMinor`
+5. `POST /orders` with a valid discount code applies exactly that percentage
+
+**Negative — what it should refuse (8)**
+
+6. `POST /orders` with no items → 422, `fields` contains `items`
+7. `POST /orders` with an empty items array → 422
+8. `POST /orders` with no email → 422, `fields` contains `email`
+9. `POST /orders` with `"notanemail"` → 422
+10. `POST /orders` with `productId: "mer-99"` → 422, not 500
+11. `POST /orders` with malformed JSON → 400, not 500
+12. `GET /orders/ORD-NOPE` → 404 with a usable error body
+13. `GET /nonsense` → 404, not 500
+
+**Boundary — the edges (4)**
+
+14. quantity `0` → rejected
+15. quantity `-1` → rejected, and no order created
+16. quantity `1` → accepted
+17. quantity `999999` → rejected, or accepted with correct arithmetic and no overflow
+
+**Behaviour — the ones that need two calls (3)**
+
+18. Stock decreases by the quantity ordered (`GET /products` before and after)
+19. An out-of-stock product cannot be ordered
+20. The same request sent twice creates exactly one order, or two with a documented reason
+
+## For each case, record
+
+```
+ID        API-ORD-015
+Title     Negative quantity is rejected and nothing is created
+Request   POST /api/meridian/orders
+          { "items": [{"productId":"mer-05","quantity":-1}],
+            "email": "ada@example.com" }
+Expected  422, body.error == "validation_failed",
+          body.fields contains "items",
+          order count unchanged
+Actual    201, order ORD-1042 created, totalMinor -1850000
+Result    FAIL → BUG-41
+```
+
+**Assert on the side effect.** Cases 15, 18 and 20 all need a second call to check what the server kept. The response alone will not tell you.
+
+## Automate the repetition
+
+By case ten you will be writing the same three checks. Lift them:
+
+```js
+function check(name, condition, detail) {
+  console.log(`${condition ? "PASS" : "FAIL"}  ${name}`, detail ?? "");
+  return condition;
+}
+
+async function send(body, headers = {}) {
+  const r = await fetch("/api/meridian/orders", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify(body),
+  });
+  return { status: r.status, body: await r.json() };
+}
+
+// API-ORD-015
+const r15 = await send({
+  items: [{ productId: "mer-05", quantity: -1 }],
+  email: "ada@example.com",
+});
+check("015 status is 422", r15.status === 422, r15.status);
+check("015 names the field", r15.body.fields?.includes("items"), r15.body);
+```
+
+That is not a testing framework and it does not need to be. It is twenty lines that turn twenty manual cases into one paste, and re-running after a fix becomes free.
+
+## Then confirm against the data
+
+For any case where the API's answer surprises you, go a layer deeper:
+
+<SqlConsole />
+
+Practise the query you would run against a real database to confirm an order's stored total matches its items — task 5. In a real job, that query is what turns "I think the total is wrong" into a report nobody argues with.
+
+## Report two defects
+
+Pick the two most serious things you found. Full reports, week 11 standard: title that carries the bug, exact request body, actual against expected, severity with a reason, and no credentials in the evidence.
+
+For an API defect, add one line the UI version does not need: **whether the UI can reach it.** A defect reachable only through the API is still real — anyone with DevTools is "only through the API" — but it changes who is exposed and how soon.
+
+<Exercise
+  prompt="Which three of the twenty cases cannot be judged from the response alone, and what do they need?"
+  accept={["15", "18", "20", "side effect", "second call"]}
+  hint="What changed on the server?"
+  solution="Cases 15 (negative quantity creates nothing), 18 (stock decreases) and 20 (sent twice creates one order). Each needs a second call — a GET before and after — because the response can be entirely correct while the stored state is wrong. That gap is where the most expensive defects live."
+/>
+
+<Exercise
+  prompt="Write the extra line an API bug report needs that a UI bug report does not."
+  solution="Whether the UI can reach it. For example: 'Not reachable through the form, which blocks negative quantities client-side — but client validation is not a control, so anyone with DevTools can send this.' It tells the reader who is exposed without letting them dismiss it as theoretical."
+/>
+
+<Terms items={[
+  { term: "Positive case", meaning: "Valid input, correct behaviour." },
+  { term: "Negative case", meaning: "Invalid input, correct refusal, nothing written." },
+  { term: "Side-effect assertion", meaning: "A second call that checks what the server kept." },
+  { term: "Runnable file", meaning: "Your cases as fetch calls. The start of week 15." },
+]} />
+
+## Week 13 in one line
+
+The screen is a rendering, the API is a view, and the database is the truth — a tester should be able to ask all three.
+
+## Next week
+
+Security testing basics: authentication, authorisation, and the ten minutes of checks that find most of what is wrong.
