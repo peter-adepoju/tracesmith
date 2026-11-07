@@ -1,0 +1,158 @@
+Most of what reaches you is familiar. The framework is for the rest — the problem nobody has seen, where the temptation is either to guess or to escalate it unread.
+
+## The five steps
+
+**1. Understand.** What exactly happened, to whom, when?
+**2. Reproduce or verify.** See it yourself, in the data.
+**3. Diagnose.** Where in the chain did it break?
+**4. Resolve or escalate.** Fix it, or hand it over with the diagnosis done.
+**5. Close and confirm.** Verify, tell the customer, record what you learned.
+
+In order, every time. The failure mode is always skipping a step — usually 2, occasionally 5.
+
+## 1. Understand
+
+The report is a description, not a diagnosis. Turn it into specifics:
+
+- **What exactly?** "The payment failed" — at which step, with what message?
+- **Which instance?** A transaction reference, an account id, an order number. One real example beats any description.
+- **When?** With a timezone. "This morning" is not a time.
+- **How many?** Once, or every time? Since when?
+- **What changed?** New device, new browser, new card, first time using the feature?
+
+<Callout kind="key">
+**Ask for one specific instance, always.**
+
+"Can you give me the reference for one transaction that failed?" is the single highest-value question in support. It converts an unanswerable description into something you can look up in thirty seconds.
+
+Ask two questions at most in a first reply. A list of eight reads as an obstacle course and gets abandoned.
+</Callout>
+
+## 2. Reproduce or verify
+
+Do not skip this, and do not take the report at face value. Roughly a third of reports are not what they say they are — a payment that "failed" succeeded and the confirmation email did not send, which is an entirely different problem with an entirely different fix.
+
+Verification does not always mean reproducing. For a specific transaction it means **looking it up**: what does our record say, what did the provider return, what does the timeline show?
+
+Use everything from Phases 1 to 3 — the console, the Network panel, the API, the database.
+
+<Callout kind="watch">
+**Never test with a real customer's money**, and never act on a live account to see what happens.
+
+Read their record, reproduce on a test account. If the only way to verify is an action with consequences, that is an escalation, not an experiment.
+</Callout>
+
+## 3. Diagnose
+
+Where in the chain did it break? Walk it in order:
+
+```
+Customer → their device/network → your app → your API
+→ your database → the provider → back again → webhook → your record
+```
+
+At each hop: did it arrive, and what came back? The week 5 and 6 skills are exactly this — a request journey with a point of failure somewhere along it.
+
+The three outcomes you are distinguishing between:
+
+- **It never happened.** No record anywhere. The request did not arrive.
+- **It happened and went wrong.** A record with an error. Read the error.
+- **It happened, went right, and something downstream did not know.** The commonest and most confusing: the payment succeeded, the webhook never arrived, so the order was never created. Both sides are internally consistent and the customer is charged with nothing to show.
+
+That third one is most of the hard tickets in payments, and recognising its shape is a large part of being good at this.
+
+## 4. Resolve or escalate
+
+**Resolve** if it is within your tools and your authority: re-send a webhook, retry a payout, correct a record, walk the customer through a setting, issue a refund within your limit.
+
+**Escalate** when it needs a code change, exceeds your authority, affects many customers, or you are genuinely stuck.
+
+<Callout kind="job">
+**Step 4 is sometimes the right answer at minute five.**
+
+A new tester or support agent tends to treat escalating as failure and spends two hours proving they could not fix something that was never theirs to fix.
+
+If it needs a code change, that was true at minute five. The skill is not avoiding escalation — it is escalating *with the diagnosis already done*, so the engineer starts work instead of starting over.
+
+Being stuck for twenty minutes is information. Being stuck for two hours is a decision you made badly.
+</Callout>
+
+A good escalation carries: the instance, what you checked and found, what you ruled out, the scope, and what you have told the customer.
+
+## 5. Close and confirm
+
+**Verify it is actually fixed** — in the system, not on someone's word. This is week 11's retest rule, and it is the step most often skipped under pressure.
+
+**Tell the customer** what happened in plain language, what was done, and whether they need to do anything.
+
+**Record what you learned.** If this will recur, it belongs in the knowledge base. If it is a bug, it belongs in the tracker. A problem solved once and not written down will be solved from scratch by somebody else next month.
+
+## Closure criteria before you start
+
+Write what done looks like at step 1, not step 5:
+
+> Closed when: the refund shows as `settled` in our system **and** the customer confirms it has reached their bank.
+
+Both halves. The system saying `settled` is not the customer having their money, and the gap between those two is where the next ticket comes from.
+
+<Exercise
+  prompt="A customer says a payment failed. You look it up and it succeeded. What is the actual problem likely to be, and what do you check?"
+  accept={["webhook", "notification", "downstream", "order", "email"]}
+  hint="The money moved. Who did not find out?"
+  solution="Something downstream never learned about the success: the webhook did not deliver, so the order was never created, or the confirmation email did not send. Check the webhook delivery log and the order record. The customer is charged with nothing to show for it, which from their side is indistinguishable from a failure — and the fix is completely different."
+/>
+
+<Exercise
+  prompt="Twenty minutes into an unfamiliar problem you are stuck. What should you do, and what is the mistake to avoid?"
+  accept={["escalate", "ask", "hand over"]}
+  hint="How long is too long?"
+  solution="Escalate with what you have — the instance, what you checked, what you ruled out, and what the customer has been told. The mistake is spending two hours proving you could not fix something that needed a code change all along. Being stuck for twenty minutes is information; being stuck for two hours is a bad decision."
+/>
+
+<Terms items={[
+  { term: "One specific instance", meaning: "The highest-value question in support." },
+  { term: "Verify, do not assume", meaning: "A third of reports are not what they say." },
+  { term: "The chain", meaning: "Device, app, API, database, provider, webhook, record." },
+  { term: "Succeeded-but-unknown", meaning: "Most of the hard tickets in payments." },
+  { term: "Closure criteria", meaning: "Written at step 1. Both halves." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What is the highest-value question in a first reply?",
+    options: [
+      "What browser are you using?",
+      "Can you give me the reference for one transaction that failed?",
+      "Have you tried again?",
+      "When did you first notice?"
+    ],
+    answer: 1,
+    why: "One real instance turns an unanswerable description into a thirty-second lookup."
+  },
+  {
+    q: "Which step is most often skipped, and what does it cost?",
+    options: [
+      "Understand — you miss context",
+      "Verify — you act on a report that is not what it says",
+      "Diagnose — you escalate too early",
+      "Close — the ticket stays open"
+    ],
+    answer: 1,
+    why: "Roughly a third of reports describe something other than what happened, and acting on the description solves the wrong problem."
+  },
+  {
+    q: "When is escalating at minute five correct?",
+    options: [
+      "Never, you should try first",
+      "When it needs a code change or exceeds your authority — that was true at minute five",
+      "Only for P1s",
+      "When the customer asks"
+    ],
+    answer: 1,
+    why: "The skill is escalating with the diagnosis done, not avoiding escalation."
+  }
+]} />
+
+## Tomorrow
+
+Fifteen tickets, one morning, one of you.

@@ -1,0 +1,123 @@
+Monday, 09:30. Fifteen tickets arrived while you were not looking. One of you.
+
+This is the week's deliverable, and it is also very close to the exercise you will be given in a support interview.
+
+## First: triage the whole queue
+
+Four minutes. Read each one, assign a priority, do not solve anything.
+
+<QueueTriage />
+
+Then check. Pay attention to which direction your errors went — under-rating a P1 and over-rating a P4 are not symmetrical mistakes.
+
+## What the queue was testing
+
+**Two tickets are one incident.** T-01 and T-03: same symptom, same start time, two merchants. If you worked them separately you spent twice as long and still did not know the scope.
+
+**The loudest is the least urgent.** T-04 is furious and cosmetic. The two-day silence deserves a real apology; it does not deserve a place ahead of a stopped settlement.
+
+**The quietest is critical.** T-05 reports a missing settlement of NGN 4,100,000 in a calm, short message. Severity does not depend on tone, in either direction.
+
+**One is a bug, not just a ticket.** T-13's export button does nothing. Answer the customer *and* file it, or it will arrive again next week from someone else.
+
+**One expires.** T-15 is not urgent at 09:30 and becomes a P1 at noon. A deadline is not an emergency, but it does run out.
+
+<Callout kind="key">
+**Over-rating is not the safe option.**
+
+Inflating a priority feels cautious. It is not: if everything is urgent, the ordering carries no information at all, and the real P1 waits behind a blurry logo while everyone is busy.
+
+Under-rating a P1 costs money today. Over-rating costs the credibility of your whole queue, which costs money every day after that.
+</Callout>
+
+## Then: the order of work
+
+Priority first, then within a priority by impact, then by age.
+
+A defensible plan for this queue:
+
+```
+1  INC-204    T-01 + T-03 as one incident. Confirm scope first:
+              how many merchants, which provider route, since when.
+2  T-05       Missing settlement, NGN 4.1m, enterprise. Separate
+              P1 — unrelated to the incident, equally stopped.
+3  T-12, T-06 Money wrong for individuals. Both P2, both bounded.
+4  T-09       Webhook silently down six hours. P2, and the longer
+              it runs the more data the partner is missing.
+5  T-07       Two totals disagreeing. P2.
+6  T-15       Before noon, or it becomes a P1.
+7  T-10, T-13 P3s.
+8  T-02, T-04, T-08, T-11, T-14  P4s, cleared at the end of the day.
+```
+
+Notice T-15 sits above the P3s despite being one: the deadline makes it time-bound in a way the others are not. Rules order the queue; judgement adjusts it, and you should be able to say why.
+
+## Three first responses
+
+Draft them now, before any investigation. They cost two minutes and they buy you the morning.
+
+**To both merchants on the incident (T-01, T-03):**
+
+> Thank you for reporting this. We can see card payments declining for your account from around 07:50 and we have confirmed it is affecting more than one merchant, so this is not something with your account specifically. We have raised it as an incident and our team is on it now.
+>
+> I will update you by 11:00 whether or not we have a fix by then. If you need to take payments urgently in the meantime, transfer is unaffected.
+
+**To the enterprise merchant (T-05):**
+
+> Thank you for flagging this, and I am sorry you have had to chase it. I can see the settlement of NGN 4,100,000 due on 6 November and I am tracing it now with our payments team.
+>
+> I do not want to guess at a cause before I have checked, so I will come back to you by 12:00 today with either the payment or a clear explanation of where it is. If it would help, I can also send the reference so your finance team can check with your bank in parallel.
+
+**To the angry customer (T-04):**
+
+> You are right, and I am sorry. Two days without a reply is not acceptable and I am not going to explain it away.
+>
+> On the statement itself: the download is ordering transactions oldest-first rather than newest-first. I have raised it with the team. It is a display problem rather than anything wrong with your data — the transactions and balances are all correct — so I do not expect it to be fixed this week, and I would rather tell you that than give you a date I cannot keep.
+
+Each of those does the same four things: **acknowledge, say what you know, say what you do not, commit to a time.** None of them guesses.
+
+The third one is the hardest and most useful. It apologises without grovelling, is honest that the fix is not imminent, and separates the real complaint (two days of silence) from the trivial one (sort order).
+
+<Callout kind="job">
+A triage exercise very like this is a standard support interview task. What they are watching for is not whether you match their answer key — it is whether you can **explain** an ordering.
+
+"T-05 above T-06 because both are money but one is four million naira and a blocked reconciliation at an enterprise account, and the other is a duplicate charge with a clear refund path" is the answer that gets the job.
+</Callout>
+
+## Check yourself
+
+- Did I triage the whole queue before working any of it?
+- Did I spot the incident, or work two tickets twice?
+- Did any priority get set by tone rather than impact?
+- Did I file T-13 as a bug as well as answering it?
+- Did every first response commit to a time?
+- Did I promise anything I had not verified?
+
+<Exercise
+  prompt="T-15 is a P3 at 09:30 and a P1 at noon. What does that tell you about priority as a concept?"
+  accept={["changes", "current", "time", "re-triage", "not permanent"]}
+  hint="Is it a label or a judgement?"
+  solution="That priority is a current judgement, not a permanent label. Urgency is how fast the damage grows, and for a deadline-bound ticket that rate is zero until it is sudden. It means the queue must be re-triaged as the day moves, not sorted once at 09:30."
+/>
+
+<Exercise
+  prompt="Why does the response to T-04 refuse to give a fix date?"
+  accept={["cannot keep", "guess", "promise", "honest"]}
+  hint="What is worse than 'not this week'?"
+  solution="Because a cosmetic bug genuinely will not be prioritised this week, and a date given to make the conversation easier is a second broken promise to a customer who is already angry about the first. 'I would rather tell you that than give you a date I cannot keep' is believable precisely because it is not what they wanted to hear."
+/>
+
+<Terms items={[
+  { term: "Triage pass", meaning: "The whole queue first, four minutes, no solving." },
+  { term: "Linked incident", meaning: "Two tickets, one problem, one investigation." },
+  { term: "Time-bound ticket", meaning: "Low priority now, high at a known hour." },
+  { term: "First response", meaning: "Acknowledge, know, do not know, commit to a time." },
+]} />
+
+## Week 16 in one line
+
+Triage the whole queue before working any of it, order by consequence rather than arrival, and never let tone set priority.
+
+## Next week
+
+Diagnosis in depth: logs, timelines and the evidence that tells you where in the chain it broke.

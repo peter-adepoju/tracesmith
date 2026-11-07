@@ -1,0 +1,135 @@
+Phase 4. Four weeks on the half of the job you are already doing — which means this phase is less about new facts and more about naming what you do, so you can do it deliberately and describe it in an interview.
+
+## The role, to someone outside tech
+
+> When a customer finds that something is not working, I work out what actually happened, fix it if I can, and get it to the right engineer with enough evidence that they can fix it quickly if I cannot. And I keep the customer informed the whole way through.
+
+Three jobs in one sentence: **diagnose, resolve or escalate, communicate.**
+
+## What makes it technical
+
+Anyone can forward a complaint. The technical part is the diagnosis:
+
+- Reading a response in a web console to see what the server actually returned
+- Querying a database to find out whether the transaction exists
+- Reading a log with a request id
+- Knowing the difference between "the payment failed" and "the payment succeeded and the webhook did not arrive" — which look identical to the customer and are entirely different problems
+
+Everything in Phases 1 to 3 was for this. You can read an API response, inspect a request, run a SQL query and write a report an engineer can act on. That is the toolkit.
+
+## Where the line sits
+
+| Support | Engineering |
+| --- | --- |
+| Find out what happened | Change the code |
+| Use the tools provided | Build new tools |
+| Fix what the system allows | Fix what the system does |
+| Re-send a webhook, retry a payout, correct a record | Fix why it needed re-sending |
+| Escalate with evidence | Deploy |
+
+<Callout kind="key">
+**Support's job is diagnosis, not repair of the system itself.**
+
+The skill is working out exactly what is wrong — far enough that an engineer can act immediately. A perfect escalation is one where the engineer reads it, opens the right file, and fixes it without asking you a single question.
+
+That standard should be familiar. It is the same one from week 11, pointed at a colleague instead of a ticket.
+</Callout>
+
+## The judgement you are paid for
+
+Not knowledge — knowledge is in the documentation. Four judgements, made all day:
+
+**What is this really?** The customer says "the app is broken". It is one failing transaction. Translating a description into a diagnosis is most of the work.
+
+**How bad is it?** Not how loudly it was said. Week 11's severity lesson, now with a person attached.
+
+**Can I fix this, or must it go up?** Escalating everything makes you a forwarding address. Escalating nothing means a critical bug sits for three days in your drafts.
+
+**What do I say, and when?** Including, often, "I do not know yet, here is what I am doing, I will come back at two."
+
+<Callout kind="job">
+This is also the most common way into tech in Nigeria, and the most common way out of it into something else.
+
+Support sits next to engineering, product and payments operations at once, and nobody else in the company sees as many real problems. Testers, product managers, implementation engineers and solutions architects very often started here — because the person who has explained the same failure forty times knows something nobody else in the building does.
+</Callout>
+
+## Tiers
+
+Most teams run a structure like this:
+
+**Tier 1** — first contact. Known problems, documented fixes, triage. Resolves most of the volume.
+
+**Tier 2** — technical. Logs, database, API, reproduction. Where this course is aimed.
+
+**Tier 3** — engineering, or a specialist team. Code changes and genuine unknowns.
+
+The useful habit at every tier: **do not escalate what you have not diagnosed.** "Customer says it is broken" is a forward. "Transaction `TRX-8841` returned `insufficient_funds` from the provider at 14:02 but our record shows `successful`, so the customer was charged and the order was not created — I can see three others today" is an escalation.
+
+## The one rule that outranks the others
+
+<Callout kind="watch">
+**Never guess at a customer.**
+
+"It should be fine now" when you have not checked, "that is a known issue" when you do not know, "it will arrive in 24 hours" because it usually does.
+
+Each one buys ten quiet minutes and costs a second conversation in which you are now the person who was wrong. "I do not know yet — I am checking and I will come back by two" costs nothing and is always available.
+</Callout>
+
+<Exercise
+  prompt="Describe the technical support role in one sentence, to someone who does not work in tech."
+  solution="Something like: 'When something is not working for a customer, I find out what actually happened, fix it if I can, get it to the right engineer with the evidence if I cannot, and keep the customer informed throughout.' Diagnose, resolve or escalate, communicate — and the diagnosis is the part that makes it technical."
+/>
+
+<Exercise
+  prompt="A customer writes 'your app is broken'. What is the first thing you need, and why is it not reassurance?"
+  accept={["what", "specific", "which", "transaction", "detail"]}
+  hint="You cannot act on a description."
+  solution="A specific instance: which action, when, which account or transaction, and what they saw. Reassurance before diagnosis is a guess, and if it turns out to be wrong you have added a broken promise to an existing problem. Acknowledge, then ask one or two precise questions."
+/>
+
+<Terms items={[
+  { term: "Triage", meaning: "Deciding what gets worked on, in what order." },
+  { term: "Escalation", meaning: "Passing it up with the diagnosis already done." },
+  { term: "Tier 1 / 2 / 3", meaning: "First contact, technical, engineering." },
+  { term: "Diagnosis", meaning: "What actually happened, as distinct from what was reported." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What is support's core job?",
+    options: [
+      "Fixing the product",
+      "Diagnosing what happened, then resolving or escalating with evidence",
+      "Keeping customers happy",
+      "Answering quickly"
+    ],
+    answer: 1,
+    why: "Speed and goodwill follow from diagnosis. Without it you are a forwarding address."
+  },
+  {
+    q: "Which is an escalation rather than a forward?",
+    options: [
+      "'Customer says checkout is broken'",
+      "'TRX-8841 returned insufficient_funds at 14:02 but our record shows successful; three others today'",
+      "'Urgent, please look'",
+      "'See attached screenshot'"
+    ],
+    answer: 1,
+    why: "It names the instance, the evidence, the contradiction and the scope, so an engineer can start immediately."
+  },
+  {
+    q: "You do not yet know why a payment failed. What do you tell the customer?",
+    options: [
+      "It should be fine now",
+      "That you are checking and when you will come back",
+      "Nothing until you know",
+      "That it is a known issue"
+    ],
+    answer: 1,
+    why: "A guess costs a second conversation in which you were wrong. Silence costs trust. A time costs nothing."
+  }
+]} />
+
+## Tomorrow
+
+How work reaches you, and why first-come-first-served fails.

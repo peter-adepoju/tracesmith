@@ -1,0 +1,156 @@
+A priority is a promise with a clock attached. Today: how to set one you can defend, and how to read a deadline that is measured in business hours.
+
+## P1 to P4
+
+**P1 — Critical.** Money stopped or lost, many customers affected, or a security incident. No workaround. Often includes out-of-hours response.
+
+**P2 — High.** A major function broken for one customer or a subset, or money wrong for an individual. Painful, bounded.
+
+**P3 — Medium.** Broken with a workaround, or one person blocked by something they can route around.
+
+**P4 — Low.** Cosmetic, a question, a feature request. No impact in waiting.
+
+The mapping to week 11's severity grid:
+
+| Bug severity + priority | Support |
+| --- | --- |
+| Critical, highest | **P1** |
+| High, high | **P2** |
+| Medium | **P3** |
+| Low | **P4** |
+
+The same judgement, differently labelled — which is worth knowing, because it means you already learned this.
+
+## Four tests for a P1
+
+A P1 interrupts people, so it needs to be right. Ask:
+
+1. **Is money stopped, lost or wrong at scale?**
+2. **Are many customers affected, or one very large one critically?**
+3. **Is there no workaround at all?**
+4. **Is it getting worse while we talk?**
+
+Two or more yes, it is a P1. One yes, probably P2. And **tone is not one of the four questions** — the angriest message in a queue is very often the lowest priority in it.
+
+## SLAs
+
+A service level agreement is a commitment with consequences, often contractual. Two numbers:
+
+**First response** — how long until a human replies, having actually looked.
+**Resolution** — how long until it is fixed, or a defined next step is agreed.
+
+A plausible set:
+
+| | First response | Resolution target |
+| --- | --- | --- |
+| P1 | 1 hour | 4 hours |
+| P2 | 4 hours | 1 business day |
+| P3 | 8 hours | 3 business days |
+| P4 | 24 hours | Best effort |
+
+<Callout kind="key">
+**The first-response clock stops when a human replies having looked — not when an autoresponder fires.**
+
+And a first response is not a fix. It is: I have read this, here is what I understand, here is what I am doing, here is when I will come back.
+
+That reply is the cheapest thing in support and the single biggest driver of whether the customer feels looked after. Most complaints about slow support are complaints about silence, not about speed.
+</Callout>
+
+## The business-hours trap
+
+This is where SLAs stop being arithmetic.
+
+<SlaClock />
+
+Try **Friday 15:00 at P3**, then **Saturday 11:00 at P2**. Both are comfortably within SLA. Both feel, to the person waiting, like being ignored for most of a weekend.
+
+That gap is not a loophole to hide behind. It is the thing your first response exists to manage: *"We have your report. Our team is back on Monday at 9 and you will have an update by 11."* The SLA is met either way; the difference is whether the customer spends the weekend wondering.
+
+<Callout kind="watch">
+Three things that quietly break the clock:
+
+- **Public holidays.** Nigeria has a lot of them, several announced at short notice. If your SLA says business days, holidays are not business days — and the customer may not know that.
+- **"Waiting on customer".** Pausing the clock is legitimate and is also the most abused field in every support tool. Pause it only when you genuinely cannot proceed, and never as a way to make a number look better.
+- **Timezones.** A merchant in Lagos and a provider in London do not share a working day. Say which zone you mean, every time.
+</Callout>
+
+## Defending a priority decision
+
+You will be challenged, usually by someone who wants theirs raised. The defence is never "that is the policy":
+
+> I have set this as P3. It affects one merchant, the export is unavailable but the same data is readable on screen, and no money is at risk. Our P1s this morning are two merchants unable to take card payments at all. If the export is blocking a filing deadline, tell me the deadline and I will re-prioritise — that would change the urgency, not the impact.
+
+Four things there: the rating, the reasoning, what else is competing, and **the specific fact that would change your mind.** That last one is what separates a judgement from a refusal.
+
+## Breaching
+
+Sometimes you will miss one. When it is going to happen:
+
+- **Say so before it does**, not after.
+- Say **why**, briefly and without blaming a colleague.
+- Give a **new time**, and make that one real.
+- **Escalate internally**, because a breach is usually a capacity problem, not a personal one.
+
+A breach you flagged in advance is a managed expectation. A breach discovered by the customer is a broken promise.
+
+<Exercise
+  prompt="A ticket arrives Friday at 16:00, priority P3, eight business hours to first response. Business hours are Monday to Friday, 9 to 17. When is it due, and what should the customer be told?"
+  accept={["monday", "15", "15:00"]}
+  hint="One hour on Friday, then seven on Monday."
+  solution="One hour remains on Friday, so seven carry into Monday: due Monday at 16:00. Within SLA, and nearly three days of silence from the customer's point of view. Tell them on Friday: we have this, the team is back Monday at 9, you will have an update by midday."
+/>
+
+<Exercise
+  prompt="A customer insists their P3 is a P1 because they are very frustrated. What do you say?"
+  accept={["impact", "workaround", "competing", "what would change"]}
+  hint="Reason, comparison, and the fact that would change it."
+  solution="Acknowledge the frustration as real, then give the reasoning: what the impact is, that a workaround exists, and what is currently P1 and why. Then offer the fact that would change your mind — 'if this is blocking a deadline, tell me the deadline'. That turns a refusal into a judgement they can engage with."
+/>
+
+<Terms items={[
+  { term: "First response", meaning: "A human has read it and said what happens next." },
+  { term: "Resolution target", meaning: "Fixed, or a defined next step agreed." },
+  { term: "Business hours", meaning: "The clock that surprises everyone. Say the timezone." },
+  { term: "Waiting on customer", meaning: "A legitimate pause, and the most abused field in support." },
+  { term: "Managed breach", meaning: "Flagged before it happens, with a new time that is real." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "When does the first-response clock stop?",
+    options: [
+      "When the autoresponder fires",
+      "When a human replies having actually looked",
+      "When the ticket is assigned",
+      "When it is resolved"
+    ],
+    answer: 1,
+    why: "An automated acknowledgement is not a response, and customers can tell the difference instantly."
+  },
+  {
+    q: "Which is NOT one of the four tests for a P1?",
+    options: [
+      "Is money stopped or wrong at scale?",
+      "Is there no workaround?",
+      "How angry is the customer?",
+      "Is it getting worse while we talk?"
+    ],
+    answer: 2,
+    why: "Tone is not severity. The angriest ticket in a queue is very often the lowest priority in it."
+  },
+  {
+    q: "What turns a defence of a priority into a judgement rather than a refusal?",
+    options: [
+      "Citing the policy",
+      "Naming the specific fact that would change your mind",
+      "Apologising",
+      "Escalating it anyway"
+    ],
+    answer: 1,
+    why: "It invites the information that would legitimately change the rating, instead of closing the conversation."
+  }
+]} />
+
+## Tomorrow
+
+The five-step framework, for a problem you have never seen before.

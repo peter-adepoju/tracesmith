@@ -1,0 +1,145 @@
+Work arrives from everywhere at once, in no order, and some of it is the same problem wearing different clothes. Today: how to receive it without losing any of it.
+
+## The channels
+
+**Email** — slow, detailed, easy to lose in a shared inbox nobody owns.
+
+**Live chat** — fast, expects an answer now, and the context vanishes when the window closes unless something captures it.
+
+**Phone** — richest and most demanding. Nothing is recorded unless you record it, which means it is the channel where work most often disappears.
+
+**Social media** — public, so it carries reputational weight out of proportion to its severity. Move it to a private channel quickly and politely.
+
+**In-app or portal** — the best of them. Arrives with the account, the device and often the failing transaction already attached.
+
+**Internal** — Slack from sales, a nudge in a corridor, an operations request. The channel most likely to bypass your system entirely.
+
+<Callout kind="key">
+**Every channel must land in one record.**
+
+A ticket for a phone call. A ticket for the Slack message from sales. A ticket for the conversation you had in the corridor.
+
+Two reasons, and the second is the one people miss:
+
+1. Work that is not written down is work that gets dropped, and you cannot see your own queue.
+2. **Patterns only exist in the aggregate.** Four people mentioning a slow dashboard across four channels is an incident. Four separate conversations in four places is four shrugs.
+</Callout>
+
+## Why first-come-first-served fails
+
+It is fair, it is simple, and it is wrong.
+
+At 08:02 a merchant reports that all card payments are declining. At 08:05 someone asks how to change their email address. At 08:21 an enterprise customer reports a missing settlement of four million naira.
+
+In arrival order you answer the email question second, while money is stopped for two businesses.
+
+**Order by consequence, not by arrival.** The queue is not a line at a counter; it is a set of problems with different costs per hour of delay.
+
+## Urgency and impact
+
+Two axes, like severity and priority in week 11 — and for the same reason, because collapsing them loses the trade-off.
+
+**Impact** — how many people, and how badly. One user inconvenienced, or every merchant unable to take money.
+
+**Urgency** — how fast the damage grows. A missing settlement gets worse hourly as a business cannot pay suppliers. A blurry logo is equally blurry next week.
+
+| | Low impact | High impact |
+| --- | --- | --- |
+| **High urgency** | P3 — one person blocked now | **P1** — many people, money stopped |
+| **Low urgency** | P4 — cosmetic | P2 — wrong for many, not yet costly |
+
+Tomorrow's lesson and the day after put numbers and deadlines on this.
+
+## Triage is its own pass
+
+Do not triage by working. Triage the **whole queue first**, quickly, then work it in order.
+
+Fifteen tickets take about four minutes to triage — enough to read each one and assign a priority, not to solve any. That four minutes is what stops you spending the morning on the first thing you opened.
+
+<Callout kind="job">
+Re-triage after any new information. A P3 at nine can be a P1 at ten because two more reports of the same symptom arrived.
+
+Conversely, a P1 drops once you know it is one customer with a local network problem. Priority is a current judgement, not a label applied once.
+</Callout>
+
+## Spotting the incident early
+
+The single most valuable triage habit: **notice when two tickets are one problem.**
+
+Signals:
+- The same symptom from different customers
+- Start times within minutes of each other
+- A sudden spike in volume on any one topic
+- A symptom that does not match the usual customer confusion
+
+Two reports of card declines starting at 07:50 is not two tickets. It is an incident, and the correct action is to raise it as one thing and tell both customers — not to debug two cases in parallel.
+
+And once you have seen two, **go looking for the third** rather than waiting for it to arrive.
+
+## One record per customer
+
+Beyond one record per issue: all of a customer's history in one place.
+
+Because the fourth ticket from the same merchant this month is a different conversation from the first. Without history you cannot see that, you ask them to re-explain, and they tell you — correctly — that they have explained this three times already.
+
+<Exercise
+  prompt="At 08:05 someone asks how to change their email. At 08:21 an enterprise customer reports a missing NGN 4,100,000 settlement. Which first, and what is the principle?"
+  accept={["settlement", "08:21", "enterprise", "money"]}
+  hint="Not arrival order."
+  solution="The settlement, despite arriving later. Order by consequence per hour of delay: the money is stopped and the merchant's reconciliation is blocked, while the email question costs nothing by waiting an hour. First-come-first-served is fair and wrong."
+/>
+
+<Exercise
+  prompt="You take a phone call, resolve it in four minutes, and hang up. Why raise a ticket anyway?"
+  accept={["pattern", "record", "history", "aggregate", "visible"]}
+  hint="Two reasons, and one is not about you."
+  solution="First, the record: the customer's history must show it, so the next person does not ask them to re-explain. Second, and more easily missed, patterns only exist in the aggregate — four unrecorded calls about the same symptom are four shrugs, while four tickets are an incident somebody can see."
+/>
+
+<Terms items={[
+  { term: "Impact", meaning: "How many, and how badly." },
+  { term: "Urgency", meaning: "How fast the damage grows." },
+  { term: "Triage pass", meaning: "Prioritise the whole queue before working any of it." },
+  { term: "Re-triage", meaning: "Priority is a current judgement, not a permanent label." },
+  { term: "One record", meaning: "Every channel lands in the system. No exceptions." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Why does first-come-first-served fail as a queue strategy?",
+    options: [
+      "It is too slow",
+      "Problems differ in cost per hour of delay, so arrival order ignores consequence",
+      "Customers dislike it",
+      "It does not fail"
+    ],
+    answer: 1,
+    why: "A how-to question and a stopped settlement cost very different amounts to leave for an hour."
+  },
+  {
+    q: "Two merchants report card declines starting within minutes. What is the correct action?",
+    options: [
+      "Work both tickets separately",
+      "Raise one incident, link both tickets, reply to both, and look for a third",
+      "Wait for more reports",
+      "Escalate the louder one"
+    ],
+    answer: 1,
+    why: "It is one problem. Debugging it twice wastes the time you need to find the scope."
+  },
+  {
+    q: "What is the less obvious reason to log a phone call you already resolved?",
+    options: [
+      "Policy",
+      "Patterns only exist in the aggregate — unrecorded calls cannot add up to an incident",
+      "To measure your performance",
+      "For billing"
+    ],
+    answer: 1,
+    why: "The customer history matters too, but an invisible repeated symptom is the expensive loss."
+  }
+]} />
+
+## Tomorrow
+
+The ticket itself: writing one a colleague could pick up cold.

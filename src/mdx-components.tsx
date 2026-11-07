@@ -22,6 +22,7 @@ import { FormLab } from "@/components/interactive/FormLab";
 import { HidingDemo } from "@/components/interactive/HidingDemo";
 import { LivePlayground } from "@/components/interactive/LivePlayground";
 import { PanelPicker } from "@/components/interactive/PanelPicker";
+import { QueueTriage } from "@/components/interactive/QueueTriage";
 import { RedactionDrill } from "@/components/interactive/RedactionDrill";
 import { RegressionPicker } from "@/components/interactive/RegressionPicker";
 import { RequestJourney } from "@/components/interactive/RequestJourney";
@@ -31,6 +32,7 @@ import { SelectorLab } from "@/components/interactive/SelectorLab";
 import { SeverityGrid } from "@/components/interactive/SeverityGrid";
 import { TestCaseBuilder } from "@/components/interactive/TestCaseBuilder";
 import { TokenInspector } from "@/components/interactive/TokenInspector";
+import { SlaClock } from "@/components/interactive/SlaClock";
 import { SpecificityScorer } from "@/components/interactive/SpecificityScorer";
 import { SqlConsole } from "@/components/interactive/SqlConsole";
 import { StatusExplorer } from "@/components/interactive/StatusExplorer";
@@ -66,6 +68,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     LivePlayground,
     PanelPicker,
     Quiz,
+    QueueTriage,
     RedactionDrill,
     RegressionPicker,
     RequestInspector,
@@ -74,6 +77,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     RunTwice,
     SelectorLab,
     SeverityGrid,
+    SlaClock,
     SpecificityScorer,
     SqlConsole,
     StatusExplorer,

@@ -1,0 +1,162 @@
+A ticket is not a note to yourself. It is a record that a colleague will pick up at 2am during an incident, that will be read in six months when the pattern matters, and that may be quoted back to you by a regulator.
+
+The standard is the same one as week 11, pointed at a colleague: **someone who has never seen this can pick it up and continue without asking you anything.**
+
+## The fields
+
+| Field | What goes in it |
+| --- | --- |
+| **Subject** | The problem, specifically. Not "Issue" |
+| **Customer** | Account id, and the tier or plan |
+| **Channel** | Where it came from |
+| **Category** | What kind of problem this is |
+| **Priority** | P1 to P4, with a reason if it is not obvious |
+| **Description** | What they reported, in their words |
+| **Diagnosis** | What you found, and how |
+| **Actions taken** | Every step, with timestamps |
+| **Current status** | What is happening right now |
+| **Next action and owner** | Who does what next |
+| **Closure criteria** | What "done" looks like |
+
+The last two are the ones that get left out, and they are the ones that decide whether the ticket moves when you are not there.
+
+## The subject line
+
+Read in a list of two hundred, exactly like a bug title:
+
+| Weak | Strong |
+| --- | --- |
+| Payment issue | Card payments declining for merchant ACC-4421 since 07:50 |
+| Customer complaint | Settlement of NGN 4.1m due 6 Nov not received |
+| Not working | Webhook delivery stopped at 02:00 for partner `lumen-pay` |
+| Urgent!! | Duplicate charge on TRX-8841, refund not yet issued |
+
+Pattern: **what, who, when.** Never put urgency in the subject — that is what the priority field is for, and a subject line shouting at you is noise the twentieth time you scroll past it.
+
+## Write the diagnosis as you go
+
+Not at the end. Each step, as you take it:
+
+```
+10:02  Customer reports card declines from ~07:50. ACC-4421.
+10:05  Checked transactions for ACC-4421: 14 attempts since 07:48,
+       all declined, all provider code 05 (do not honour).
+10:09  Checked three other merchants on the same provider route:
+       same pattern from 07:48. Not customer-specific.
+10:11  Raised INC-204. Linked T-01 and T-03.
+10:14  Replied to both merchants with acknowledgement and a
+       15:00 update commitment.
+```
+
+Six lines, and anyone can now take over. Note the shape: each line is a **fact with a time**, not a feeling. "Checked three other merchants" is reproducible; "seems widespread" is not.
+
+## Categories
+
+Boring, and the thing that makes your queue data worth having:
+
+- Payment failure
+- Settlement or payout
+- Refund or dispute
+- Account or access
+- Integration or API
+- Reporting or data
+- How-to or documentation
+- Bug (confirmed)
+- Feature request
+
+Two habits:
+
+**Categorise accurately even when it is slower.** Six months of accurate categories tells the company that a third of tickets are one integration problem, and that is a roadmap item. Six months of "Other" tells it nothing.
+
+**Re-categorise when the diagnosis changes.** A "payment failure" that turns out to be a webhook problem is a webhook ticket now.
+
+<Callout kind="job">
+If a category is missing — and it usually is — raise that. "We have no category for duplicate charges and I have seen nine this month" is a small, concrete, visible contribution that makes you useful beyond your own queue.
+</Callout>
+
+## Ownership
+
+**One owner at a time, always a human.** A ticket owned by "the team" is owned by nobody, which is the mechanism by which things sit for a week.
+
+A handoff has three parts, and all three are needed:
+
+1. **A summary in the ticket** — what is done, what is next, what you are waiting for.
+2. **An explicit change of owner** in the system.
+3. **A message to that person**, so they know it exists.
+
+Doing only the third is how a ticket lives in a chat thread and nowhere else.
+
+## Writing the handoff
+
+> Handing to Chidi for the evening. Customer ACC-4421, card declines since 07:50, part of INC-204 with T-03. Provider confirmed a routing issue at 11:20 and estimates a fix by 16:00. I have told both merchants we will update at 15:00 — **that update is the next action and it is due whether or not the provider has come back.** If the fix lands, confirm with the merchants that payments are going through before closing; do not close on the provider's word alone.
+
+That carries the state, the commitment with its deadline, and the closure criteria — including the instruction not to close on someone else's say-so, which is the week 11 retest rule in support clothing.
+
+## Closure criteria, decided at the start
+
+Write what "done" means before you begin:
+
+- The customer confirms it works
+- The refund appears in their account, verified in the system
+- The webhook has delivered successfully and the partner confirms receipt
+
+Without this, tickets close on *"I think that is sorted"* and reopen three days later — and a reopened ticket costs far more than the five minutes of verification would have.
+
+<Exercise
+  prompt="Rewrite this subject: 'URGENT - customer very angry - payment problem!!'"
+  solution="Something like: 'Duplicate charge on TRX-8841 for ACC-1190, refund not yet issued'. What, who, when. The anger belongs in the description and the urgency belongs in the priority field — a subject line that shouts tells the twentieth reader nothing about whether this is theirs."
+/>
+
+<Exercise
+  prompt="You message a colleague on Slack asking them to take over a ticket. What else must happen, and what goes wrong if it does not?"
+  accept={["owner", "assign", "ticket", "summary"]}
+  hint="Two more things, both in the system."
+  solution="Change the owner in the system, and write a summary in the ticket covering what is done, what is next and what you are waiting for. Without those the ticket's real state lives in a chat thread: the queue shows it as still yours, nobody else can pick it up, and the context is lost the moment that thread scrolls."
+/>
+
+<Terms items={[
+  { term: "Closure criteria", meaning: "What done looks like. Decided before you start." },
+  { term: "Next action and owner", meaning: "The two fields that decide whether it moves without you." },
+  { term: "Handoff", meaning: "Summary, owner change, and a message. All three." },
+  { term: "Re-categorise", meaning: "When the diagnosis changes, the category changes." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What makes a good ticket subject?",
+    options: [
+      "The urgency",
+      "What, who, when — specifically",
+      "The customer's own words",
+      "A category code"
+    ],
+    answer: 1,
+    why: "It is read in a list of two hundred. Urgency lives in the priority field."
+  },
+  {
+    q: "Why write the diagnosis as you go rather than at the end?",
+    options: [
+      "It is faster",
+      "Anyone can take over at any moment, and the facts are still exact",
+      "Policy requires it",
+      "It looks thorough"
+    ],
+    answer: 1,
+    why: "Reconstruction at the end loses times and turns facts into impressions, exactly as it does in a test run."
+  },
+  {
+    q: "A ticket is owned by 'the support team'. What is the problem?",
+    options: [
+      "Nothing",
+      "Owned by everyone means owned by nobody, which is how things sit for a week",
+      "It is a tooling limitation",
+      "It is more flexible"
+    ],
+    answer: 1,
+    why: "One named human at a time, or no one picks it up."
+  }
+]} />
+
+## Tomorrow
+
+Priority, SLAs, and the business-hours clock that surprises everyone.
