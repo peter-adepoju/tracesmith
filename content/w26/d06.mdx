@@ -1,0 +1,162 @@
+The last day. One real automation, built, tested, documented and handed over — meeting the full definition of done, and presented in five minutes.
+
+Not a demo. Something that runs on Monday whether or not you are there.
+
+## Choose it
+
+Pick something **real and small**. A process that genuinely happens, that somebody genuinely does, that you can finish.
+
+Good: a daily report that is currently assembled by hand. A chase that happens when someone remembers. A reconciliation between two systems. A notification that is currently somebody watching a screen.
+
+Bad: anything you invented to have something to build. The whole value is that a real person stops doing a real thing.
+
+If you have no work process, use your own life: a weekly summary of something you track, a reminder that depends on a real condition, a check on something you currently check by hand.
+
+## The definition of done
+
+Not "it works". All of it:
+
+**Chosen and justified**
+- Scored on frequency, stability and cost of error — week 20
+- Payback calculated
+- Written down as a one-paragraph proposal, including what you decided *not* to build
+
+**Built**
+- Trigger, call, record — week 21
+- State in a table, not a document
+- Logic in code where it is logic, on the canvas where it is movement
+
+**Reliable** — week 22
+- Retries with backoff on every external call
+- Timeouts set deliberately, worst case inside the schedule interval
+- Idempotent, proven by the run-twice test and the kill-halfway test
+- An error workflow attached, alerting on two channels
+- A run log you own, with items in and items processed
+- A heartbeat, and something watching for its absence
+
+**Governed** — week 25
+- No invented data anywhere, including the demo
+- An audit trail for anything consequential, with named actors
+- Credentials in the store, scoped, with a recorded expiry
+- If it uses a model: evals with a baseline, and a human gate before anything irreversible
+
+**Documented** — week 26
+- One page a stranger can follow, tested by handing it to one
+- A runbook with three failure modes and the re-run safety answered
+- In the repository, with the prompts and eval cases
+
+**Measured**
+- A baseline taken before
+- The after measured honestly, net of maintenance
+- The misses recorded
+
+**Handed over**
+- A named owner who is not you, if that is possible
+- A walkthrough where they drove
+- Responsibility, authority, context and access all transferred
+
+<Callout kind="key">
+**The hard parts are not the building.**
+
+Building is the afternoon. The definition of done above is the week, and every item on it is something you have seen go wrong in the previous twenty-five.
+
+That gap — between "it works on my machine" and "it runs on Monday whether or not I am there" — is the entire difference between the two.
+</Callout>
+
+## Break it on purpose, one more time
+
+Before you call it done, run the week 22 day 6 drill:
+
+1. Kill the dependency → does it retry, then alert, on both channels?
+2. Break the credential → does it fail distinguishably, without retrying a 401?
+3. Run it twice → does the second run change nothing?
+4. Kill it halfway and re-run → does it complete the work exactly once?
+5. Switch it off → does anything notice, inside the expected window?
+6. Feed it bad items → does it report `partial` with real counts?
+
+Record the gaps. Fix them. **A capstone that has never failed in front of you is not finished.**
+
+## Present it in five minutes
+
+The last artefact. Five minutes, in this order:
+
+**0:00 — The problem.** One sentence, with the number. *"The daily reconciliation takes 40 minutes every morning and three discrepancies a month reach Finance uncaught."*
+
+**0:30 — What it does now.** One sentence. *"It runs at 08:00, compares both sides, posts a summary, and alerts when they disagree. It reports; it never corrects."*
+
+**1:00 — Show it.** The actual output in the actual channel. Thirty seconds. Not a slide of the canvas — nobody wants to look at a canvas.
+
+**1:30 — One design decision, explained.** The one with a real trade-off. *"It reports rather than corrects, because an auto-fixer that picks the wrong side makes the drift worse and harder to find."* This is the slide that tells people whether you understand what you built.
+
+**2:30 — Reliability.** Briefly: retries, idempotent, heartbeat, alerts on two channels, and *"I broke it six ways and here is what I found and fixed."*
+
+**3:30 — The numbers.** Before, after, net of maintenance, and the misses.
+
+**4:30 — Owner and what is next.** Who owns it, what you would do next, and what you deliberately did not build.
+
+Two things to resist: showing the canvas, and explaining how clever it is. Nobody is assessing the diagram. They are assessing whether this will still be working in six months.
+
+## What you have at the end
+
+Twenty-six weeks. 156 lessons. And a set of artefacts that is more persuasive than any of it:
+
+- Bug reports an engineer could act on — week 11
+- A full feature pass with an assessment — week 12
+- Twenty API cases and the defects they found — week 13
+- A five-check security sweep — week 14
+- A Playwright suite that runs on every push — week 15
+- A triaged queue and the reasoning — week 16
+- Six diagnoses with the escalations — week 17
+- Ten replies rewritten — week 18
+- A classifier with an eval set and a baseline — week 23
+- An agent brief that would pass review — week 24
+- And this: one automation, running, documented, owned by someone else
+
+<Callout kind="job">
+Put them in a public repository with a README that explains what each one is.
+
+Most candidates for a QA, support or automation role arrive with a certificate and a description of what they learned. Arriving with eleven artefacts, each of which is a thing you actually produced, is a different conversation — and the hiring question stops being *can you do this* and becomes *when can you start*.
+</Callout>
+
+## Check yourself, one last time
+
+- Does it run without me?
+- Have I watched it fail, on purpose, and fixed what I found?
+- Can a stranger follow my page without asking me a question?
+- Have I measured the before and the after, net of maintenance?
+- Does someone else own it, with the authority to change it?
+- Have I told them what is wrong with it?
+
+<Exercise
+  prompt="Your capstone works perfectly and has never failed. Why is it not finished?"
+  accept={["never failed", "drill", "break", "untested"]}
+  hint="What have you not observed?"
+  solution="Because you have no evidence any of the reliability work functions. Untested retries, alerting and heartbeats look exactly like working ones until the day they are needed — and alerting in particular fails silently by definition. Run the six drills, record the gaps, and fix them. A capstone that has never failed in front of you is a capstone you are hoping about."
+/>
+
+<Exercise
+  prompt="In the five-minute presentation, which minute matters most, and why?"
+  accept={["design decision", "1:30", "trade-off", "why"]}
+  hint="Which part cannot be faked?"
+  solution="The design decision with a real trade-off, at 1:30. Anyone can show a thing working; explaining why you chose to report rather than correct, and what the alternative would have cost, is the part that shows judgement — and judgement is what is actually being assessed. Everything else is evidence that you can build, which was never in doubt."
+/>
+
+<Terms items={[
+  { term: "Definition of done", meaning: "Chosen, built, reliable, governed, documented, measured, handed over." },
+  { term: "Real and small", meaning: "Something a person actually stops doing." },
+  { term: "The drill", meaning: "Six deliberate failures before you call it finished." },
+  { term: "Five minutes", meaning: "Problem, what it does, show it, one decision, reliability, numbers, owner." },
+  { term: "Eleven artefacts", meaning: "What twenty-six weeks leaves you holding." },
+]} />
+
+## The course in one line
+
+Find out what is actually true, prove it with evidence, write it down so somebody else can act on it, and build things that keep working when you are not watching.
+
+That is quality assurance, that is technical support, and that is automation. It was always the same job.
+
+## What next
+
+You have the three roles. The useful next steps are all outside this site: do the work, keep the artefacts, write down what you learn, and hand things over so you can go and build the next one.
+
+Come back to any week whenever you need it. The labs, the figures and the Meridian defects are all still here.

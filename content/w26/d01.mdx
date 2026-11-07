@@ -1,0 +1,146 @@
+The last week. Everything built in the previous twenty-five is worth a fraction of what it could be if nobody but you can run it.
+
+This week is handover, and it starts with documentation a stranger can follow.
+
+## Who you are writing for
+
+Not yourself. Not a colleague who sat next to you while you built it.
+
+**A competent person who has never seen this, reading it under pressure, at an hour they did not choose.** Possibly after you have left.
+
+Every decision about what to include follows from that reader.
+
+## Open with the summary
+
+The first paragraph answers: what is this, who is it for, what does it do, and what must the reader know before anything else.
+
+> **Daily settlement reconciliation.** Every working morning at 08:00 WAT this compares the previous day's payouts against our transaction records and posts a summary to `#finance`, raising an alert when they disagree. It reads only — it never corrects anything. If it has not posted by 08:30, something is wrong; see *When it breaks*. Owner: Peter.
+
+Four sentences. A reader who stops there still knows what it is, when to worry, and who to ask.
+
+<Callout kind="key">
+**Put the most important thing first, always.**
+
+People do not read documentation; they scan it for the thing they need. A document that builds carefully to its conclusion will have the conclusion missed.
+
+If someone reads only the first paragraph, what must they know? Put that there, and let the detail follow.
+</Callout>
+
+## The five sections
+
+**1. What it does.** In plain language, from the business's point of view rather than the system's. "Compares payouts against transactions and reports differences", not "queries two endpoints and diffs the result sets".
+
+**2. Where it lives.** The workflow name and link, the repository, the credential names, the tables it uses, the channels it posts to. Everything a reader must be able to find.
+
+**3. What breaks it.** The honest list, from experience. Provider outage, expired credential, rate limit, a schema change upstream, a public holiday with no payouts. Each with what it looks like when it happens.
+
+**4. How to fix it.** Tomorrow's lesson covers this properly. Here: the link to the runbook.
+
+**5. Who to call.** A named owner, a named deputy, and the escalation path. "The team" is not an answer.
+
+## Write what you were about to leave out
+
+The things that feel too obvious while you are inside the work, and are the entire difficulty for someone outside it:
+
+- Why it runs at 08:00 and not 07:00 — because the provider's batch lands at 07:40
+- Why it reports differences instead of correcting them — because an auto-fixer that picks the wrong side makes the drift worse
+- Why there is a two-kobo tolerance — because the provider rounds and we do not
+- Why the credential is read-only — deliberately, and it must stay that way
+- What the strange name means
+- Which bit you are least confident about
+
+That last one is the most generous thing you can write. *"The partial-settlement branch is the part I am least sure of; it has been exercised twice and both were straightforward."* It tells the next person where to look first, and it costs you nothing but the admission.
+
+## Say what it does not do
+
+Easily as important as what it does, and almost always missing:
+
+> **This does not:** correct discrepancies, chase the provider, handle currencies other than NGN, cover weekend settlements (there are none), or notify anyone outside `#finance`.
+
+Without it, someone will assume one of those is covered and plan around it. The absence is invisible until the day it matters.
+
+## Test the page by handing it over
+
+The only test that counts. Give it to somebody who has never seen the system and ask them to do something real — find the last run, tell you whether it succeeded, find the owner, say what would happen if the provider were down.
+
+Watch, and do not help. Every question they ask is a gap. Every pause is ambiguity.
+
+Then fix the document rather than answering the question, which is the discipline — answering is faster and teaches the document nothing.
+
+<Callout kind="job">
+A fifteen-minute handover test finds more than an hour of re-reading your own writing, because you cannot un-know what you know.
+
+It is also the cheapest way to discover that the thing you thought was obvious is the thing everybody gets stuck on.
+</Callout>
+
+## Keep it near the thing
+
+Documentation in a place nobody looks is documentation that does not exist.
+
+- In the repository, next to the code and the prompts
+- Linked from the workflow itself, in a note on the canvas
+- Linked from the alert, so the person reading at 03:00 has it in front of them
+- One page, not twelve — a sprawl nobody maintains is worse than a page that is slightly incomplete
+
+And **date it**, with the owner. An undated document of unknown provenance gets treated as unreliable, usually correctly.
+
+<Exercise
+  prompt="Name three things that feel too obvious to write down and are exactly what the next person needs."
+  accept={["why", "timing", "tolerance", "read-only", "unsure"]}
+  hint="The reasons behind the choices."
+  solution="Why it runs at the time it does; why it reports rather than corrects; why a tolerance or threshold has the value it has; why the credential is read-only; and which part you are least confident about. All of them are invisible from the configuration, all of them look obvious from inside the work, and each is a decision the next person would otherwise have to re-derive or accidentally undo."
+/>
+
+<Exercise
+  prompt="You hand your page to a colleague and they ask a question. What is the right response?"
+  accept={["fix the document", "edit", "not answer"]}
+  hint="Answering is the fast option."
+  solution="Fix the document, rather than answering. Their question is the finding — answering it is faster and teaches the page nothing, so the next reader hits exactly the same gap. Write the answer in, hand it back, and keep going."
+/>
+
+<Terms items={[
+  { term: "The reader", meaning: "Competent, new, under pressure, at 3am." },
+  { term: "Summary first", meaning: "People scan. Put the conclusion at the top." },
+  { term: "What it does not do", meaning: "Invisible until the day someone assumed it did." },
+  { term: "The handover test", meaning: "Hand it over, watch, fix the page not the question." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Who should documentation be written for?",
+    options: [
+      "Your future self",
+      "A competent person who has never seen it, reading under pressure",
+      "Your manager",
+      "The team who built it"
+    ],
+    answer: 1,
+    why: "Every decision about what to include follows from that reader, including the things that feel too obvious."
+  },
+  {
+    q: "Why include a 'what it does not do' section?",
+    options: [
+      "To manage expectations politely",
+      "Because an absence is invisible, and someone will plan around a capability that is not there",
+      "For completeness",
+      "It is not needed"
+    ],
+    answer: 1,
+    why: "Nobody discovers a missing capability until the day they needed it."
+  },
+  {
+    q: "A colleague reading your page asks a question. What do you do?",
+    options: [
+      "Answer it",
+      "Fix the document so the next reader does not have to ask",
+      "Note it for later",
+      "Explain in more detail verbally"
+    ],
+    answer: 1,
+    why: "The question is the test result. Answering it leaves the gap in place for everyone after them."
+  }
+]} />
+
+## Tomorrow
+
+Runbooks for when it breaks.

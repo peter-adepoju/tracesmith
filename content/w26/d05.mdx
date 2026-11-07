@@ -1,0 +1,160 @@
+The last skill, and the one most people get backwards: making yourself unnecessary to the thing you built.
+
+## The instinct is wrong
+
+Being the only person who understands something feels like security. It is the opposite.
+
+**You cannot be moved.** Not to the interesting project, not to the promotion, because you are load-bearing where you are.
+
+**You are interrupted constantly.** Every question comes to you, forever, including on holiday.
+
+**Your work cannot grow.** Nobody will let a critical process depend on one person who might leave, so it stays small or gets rebuilt by someone else.
+
+**It is fragile, and everyone knows it.** A system with one person who understands it is a risk on somebody's register, and risks get managed — sometimes by replacing them.
+
+<Callout kind="key">
+**Being replaceable on each thing is what makes you promotable across things.**
+
+The person who can hand over cleanly is the person who gets given the next project. The person who cannot is the person still running the last one in three years.
+
+This is not a moral point. It is how the incentives actually work, and it is worth understanding early.
+</Callout>
+
+## The walkthrough where they drive
+
+Not a demo. A session where **they** hold the keyboard and you sit beside them.
+
+Give them real tasks, in order:
+
+1. Find the workflow and open the last run
+2. Tell me whether it succeeded, and how you know
+3. Find yesterday's output
+4. Show me where the credential lives
+5. Here is an alert — what would you do first?
+6. Re-run it, safely. Tell me first why that is safe
+7. Make a small change, and tell me how you would check you had not broken anything
+
+Your job is to be quiet. Let them look, let them be stuck, let them find it.
+
+Every time you reach for the keyboard, you have found a documentation gap and then covered it up.
+
+## Write it down as you go
+
+Keep the page open during the session. When they ask something, **write the answer into the document rather than saying it.** Then let them read it.
+
+It feels slow and it is the entire point — the session is a test of the documentation, not of them, and answering out loud leaves the gap in place for the next person.
+
+By the end you have a page that has been proven against a real reader.
+
+## What ownership actually transfers
+
+Handing over is not showing someone how it works. It is transferring four things:
+
+**Responsibility.** They are the owner now. The alerts go to them, their name is in the documentation, and this is written down somewhere other than a conversation.
+
+**Authority.** They can change it without asking you. If every change still needs your approval, nothing was transferred.
+
+**Context.** Not only how it works, but why it is the way it is — the decisions, the constraints, the thing you were least sure about.
+
+**Access.** Credentials, repository, platform, channels, and the escalation path. Obvious, and it is the one most often half-done.
+
+A handover missing the second item is the common failure. People hand over operation and keep the right of veto, and three months later they are still the real owner and resent the interruptions.
+
+## Hand over the problems too
+
+Tell them what is wrong with it. All of it.
+
+> The partial-settlement branch has only been exercised twice. The tolerance is two kobo because the provider rounds, and I am not certain that is right in every case. There is no eval on the summary wording. The run log has never been cleaned up and will need archiving eventually.
+
+This feels like undermining your own work and it is the most valuable thing you can say. They will find these anyway — and finding them undisclosed teaches them that your handovers are not complete, which affects everything you give them afterwards.
+
+## Let them change it
+
+They will do things differently. Some will be worse, some better, and most simply different.
+
+Unless it is genuinely dangerous — removing an idempotency key, sending without a gate — **let them**. A system its owner cannot change is not owned by them, and the alternative is that they stop changing it at all, which is how a system becomes frozen and then obsolete.
+
+Say the boundary explicitly:
+
+> Change anything you like. Two things I would push back on: the gate before any refund, and the idempotency key on the payout call. Both are there because of specific incidents and I will explain either one if you want to change them anyway.
+
+That names what matters, explains that it is reasoned rather than personal, and leaves them genuinely free with everything else.
+
+## Confirm it transferred
+
+A week or two later, check:
+
+- Did the alerts go to them, and did they act on them?
+- Did they make a change without asking you?
+- Did something break, and did they handle it?
+- Are they still coming to you with questions the page should answer?
+
+That last one is the signal. Persistent questions mean the documentation is still incomplete — fix the page, not the person.
+
+<Callout kind="job">
+In an interview, "I built it and then handed it over, and it has run for six months without me" is a much stronger sentence than "I built it".
+
+The first describes an engineer. The second describes a dependency.
+</Callout>
+
+<Exercise
+  prompt="During a walkthrough the person gets stuck and you reach for the keyboard. What have you just done?"
+  accept={["hidden", "covered", "gap", "missed"]}
+  hint="You found something and then lost it."
+  solution="Found a documentation gap and immediately covered it up. Their being stuck is the result you came for. Sit on your hands, let them look, and when they ask, write the answer into the page rather than saying it — then let them read it from there."
+/>
+
+<Exercise
+  prompt="Why is handing over operation while keeping approval rights not a handover?"
+  accept={["authority", "veto", "still owner", "cannot change"]}
+  hint="Four things transfer; which is missing?"
+  solution="Because authority did not transfer. If every change still needs your approval you remain the real owner, with all the interruptions and none of the clarity — and the nominal owner learns not to change anything, which freezes the system. Name the two or three things you would genuinely push back on, explain why, and leave everything else theirs."
+/>
+
+<Terms items={[
+  { term: "Replaceable to be promotable", meaning: "How the incentives actually work." },
+  { term: "They drive", meaning: "Your hands stay off the keyboard." },
+  { term: "Write, do not say", meaning: "Answering out loud leaves the gap for the next person." },
+  { term: "Four transfers", meaning: "Responsibility, authority, context, access." },
+  { term: "Hand over the problems", meaning: "They will find them anyway." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Why is being the only person who understands a system bad for you?",
+    options: [
+      "It is unfair",
+      "You cannot be moved to anything else, and you are interrupted forever",
+      "It is against policy",
+      "It is not bad"
+    ],
+    answer: 1,
+    why: "Load-bearing people do not get the next project, and a one-person dependency is a risk somebody will manage."
+  },
+  {
+    q: "During the walkthrough, who should be at the keyboard?",
+    options: [
+      "You, demonstrating",
+      "Them, doing real tasks while you stay quiet",
+      "Both in turn",
+      "Neither"
+    ],
+    answer: 1,
+    why: "A demo tests your explanation; them driving tests your documentation, which is what has to survive you."
+  },
+  {
+    q: "What is most often missing from a handover?",
+    options: [
+      "Access",
+      "Authority — they operate it but still need your approval to change it",
+      "Documentation",
+      "Credentials"
+    ],
+    answer: 1,
+    why: "Without it you remain the real owner, and the nominal owner learns not to change anything."
+  }
+]} />
+
+## Tomorrow
+
+The capstone.

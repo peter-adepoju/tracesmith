@@ -1,0 +1,140 @@
+Agents are the part everyone wants to build first and should build last — after workflows, after reliability, after you can measure a model step. That order is not gatekeeping. It is that an agent is a workflow you cannot see in advance, and debugging one without those foundations is miserable.
+
+<Video id="ai-agents" />
+
+## The definitions
+
+A **workflow** has steps decided in advance. The same path every time, whatever the data. A model may well be one of those steps — classifying, extracting, drafting — and it is still a workflow.
+
+An **agent** decides its own steps. Given a goal and a set of tools, it chooses what to do next based on what it has found so far. The path is different every run because the findings are different.
+
+## The test
+
+**Can the steps be written in advance?**
+
+If yes, it is a workflow. If genuinely no — because what to check next depends on what the last check returned — it is an agent.
+
+<AgentTest />
+
+Six tasks. Four are workflows, and that ratio is roughly right for real work.
+
+<Callout kind="key">
+**A workflow with a model step in it is still a workflow.**
+
+This is the distinction people lose. "We built an AI agent that classifies tickets" is a workflow with one model call: read, classify, assign — three steps, known in advance, identical every time.
+
+Calling it an agent is not just imprecise. It invites a design with loops, tool choice and non-determinism that the task does not need and cannot benefit from.
+</Callout>
+
+## What calling everything an agent costs
+
+**Expectations.** "Agent" suggests something that handles novelty and recovers from surprises. When a classifier labelled an agent meets something unexpected, people are surprised it did not cope — and they were told it would.
+
+**Design.** Build it as an agent and you get loops, tool selection and non-determinism in a problem that was deterministic. More to go wrong, for nothing.
+
+**Cost.** An agent makes several model calls per run instead of one, and the number varies.
+
+**Debuggability.** A workflow failure is at a known step. An agent failure is somewhere in a path that only happened once, and you may not be able to reproduce it.
+
+**Trust.** Governance teams hear "agent" and reach for restrictions. Describing a three-step workflow as an agent can get it blocked for reasons that do not apply to it.
+
+## When an agent is right
+
+Three conditions, all of them:
+
+1. **The path genuinely varies.** What to do next depends on findings.
+2. **The task is bounded.** There is a clear goal and a clear point at which it is finished.
+3. **A mistake is recoverable.** It can be caught and undone, or a human approves before anything irreversible.
+
+Fit all three and an agent earns its place. Fit two and you want a workflow with a model step. Fit one and you want code.
+
+The honest examples are investigative: diagnosing why a specific payment failed, researching a prospective merchant, working out which of six systems a discrepancy came from. Each is a question where the second step depends on the first answer — the week 17 diagnosis work, which is exactly why Phase 4 came before this.
+
+## The shape of an agent
+
+```
+Goal:   "Find out why payment PAY-8841 failed."
+Tools:  look_up_payment, check_webhook_deliveries,
+        search_logs, check_provider_status
+Bounds: at most 8 steps, 60 seconds, read-only
+Stop:   a cause is identified, or the budget is spent
+
+Loop:
+  Model decides which tool to call, with what arguments
+  Tool runs, returns a result
+  Model reads it and decides the next step
+  Until a stop condition is met
+
+Output: a summary of what it found, for a human
+```
+
+The rest of this week is the three lines in the middle: the **tools**, the **bounds**, and the **human** at the end.
+
+<Callout kind="watch">
+**Build the workflow version first, even when an agent is right.**
+
+The workflow forces you to name the tools, the data they return and the shape of the answer. Those are the hardest parts of an agent and they are much easier to get right when the sequence is fixed.
+
+Then relax the sequence. An agent built on tools that already work is a manageable project; an agent built from nothing is a month of not knowing which layer is wrong.
+</Callout>
+
+<Exercise
+  prompt="A team describes their ticket classifier as an AI agent. Name two concrete costs of that description."
+  accept={["expectation", "governance", "design", "blocked", "debug"]}
+  hint="One is about people, one is about the build."
+  solution="Expectations: 'agent' promises handling novelty and recovering from surprises, so people are surprised when a classifier does not. And governance: review teams hear 'agent' and apply restrictions designed for autonomous systems, which can block a three-step workflow for reasons that do not apply. There is also the design cost — loops and tool choice in a deterministic problem."
+/>
+
+<Exercise
+  prompt="Name the three conditions that must all hold before an agent is the right shape."
+  accept={["path varies", "bounded", "recoverable"]}
+  hint="Path, scope, consequences."
+  solution="The path genuinely varies because each step depends on the last finding; the task is bounded with a clear goal and a clear finishing point; and a mistake is recoverable, either because it can be undone or because a human approves anything irreversible. Two out of three means a workflow with a model step."
+/>
+
+<Terms items={[
+  { term: "The test", meaning: "Can the steps be written in advance?" },
+  { term: "Workflow with a model", meaning: "Still a workflow. Most things are this." },
+  { term: "Agent", meaning: "Chooses its own next step from what it found." },
+  { term: "Build the workflow first", meaning: "The tools are the hard part. Get them right while the order is fixed." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "A workflow reads a ticket, classifies it with a model, and assigns a queue. What is it?",
+    options: [
+      "An agent",
+      "A workflow with a model step",
+      "Neither",
+      "Both"
+    ],
+    answer: 1,
+    why: "Three steps, known in advance, identical every run. A model being involved does not change the shape."
+  },
+  {
+    q: "Which task genuinely suits an agent?",
+    options: [
+      "Generating monthly invoices",
+      "Investigating why one specific payment failed",
+      "Chasing merchants for documents",
+      "Reconciling settlements daily"
+    ],
+    answer: 1,
+    why: "Each finding changes the next question, so the sequence cannot be written in advance."
+  },
+  {
+    q: "Why build the workflow version first, even when an agent is right?",
+    options: [
+      "It is cheaper",
+      "It forces you to get the tools and their outputs right while the sequence is still fixed",
+      "It is required",
+      "It is faster to run"
+    ],
+    answer: 1,
+    why: "The tools are the hard part, and debugging them inside a varying path is far worse than debugging them in order."
+  }
+]} />
+
+## Tomorrow
+
+Tools, and giving an agent hands that cannot do damage.

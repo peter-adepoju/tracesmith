@@ -133,6 +133,30 @@ import w22d03 from "./w22/d03.mdx";
 import w22d04 from "./w22/d04.mdx";
 import w22d05 from "./w22/d05.mdx";
 import w22d06 from "./w22/d06.mdx";
+import w23d01 from "./w23/d01.mdx";
+import w23d02 from "./w23/d02.mdx";
+import w23d03 from "./w23/d03.mdx";
+import w23d04 from "./w23/d04.mdx";
+import w23d05 from "./w23/d05.mdx";
+import w23d06 from "./w23/d06.mdx";
+import w24d01 from "./w24/d01.mdx";
+import w24d02 from "./w24/d02.mdx";
+import w24d03 from "./w24/d03.mdx";
+import w24d04 from "./w24/d04.mdx";
+import w24d05 from "./w24/d05.mdx";
+import w24d06 from "./w24/d06.mdx";
+import w25d01 from "./w25/d01.mdx";
+import w25d02 from "./w25/d02.mdx";
+import w25d03 from "./w25/d03.mdx";
+import w25d04 from "./w25/d04.mdx";
+import w25d05 from "./w25/d05.mdx";
+import w25d06 from "./w25/d06.mdx";
+import w26d01 from "./w26/d01.mdx";
+import w26d02 from "./w26/d02.mdx";
+import w26d03 from "./w26/d03.mdx";
+import w26d04 from "./w26/d04.mdx";
+import w26d05 from "./w26/d05.mdx";
+import w26d06 from "./w26/d06.mdx";
 
 export const LESSONS: Record<string, ComponentType> = {
   w01d01,
@@ -267,6 +291,30 @@ export const LESSONS: Record<string, ComponentType> = {
   w22d04,
   w22d05,
   w22d06,
+  w23d01,
+  w23d02,
+  w23d03,
+  w23d04,
+  w23d05,
+  w23d06,
+  w24d01,
+  w24d02,
+  w24d03,
+  w24d04,
+  w24d05,
+  w24d06,
+  w25d01,
+  w25d02,
+  w25d03,
+  w25d04,
+  w25d05,
+  w25d06,
+  w26d01,
+  w26d02,
+  w26d03,
+  w26d04,
+  w26d05,
+  w26d06,
 };
 
 export function hasLesson(key: string): boolean {

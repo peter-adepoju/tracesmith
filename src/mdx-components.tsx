@@ -7,6 +7,7 @@ import { Terms } from "@/components/Terms";
 import { Video } from "@/components/Video";
 import { AccessibleName } from "@/components/interactive/AccessibleName";
 import { AccessMatrix } from "@/components/interactive/AccessMatrix";
+import { AgentTest } from "@/components/interactive/AgentTest";
 import { AssertionLab } from "@/components/interactive/AssertionLab";
 import { AutomationScorer } from "@/components/interactive/AutomationScorer";
 import { BoxModel } from "@/components/interactive/BoxModel";
@@ -14,6 +15,7 @@ import { BugReportGrader } from "@/components/interactive/BugReportGrader";
 import { ConsoleLab } from "@/components/interactive/ConsoleLab";
 import { CurlReader } from "@/components/interactive/CurlReader";
 import { EndpointBuilder } from "@/components/interactive/EndpointBuilder";
+import { EvalRunner } from "@/components/interactive/EvalRunner";
 import { IdorProbe } from "@/components/interactive/IdorProbe";
 import { JsonExplorer } from "@/components/interactive/JsonExplorer";
 import { KeyboardPass } from "@/components/interactive/KeyboardPass";
@@ -54,6 +56,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
     AccessibleName,
     AccessMatrix,
+    AgentTest,
     AssertionLab,
     AutomationScorer,
     BoxModel,
@@ -62,6 +65,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     ConsoleLab,
     CurlReader,
     EndpointBuilder,
+    EvalRunner,
     Exercise,
     ExposureScan,
     FlakyRunner,

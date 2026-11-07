@@ -1,0 +1,175 @@
+A workflow that exists only inside a platform's interface has no history, no review, no rollback and no backup. The repository fixes all four at once.
+
+## Why the repo beats the platform
+
+**History.** `git log` tells you what changed, when and why. A platform tells you the workflow was updated on Tuesday.
+
+**Review.** A change someone else reads before it runs. Platforms generally let anyone with access edit production directly.
+
+**Rollback.** One command to the last working version, rather than reconstructing it from memory.
+
+**Backup.** A platform account lost, an environment deleted, a subscription lapsed — the repo still has everything.
+
+**Portability.** Moving tools is painful. Moving tools with no record of what your workflows did is a rebuild.
+
+<Callout kind="key">
+**The repository is the source of truth. The platform is where a copy of it runs.**
+
+Week 20 day 4's rule applied to your own work: one system owns each fact, and everything else holds a copy.
+
+The moment both the repo and the platform can be edited independently, they will disagree, and nobody will be able to say which is right.
+</Callout>
+
+## What goes in
+
+```
+automations/
+  daily-reconciliation/
+    workflow.json          exported from the platform
+    README.md              what it does, where it lives, who owns it
+    RUNBOOK.md             failure modes and recovery
+    prompts/
+      summarise.v3.md
+      summarise.evals.json
+      summarise.baseline.md
+    schema/
+      runs.sql             the tables it uses
+    CHANGELOG.md
+```
+
+Everything except the secrets. The workflow export, the prompts, the eval cases and their baseline, the table definitions, the documentation and the runbook.
+
+<Callout kind="watch">
+**Check the export before committing it.**
+
+A workflow JSON can contain a typed-in API key, a customer's email in pinned test data, or an internal hostname.
+
+Read it. Every time. A secret committed once is compromised permanently — week 25 day 3 — and this is the commonest way it happens, because nobody reads a 900-line JSON file before committing it.
+
+A pre-commit hook scanning for `sk_live`, `Bearer `, `password` and `api_key` is twenty minutes of work and catches most of it.
+</Callout>
+
+## Keeping them in step
+
+The real difficulty: the platform is where people edit, and the repo is where truth is supposed to live.
+
+Three approaches, worst to best:
+
+**1. Export by hand after changing.** Relies on discipline and fails within a month.
+
+**2. Export on a schedule.** A workflow that exports every workflow nightly and commits any differences. It does not prevent drift; it makes drift **visible**, which is most of the value — a commit appearing that nobody made is a change nobody reviewed.
+
+**3. Deploy from the repo.** The repo is edited, reviewed and pushed to the platform by a pipeline. Production is read-only to humans. The right answer, and more setup than most small teams will do.
+
+Approach 2 is the realistic recommendation. Build the nightly exporter; it is an hour, and it converts an invisible problem into a visible one.
+
+## Commit messages that explain
+
+A change to a prompt or a threshold needs a *why*, because the *what* is already in the diff.
+
+```
+Weak:    Updated workflow
+         Fixed bug
+         prompt v3
+
+Strong:  Reconciliation: widen tolerance to 2 kobo
+
+         The provider rounds settlement amounts to the nearest
+         kobo and we do not, so exact matching produced three
+         false discrepancies a week. Two kobo covers observed
+         rounding with room; anything larger would hide a real
+         single-transaction error.
+
+         Evals re-run: 23/25, unchanged.
+```
+
+In a year that message is the only record of why the number is 2 and not 5 — and without it, somebody will "tidy" it.
+
+## Mirroring a live system you inherited
+
+You will usually arrive somewhere with workflows already running and nothing in version control. A good first-month project:
+
+1. **List everything** that is active. There will be more than anyone expects.
+2. **Export each one** and read it for secrets before committing.
+3. **Commit as-is**, with no changes. The first commit is a snapshot, not an improvement.
+4. **Write a one-line README** per workflow: what it does, who owns it, whether anyone still needs it.
+5. **Flag the orphans.** Workflows with no owner, or that nobody can explain. There are always several.
+6. **Then** start improving, with a baseline to compare against.
+
+Step 5 is where the value is. "These four workflows are active, have no owner, and nobody I asked could say what they are for" is a genuinely useful finding, and it is often the first time anyone has looked.
+
+## Tag what is running
+
+So the repo can answer *what is in production right now?*
+
+```bash
+git tag -a reconciliation-v4 -m "Deployed 10 Nov: 2 kobo tolerance"
+```
+
+```bash
+git push origin reconciliation-v4
+```
+
+Then an incident at 3am can be checked against the exact version that was running, rather than whatever is on the main branch today.
+
+<Exercise
+  prompt="Your team edits workflows in the platform and exports to the repo nightly. This does not prevent drift. What does it give you?"
+  accept={["visible", "see", "review", "notice"]}
+  hint="Drift you can see versus drift you cannot."
+  solution="Visibility. A commit appearing that nobody made is a change nobody reviewed, and it shows up as a diff with a date — so you can see what changed, ask who did it, and roll back. It converts an invisible problem into a visible one, which is most of the value and an hour of work."
+/>
+
+<Exercise
+  prompt="Why read a workflow JSON before committing it?"
+  accept={["secret", "key", "customer", "pinned", "email"]}
+  hint="What ends up inside an export?"
+  solution="Because it can contain a typed-in API key, a customer's email in pinned test data, or internal hostnames — and a secret committed once is in the history permanently, in every clone and fork. Read it every time, and add a pre-commit hook scanning for common key patterns, since nobody reads 900 lines of JSON carefully."
+/>
+
+<Terms items={[
+  { term: "Repo as source of truth", meaning: "The platform runs a copy of it." },
+  { term: "Nightly export", meaning: "Does not prevent drift; makes it visible." },
+  { term: "Deploy from the repo", meaning: "The right answer. Production read-only to humans." },
+  { term: "Commit the why", meaning: "The what is in the diff. The why is not." },
+  { term: "Tag what is deployed", meaning: "So 3am can check the version that was running." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What does a nightly export give you that manual export does not?",
+    options: [
+      "Prevention of drift",
+      "Visibility — an unreviewed change appears as a dated diff",
+      "Faster deploys",
+      "Better security"
+    ],
+    answer: 1,
+    why: "Discipline-based export fails within a month; the scheduled one at least shows you what changed."
+  },
+  {
+    q: "What must never go into the repository?",
+    options: [
+      "Prompts",
+      "Eval cases",
+      "Secrets, including ones typed into a workflow export",
+      "Table definitions"
+    ],
+    answer: 2,
+    why: "A secret committed once is in every clone and fork permanently, and removing the line does nothing."
+  },
+  {
+    q: "What is the most valuable finding when mirroring an inherited system?",
+    options: [
+      "The total number of workflows",
+      "Active workflows with no owner that nobody can explain",
+      "Which run most often",
+      "The oldest one"
+    ],
+    answer: 1,
+    why: "There are always several, and it is usually the first time anyone has looked."
+  }
+]} />
+
+## Tomorrow
+
+Measuring whether it actually helped.

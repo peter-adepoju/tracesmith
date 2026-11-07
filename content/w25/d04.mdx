@@ -1,0 +1,186 @@
+Connecting a new service takes four minutes and can commit your company to something nobody agreed to. The questions below take twenty minutes and are the difference between an automation that gets approved and one that gets switched off by legal.
+
+## Ask before you connect
+
+**1. What data will it see?** Specifically. Not "customer data" — *names, email addresses, transaction amounts and references, for roughly 4,000 merchants.*
+
+**2. Where does it go?** Which country, which cloud region. For personal data this is a legal question, not a technical one.
+
+**3. How long is it kept?** Thirty days? Indefinitely? Can you request deletion, and does the provider honour it in practice?
+
+**4. Is it used for training?** The question that gets automations switched off retroactively. Many providers offer a business tier where it is not; the default tier often is.
+
+**5. Who at the provider can see it?** Support staff? Is access logged?
+
+**6. What happens if they are breached?** Will you be told, how fast, and what is your obligation to your own customers?
+
+**7. Can you get your data out, and delete it?** Before you commit, not after.
+
+**8. Who at your company approved this?** Named person. Today, in writing.
+
+<Callout kind="key">
+**Connecting a tool is a data-sharing decision, not a technical one.**
+
+Clicking Authorise on an OAuth screen can hand a third party ongoing access to a mailbox, a drive or a customer database — a decision with legal weight, made by whoever happened to be building that afternoon.
+
+The person building is very often not the person entitled to make it. Ask first; the four minutes saved are not worth the conversation afterwards.
+</Callout>
+
+## Training and retention
+
+The two risks worth understanding properly.
+
+**Training.** If a provider trains on your inputs, your customers' data becomes part of a model you do not control, and it cannot be withdrawn. Under the NDPA in Nigeria, and the GDPR for any European customers, that is processing your customers almost certainly did not consent to.
+
+Check the tier you are actually on. Consumer and free tiers frequently train by default; business and enterprise tiers frequently do not. The difference is a setting and a contract, and the answer must come from the terms rather than from a blog post.
+
+**Retention.** Even without training, prompts and responses are often retained for a period — commonly thirty days, for abuse monitoring. That means your customer data sits on a third party's systems for thirty days, readable by their staff under some conditions, and in scope of any breach they have.
+
+Neither is necessarily unacceptable. Both have to be **known, written down and approved** rather than discovered.
+
+## Reduce what you send
+
+The best protection is sending less.
+
+**Redact before sending.** A classifier does not need the customer's name, email or card details to decide a message is about billing. Strip them first.
+
+```js
+const safe = text
+  .replace(/\b[\w.+-]+@[\w-]+\.[\w.]+\b/g, "[email]")
+  .replace(/\b(?:\d[ -]?){13,19}\b/g, "[card]")
+  .replace(/\+?234[\d\s-]{7,}/g, "[phone]");
+```
+
+**Send ids, not people.** `cus_01` instead of a name, everywhere it will do.
+
+**Send the field, not the record.** If the model needs the message body, do not send the whole customer object around it.
+
+**Do not send what you do not need.** The commonest failure: passing an entire API response into a prompt because it was already in the item.
+
+Each of those also reduces tokens, so the privacy win and the cost win point the same way.
+
+## Self-hosted and local
+
+Sometimes the right answer. A smaller model running on your own infrastructure sends nothing outside, which removes the whole question.
+
+The trade: less capable, more to operate, and a real cost in time. For a high-volume classification over sensitive data it can be clearly worth it. For drafting replies, usually not.
+
+Worth knowing it exists, and worth proposing when data protection is the blocker rather than capability.
+
+## The one-page request
+
+What you hand to whoever approves these.
+
+```
+REQUEST — connect [provider] for ticket classification
+
+WHAT IT DOES
+  Classifies incoming support messages into four queues so they
+  reach the right team. One model call per ticket, about 400 a day.
+
+DATA SENT
+  The message body only, with email addresses, phone numbers and
+  anything card-shaped redacted before sending. No names, no
+  account identifiers, no transaction data.
+  Roughly 400 messages a day.
+
+WHERE IT GOES
+  [provider], [region]. Transit encrypted.
+
+RETENTION
+  30 days per their business terms, then deleted. Not used for
+  training on the business tier — clause [x] of their terms,
+  attached.
+
+ALTERNATIVES CONSIDERED
+  Keyword rules: tried, about 68% accurate, not good enough.
+  Self-hosted small model: viable, roughly 3 weeks of setup and
+  ongoing operation. Recommend revisiting if volume grows.
+
+RISK
+  If breached, up to 30 days of support message bodies could be
+  exposed. These contain customer complaints and may contain
+  personal data the customer typed themselves despite redaction.
+  Impact: moderate. No credentials or payment data is sent.
+
+CONTROLS
+  Redaction before sending, verified by 20 test cases.
+  Business tier contracted, training disabled.
+  Credential in the store, read-only, rotated quarterly.
+  Monthly review of a sample of what was actually sent.
+
+APPROVAL NEEDED FROM
+  [name], data protection owner
+
+OWNER
+  Peter. Review quarterly.
+```
+
+The sections that matter to a reviewer are **DATA SENT** (specific), **RISK** (honest, including the residual risk after your controls), and **ALTERNATIVES** (which shows this was a decision rather than a default).
+
+<Callout kind="job">
+Most people connect the tool and hope nobody asks. Arriving with this page is a different conversation entirely — it is usually approved on the spot, because you have already done the work the reviewer was going to have to do.
+
+It also protects you. An approval you obtained in writing is a decision the company made, not one you made alone on a Tuesday.
+</Callout>
+
+<Exercise
+  prompt="Your classifier needs the message body. Name three things you can strip before sending, and the second benefit of doing so."
+  accept={["email", "phone", "card", "name", "tokens"]}
+  hint="Privacy, and one other thing."
+  solution="Email addresses, phone numbers, anything card-shaped, and customer names — none of which a classifier needs to decide a message is about billing. The second benefit is cost: less text is fewer tokens, so the privacy win and the cost win point the same way, which makes redaction an easy argument."
+/>
+
+<Exercise
+  prompt="Why is 'is it used for training?' the question that gets automations switched off retroactively?"
+  accept={["cannot withdraw", "consent", "ndpa", "gdpr", "permanent"]}
+  hint="Can it be undone?"
+  solution="Because once customer data is in a trained model it cannot be withdrawn — unlike retention, which expires. That makes it processing customers did not consent to, under the NDPA or the GDPR, with no remedy available. It is usually discovered later by someone in legal, and the only available response is to stop, which takes the automation with it."
+/>
+
+<Terms items={[
+  { term: "The eight questions", meaning: "Ask before connecting, not after." },
+  { term: "Training risk", meaning: "Cannot be withdrawn. Retention expires; training does not." },
+  { term: "Redact before sending", meaning: "Privacy and token cost, same direction." },
+  { term: "The one-page request", meaning: "Data, destination, retention, alternatives, risk, controls." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which question most often causes an automation to be switched off later?",
+    options: [
+      "What does it cost?",
+      "Is the data used for training?",
+      "How fast is it?",
+      "Who owns it?"
+    ],
+    answer: 1,
+    why: "Training cannot be undone, so the only available remedy once discovered is to stop using the tool."
+  },
+  {
+    q: "What is the best protection when sending data to a third party?",
+    options: [
+      "Encryption in transit",
+      "Sending less — redact, send ids, send only the field needed",
+      "A long contract",
+      "A different region"
+    ],
+    answer: 1,
+    why: "Encryption protects the journey; the data still arrives. Reducing what you send reduces the exposure itself."
+  },
+  {
+    q: "Who should approve connecting a new tool that sees customer data?",
+    options: [
+      "The person building it",
+      "A named data protection owner, in writing",
+      "The team lead verbally",
+      "Nobody, if it is low risk"
+    ],
+    answer: 1,
+    why: "It is a data-sharing decision with legal weight, and written approval protects you as well as the company."
+  }
+]} />
+
+## Tomorrow
+
+Evals: proving a prompt still works after someone changes it.

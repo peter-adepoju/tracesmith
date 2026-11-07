@@ -1,0 +1,136 @@
+This week is the difference between an automation a business will actually run and a clever demo nobody is allowed to turn on.
+
+It starts with the rule that outranks every other rule in this course.
+
+## Never invent data
+
+Not in a test. Not in a demo. Not as a placeholder. Not to make a screenshot look complete.
+
+When a value is missing, the system says **missing**. When a lookup fails, it says **failed**. When a model cannot determine something, it says **unknown**.
+
+<Callout kind="key">
+**A plausible fabrication is worse than a visible gap.**
+
+A gap is obvious and gets fixed. A plausible invention is indistinguishable from a real value — it gets believed, acted on, copied into a report, and quoted back to you in a meeting.
+
+The damage is not the wrong number. It is that nobody knows which other numbers to doubt. One fabricated value found in a report makes every value in it suspect, and that is a much larger loss than the original mistake.
+</Callout>
+
+## Fabricated test data is still a defect
+
+This is the one people push back on.
+
+A demo with invented transactions looks finished. Then it is shown to a stakeholder who asks about one of the figures. Or it reaches a screenshot in a document. Or the test data never gets replaced, and three months later a report is quietly running on it.
+
+The rules:
+
+- **Invented data must be obviously invented.** `ada@example.com`, `Test Merchant Ltd`, `NGN 1.00`. Never a plausible Nigerian company name with a plausible turnover.
+- **Label it in the output**, not only in the code. `[TEST DATA]` in the header of the demo, where the screenshot will catch it.
+- **Never mix** real and invented records in one view. A table with nine real rows and one invented one is a trap for the next reader.
+- **An empty state is a fine demo.** "No transactions in this period" shows the system works. It is a better demo than one with pleasant fictional numbers, because it is honest about what you have built.
+
+## Flag missing as missing
+
+In the output, visibly:
+
+| Bad | Good |
+| --- | --- |
+| `Total: NGN 0.00` when the lookup failed | `Total: unavailable — could not reach the payments API` |
+| `Status: active` as a default | `Status: unknown` |
+| An empty cell | `not provided` |
+| Silently skipping a record | `3 of 40 could not be processed — listed below` |
+
+The `NGN 0.00` row is the dangerous one. A failure rendered as a zero is a fabricated fact, and zero is a perfectly plausible total.
+
+This is week 20's missing-record problem seen from the output end: **absence must be visible**, or it is indistinguishable from a real value of nothing.
+
+## Spotting a guess presented as a fact
+
+Three questions, of any system output:
+
+**Where did this come from?** Can you trace each number to a source — a record, an API response, a calculation over named inputs?
+
+**What happens when it is not available?** Does the system show a gap, or does it have a default? A default is a guess with a confident face.
+
+**Is anything here derived?** A derived number — an estimate, an average, a projection — should be labelled as derived, and never sit in the same column as measured ones with no distinction.
+
+In a model-based step this is sharper still. A model asked for a transaction reference it has not been given will produce something shaped exactly like one. Week 23's defences — give it the facts, name an explicit unknown value, validate the output against a known set — exist for this.
+
+## Say it out loud
+
+The habit worth building, because it is uncomfortable the first time:
+
+> I do not have that number. I can get it by Thursday.
+
+> Three of the forty records could not be processed. Here they are.
+
+> The report is complete except for 6 November, where the provider's data is missing. I have not filled it in.
+
+Each of those is a small admission that buys something large: everything else you say is believable.
+
+<Callout kind="job">
+In a payments context this is not only professional, it is regulatory. A figure in a report that nobody can trace to a source is a finding in an audit, and "the system defaulted it" is not an answer anyone wants to give.
+
+Being the person who refuses to fill a gap with something plausible is a reputation worth having early.
+</Callout>
+
+<Exercise
+  prompt="A lookup fails and your workflow renders the total as NGN 0.00. Why is that worse than an error?"
+  accept={["plausible", "zero", "believed", "fabricat"]}
+  hint="Is zero a believable total?"
+  solution="Because zero is a perfectly plausible total, so the failure is invisible — the number gets read, believed and acted on, and nobody has any reason to check it. An error is loud and gets fixed. Render it as 'unavailable — could not reach the payments API' so the gap is visible as a gap."
+/>
+
+<Exercise
+  prompt="Why is a demo with invented but realistic transaction data a defect rather than a shortcut?"
+  accept={["screenshot", "believed", "never replaced", "indistinguish"]}
+  hint="Where does the data end up?"
+  solution="Because realistic invented data is indistinguishable from real data once it leaves your screen — into a screenshot, a document, a stakeholder's memory of what the numbers were — and because test data that looks real very often never gets replaced. Use obviously fake values, label them in the output, and remember that an honest empty state is a perfectly good demo."
+/>
+
+<Terms items={[
+  { term: "Never invent data", meaning: "The rule that outranks the others." },
+  { term: "Plausible fabrication", meaning: "Worse than a gap, because it is believed." },
+  { term: "Failure as zero", meaning: "A fabricated fact wearing a believable number." },
+  { term: "Obviously invented", meaning: "example.com and NGN 1.00, labelled in the output." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Why is a plausible fabrication worse than a visible gap?",
+    options: [
+      "It takes longer to fix",
+      "It is believed and acted on, and it makes every other figure suspect once found",
+      "It is harder to produce",
+      "It is not worse"
+    ],
+    answer: 1,
+    why: "The loss is not the wrong number but the confidence in every number beside it."
+  },
+  {
+    q: "A record could not be processed. What should the output show?",
+    options: [
+      "Nothing — skip it",
+      "A default value",
+      "An explicit line: 3 of 40 could not be processed, listed",
+      "Zero"
+    ],
+    answer: 2,
+    why: "Silent skipping is the missing-record problem from the output end: absence that looks like nothing happened."
+  },
+  {
+    q: "What makes acceptable demo data?",
+    options: [
+      "Realistic names and amounts",
+      "Obviously invented values, labelled as test data in the output",
+      "Last month's real data",
+      "Anonymised real data"
+    ],
+    answer: 1,
+    why: "Realistic invented data survives into screenshots and reports, where nothing marks it as fictional."
+  }
+]} />
+
+## Tomorrow
+
+Audit trails: reconstructing a decision months later.

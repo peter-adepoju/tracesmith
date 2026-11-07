@@ -1,0 +1,196 @@
+"It is working well" is not a result. It is a feeling, and it is the feeling of the person who built it.
+
+## Pick the metric before you build
+
+Before anything, decide: **what number should move, and by how much?**
+
+> The daily reconciliation currently takes one person about 40 minutes each working morning and three discrepancies a month reach Finance uncaught. After this, I expect the time to drop to about 5 minutes of reviewing the summary, and uncaught discrepancies to go to zero.
+
+That sentence is worth an hour of building. It forces you to say what the problem actually is, it gives you something to measure against, and it means you cannot quietly redefine success later.
+
+<Callout kind="key">
+**A metric chosen afterwards is a metric chosen to be flattering.**
+
+Everybody does this unintentionally. You build something, look at the results, and pick the number that improved — and it is not dishonest, it is just how attention works.
+
+Decide first, in writing. Then you are measuring rather than arguing.
+</Callout>
+
+## Measure the before
+
+You cannot show an improvement against a baseline you never took.
+
+**Time.** Ask the person doing it, then watch them do it once. The two numbers will differ — people underestimate routine work and overestimate work they dislike.
+
+**Frequency.** How often does it happen? Count a real week rather than estimating.
+
+**Errors.** How many go wrong now? If nobody knows, that itself is a finding, and counting for two weeks before you build gives you both a baseline and an argument.
+
+**Wait time.** Week 20 day 3: usually larger than the work time and usually ignored. How long does a thing sit before anyone touches it?
+
+If the baseline does not exist, **spend a week measuring before you build**. It feels like a delay and it is the difference between "this helped" and "this helped, here is by how much".
+
+## Good and bad metrics
+
+| Weak | Strong |
+| --- | --- |
+| It saves time | 40 minutes a day, 176 hours a year |
+| Fewer errors | Uncaught discrepancies: 3 a month → 0 in 3 months |
+| People like it | The summary is read within 15 minutes on 19 of 20 mornings |
+| It is faster | Merchants chased within 4 hours instead of 2.6 days |
+| Accuracy is good | 92% on 25 held-out cases, against 68% for the rules it replaced |
+
+Strong metrics have a number, a unit and a comparison. The last one is what people leave out: 92% means nothing without the 68%.
+
+## Measure the after honestly
+
+**Wait long enough.** A week is not a measurement. A month covers a month-end, a public holiday, a quiet period and a busy one.
+
+**Count the new costs.** An automation is not free:
+
+- Time spent reviewing its output
+- Time spent fixing it when it breaks
+- The model and platform costs
+- Time spent explaining it to people
+
+A workflow saving 40 minutes a day and costing 2 hours a week in maintenance is saving far less than it appears. **Report both sides.**
+
+**Count the failures.** How many runs failed? How many produced a wrong result that a human caught? How many were not caught?
+
+## Resist gaming your own number
+
+You will want it to look good. The specific temptations:
+
+**Changing the definition.** "Time saved" quietly becoming "time saved on the days it worked".
+
+**Excluding the bad period.** The week it was broken was not representative — except that it is exactly as representative as the week it ran perfectly.
+
+**Counting the gross.** 40 minutes saved, without the 20 minutes now spent reviewing the summary.
+
+**Measuring the easy thing.** Number of runs, rather than whether the runs were correct. Volume is not value.
+
+**Comparing with a worse baseline than reality.** Against "if nobody did it at all" rather than against "what a person was actually doing".
+
+<Callout kind="watch">
+**Report the honest number, including when it is disappointing.**
+
+"I estimated 176 hours a year and it is closer to 90, because the review step takes longer than I expected" is a sentence that makes everything else you report believable.
+
+Inflated numbers are checked eventually, usually by someone who does not like the project. Being the person whose numbers survive scrutiny is worth far more than any individual result — and it is how your next proposal gets approved without an argument.
+</Callout>
+
+## Measure whether it is still helping
+
+A one-off measurement decays. Things change: volume grows, the process shifts, the upstream system changes, the automation drifts.
+
+Build the measurement in:
+
+```sql
+-- Monthly: did it run, did it work, how much did it handle?
+SELECT strftime('%Y-%m', started_at) AS month,
+       COUNT(*)                                        AS runs,
+       SUM(CASE WHEN status='success' THEN 1 ELSE 0 END) AS ok,
+       SUM(items_processed)                            AS items
+FROM runs
+WHERE workflow = 'daily-reconciliation'
+GROUP BY month ORDER BY month DESC;
+```
+
+Week 22's run log, answering the question this lesson asks. **The measurement is a feature of the automation, not a report you write once.**
+
+## Write it up
+
+```
+RESULT — daily settlement reconciliation, 3 months
+
+BEFORE    40 min/working day of one person's time (measured,
+          observed twice). 3 uncaught discrepancies a month.
+          Summary available ~09:30.
+
+AFTER     6 min/day reviewing the summary (measured over 60
+          working days). 0 uncaught discrepancies. Summary
+          posted at 08:05.
+
+NET       ~34 min/day saved = ~150 hours a year.
+          Less maintenance: ~1.5 hours a month = 18 hours a year.
+          Net ~132 hours a year.
+
+ALSO      Discrepancies now surface at 08:05 rather than 09:30,
+          which gives Finance an extra 85 minutes before the
+          provider's cut-off. Not in the original estimate and
+          arguably the larger win.
+
+COSTS     Platform: existing. Model: none, no model step.
+          Build: 14 hours against the 12 estimated.
+
+MISSES    Two runs failed in three months, both provider 503s,
+          both recovered by re-running. One produced a false
+          discrepancy from a rounding difference, fixed by
+          widening the tolerance to 2 kobo.
+
+STILL     The partial-settlement branch has been exercised twice.
+UNPROVEN  I would not call it proven yet.
+```
+
+The last two sections are what make the first three credible.
+
+<Exercise
+  prompt="Your automation saves 40 minutes a day and takes 2 hours a week to maintain. What is the honest net figure?"
+  accept={["net", "both", "subtract", "less"]}
+  hint="Report both sides."
+  solution="About 200 minutes a week saved against 120 spent, so roughly 80 minutes a week net — a fraction of the headline. Report both numbers, because the gross figure alone will be checked eventually by someone who does not like the project, and the honest version is what makes your next estimate believable."
+/>
+
+<Exercise
+  prompt="Name the most common way people unintentionally game their own metric."
+  accept={["gross", "exclude", "definition", "bad week"]}
+  hint="Which weeks get left out?"
+  solution="Excluding the period when it was broken as 'not representative' — when it is exactly as representative as the week it ran perfectly. Close behind: reporting the gross saving without the new review and maintenance time, and quietly changing the definition to 'time saved on the days it worked'."
+/>
+
+<Terms items={[
+  { term: "Pick the metric first", meaning: "Chosen afterwards means chosen to flatter." },
+  { term: "Measure the before", meaning: "Ask, then watch. The two numbers differ." },
+  { term: "Net, not gross", meaning: "Subtract review and maintenance time." },
+  { term: "Still unproven", meaning: "The section that makes the rest believable." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "When should you choose the metric?",
+    options: [
+      "After the first month",
+      "Before you build, in writing",
+      "When asked",
+      "At the end"
+    ],
+    answer: 1,
+    why: "A metric chosen afterwards is chosen to flatter, and nobody does that deliberately."
+  },
+  {
+    q: "What is missing from '40 minutes a day saved'?",
+    options: [
+      "The date",
+      "The new costs: review time, maintenance, platform and model spend",
+      "The owner",
+      "Nothing"
+    ],
+    answer: 1,
+    why: "The net figure is often a fraction of the gross, and reporting only the gross invites a correction from someone unfriendly."
+  },
+  {
+    q: "Why include a 'misses' or 'still unproven' section?",
+    options: [
+      "Honesty for its own sake",
+      "It is what makes the rest of the numbers believable",
+      "It is required",
+      "To lower expectations"
+    ],
+    answer: 1,
+    why: "Numbers that survive scrutiny are worth more than any single result, and they are how the next proposal gets approved."
+  }
+]} />
+
+## Tomorrow
+
+Teaching someone else to own it.

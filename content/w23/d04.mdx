@@ -1,0 +1,150 @@
+The most valuable thing an automation person can say in 2026 is often: **this step does not need a model.**
+
+It is also the least popular, which is part of why it is valuable.
+
+## Arithmetic dressed up as reasoning
+
+The pattern to watch for. A task that sounds like judgement and is actually a calculation:
+
+| Phrased as reasoning | Actually |
+| --- | --- |
+| "Work out whether this merchant is over their limit" | `volume > limit` |
+| "Decide if the settlement looks right" | `sum(items) === total` |
+| "Judge whether this is a large transaction" | `amount > threshold` |
+| "Determine if the document has expired" | `expiry < today` |
+| "Assess whether we have chased enough" | `chase_count >= 3` |
+| "Figure out which tier this customer is on" | A lookup table |
+
+Every one of those is a model call someone has built, and every one is slower, more expensive, non-deterministic and **less accurate** than one line of code.
+
+<Callout kind="key">
+**If you can write the rule, write the rule.**
+
+A model is for the cases where you genuinely cannot — where the input is unstructured, the variation is open-ended, and a human would have to read it and decide.
+
+`amount > 500000` is not one of those. It is a comparison, and a model doing comparisons will occasionally get one wrong in a way nothing flags.
+</Callout>
+
+## Replace a model step with code
+
+Ask three questions of any model step:
+
+**1. Could a rule do this?** If the decision rests on a field value, a threshold, a date comparison or a lookup — yes. Write the rule.
+
+**2. Could a rule do most of it?** Very often. Handle the clear 80% in code and send only the ambiguous remainder to the model. Cheaper, faster, and the model's error rate now applies to a fifth as many items.
+
+**3. Is the model's job only to parse?** If the input is already structured — JSON from an API — you do not need a model to read it. You need a field reference.
+
+That second question is the most useful one in this lesson. The hybrid shape:
+
+```
+If the message contains a transaction reference
+  AND mentions "refund"            → billing, no model call
+If the message is under 5 words
+  AND ends in "?"                  → needs a model
+Everything else                    → model
+```
+
+A few cheap rules at the front, and the model handles what is left.
+
+## The cost of an unnecessary model call
+
+**Money.** Small per call, and real at volume. 400 tickets a day is 12,000 calls a month.
+
+**Latency.** Hundreds of milliseconds to several seconds, against a sub-millisecond comparison. In a loop over 50 items that is the difference between instant and a minute.
+
+**Non-determinism.** You have made a deterministic step probabilistic. `amount > 500000` is right every time; a model asked the same question is right nearly every time, and you will not know which calls were the exception.
+
+**A dependency.** An external service that can be down, rate-limited, slow, deprecated or repriced. You added an outage mode to a comparison.
+
+**Debuggability.** When the rule is wrong you read the rule. When the model is wrong you read the prompt, the input, the output and the temperature, and then you argue about whether it is wrong.
+
+**Data exposure.** Every call sends your data to a third party. Week 25 day 4 is about what that means, and the cheapest way to reduce the question is to make fewer calls.
+
+<Callout kind="watch">
+**"We used AI for it" is not a feature.**
+
+It is a cost and a risk that has to be justified by something a rule could not do. When a model step cannot be defended that way, it is decoration — and it is decoration with a per-call price, a latency cost and a third-party dependency attached.
+
+Being the person who removes an unnecessary model call is worth more than being the person who added it.
+</Callout>
+
+## Where a model genuinely earns its place
+
+To be fair to the other side:
+
+- **Unstructured text in, structured data out** — pulling fields from an email nobody formatted
+- **Classification over open-ended language** — where the phrasings are endless and no keyword list keeps up
+- **Summarising** many things into one readable thing
+- **Rewriting** for tone or audience
+- **Matching** things that are the same but written differently — "Lagos Canvas Holdall" against "canvas holdall (Lagos)"
+- **Drafting** text for a human to approve
+
+Common thread: the input is **language**, the variation is **open-ended**, and a rule would need to be infinitely long.
+
+## The honest review
+
+Take any workflow with a model in it and ask of each call: *what would break if I replaced this with a rule?*
+
+Sometimes the answer is "most of it" — keep the model. Sometimes it is "nothing", and you have just made the workflow faster, cheaper, more reliable and easier to debug in one edit.
+
+<Exercise
+  prompt="A workflow asks a model: 'Given this transaction amount and this merchant limit, is the merchant over their limit?' What is wrong?"
+  accept={["comparison", "code", "rule", "arithmetic"]}
+  hint="What is actually being asked?"
+  solution="It is a comparison — amount > limit — dressed up as a question. Replacing it with one line of code makes it faster, free, deterministic and correct every time, and removes an external dependency from a step that is arithmetic. This is the commonest unnecessary model call there is."
+/>
+
+<Exercise
+  prompt="Describe the hybrid shape for a classifier where 80% of messages are easy."
+  accept={["rules first", "remainder", "cheap rules", "80"]}
+  hint="Two stages."
+  solution="Put a few cheap rules at the front for the clear cases — a message with a transaction reference and the word 'refund' is billing, no model needed — and send only what the rules cannot settle to the model. Four fifths of the volume becomes free, instant and deterministic, and the model's error rate now applies to a fifth as many items."
+/>
+
+<Terms items={[
+  { term: "Arithmetic in disguise", meaning: "A comparison phrased as a judgement." },
+  { term: "The hybrid shape", meaning: "Rules for the clear cases, model for the remainder." },
+  { term: "Added an outage mode", meaning: "What a model call does to a comparison." },
+  { term: "Decoration", meaning: "A model step no rule-based argument can defend." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which of these genuinely needs a model?",
+    options: [
+      "Deciding whether an amount exceeds a threshold",
+      "Checking whether a document has expired",
+      "Pulling the amount and reference out of a customer's free-text email",
+      "Looking up a customer's tier"
+    ],
+    answer: 2,
+    why: "Unstructured language in, structured data out — the variation is open-ended and no rule covers it."
+  },
+  {
+    q: "What does replacing a comparison with a model call add?",
+    options: [
+      "Accuracy",
+      "Cost, latency, non-determinism, a dependency and worse debuggability",
+      "Nothing",
+      "Flexibility"
+    ],
+    answer: 1,
+    why: "You made a step that was right every time into one that is right nearly every time, and added an outage mode."
+  },
+  {
+    q: "What is the hybrid approach?",
+    options: [
+      "Two models voting",
+      "Cheap rules for the clear majority, the model only for the remainder",
+      "A model with a fallback model",
+      "Asking the model twice"
+    ],
+    answer: 1,
+    why: "Most of the volume becomes free, instant and deterministic, and the error rate applies to far fewer items."
+  }
+]} />
+
+## Tomorrow
+
+Cost, latency and routing work to the cheapest model that can do it.

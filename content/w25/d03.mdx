@@ -1,0 +1,162 @@
+A credential is the one thing in your system that is dangerous purely by existing in the wrong place. Everything else needs to be used wrongly; a key in a log file is already a problem.
+
+## Where they belong
+
+**Yes:** your platform's credential store, a secrets manager, environment variables injected at runtime, CI secrets.
+
+**No, ever:** the repository, a workflow's exported JSON, a node's header field typed by hand, a spreadsheet, a chat message, a ticket, a screenshot, a document, your laptop's notes app, an email.
+
+<TokenInspector />
+
+Load the samples and remember the rule from week 7: a token is **encoded, not encrypted**. Anyone holding it can read every claim inside it, and anyone holding it can use it. There is nothing to crack.
+
+## Where secrets actually leak
+
+Rarely a breach. Almost always one of these:
+
+**Error messages.** A failed HTTP node's error can include the full request, `Authorization` header and all — posted automatically into a channel by your error workflow. Week 22 day 3 flagged this; it is the commonest leak in automation.
+
+**Logs.** Logging the whole request object is one line shorter than logging the three fields you need.
+
+**Workflow exports.** A JSON export shared with a colleague, or committed "so we have a backup", with a typed key inside it.
+
+**Screenshots.** A node panel open during a screen-share, with the header visible.
+
+**The repository.** Committed once, deleted in the next commit, and present in the history permanently.
+
+**A model's context.** Week 24: a credential in a prompt can appear in the output, in a log, in a summary.
+
+<Callout kind="watch">
+**A secret committed once is compromised, even after you delete it.**
+
+It is in the history, in every clone, in every fork, and in whatever indexes your repository. Removing the line does nothing.
+
+The only response is to **rotate it**. Delete the credential at the provider, issue a new one, update the store. Do that first, before cleaning the history — the cleanup is tidiness; the rotation is the fix.
+</Callout>
+
+## Rotation
+
+Credentials should be replaced on a schedule, and the schedule only works if rotating is easy.
+
+It is easy when every consumer reads the credential from **one place**. It is a nightmare when the key is typed into fourteen nodes, two scripts and someone's local `.env` — which is the real argument for a credential store, beyond encryption.
+
+A rotation worth having:
+
+1. Create the new credential **alongside** the old one
+2. Update the store
+3. Verify the workflows are using it — run one, check
+4. **Then** revoke the old one
+5. Record the rotation in the audit trail
+
+Never revoke first. An overlap of an hour costs nothing; a revoke-first rotation is a self-inflicted outage.
+
+## Make expiry loud
+
+The failure this lesson exists for.
+
+A certificate, an OAuth token or an API key expires at 02:00 on a Sunday. The workflow fails. If that workflow runs daily and is not watched, you find out on Monday — or on the 31st, from a merchant.
+
+Three defences, and you want all three:
+
+**Record every expiry date somewhere queryable.** A table: credential, system, owner, expires. Nobody knows these otherwise, because the expiry was set once by someone who has since left.
+
+**Alert well in advance.** 30 days, 7 days, 1 day. Not on the morning it expires.
+
+**Make the failure unmistakable.** A `401` from an expired credential should produce an alert naming it as an authentication failure — not get swallowed by a generic retry that exhausts and reports "the API is down".
+
+```sql
+SELECT name, system, owner, expires_at,
+       CAST(julianday(expires_at) - julianday('now') AS INT) AS days_left
+FROM credentials
+WHERE expires_at IS NOT NULL
+ORDER BY days_left;
+```
+
+Run it weekly. It takes ten minutes to build and it prevents a category of outage that is otherwise guaranteed to happen eventually.
+
+## Scope, and least privilege
+
+The other half of the question. A credential should be able to do the minimum the job needs:
+
+- **Read-only** where the workflow only reads. Most do.
+- **A separate credential per workflow**, so revoking one does not break five
+- **Separate test and production** credentials, visibly different — week 17 day 5 is full of tickets caused by confusing them
+- **Scoped to the endpoints needed**, if the provider supports it
+- **Never** the admin or root key because it was easier to get
+
+That last one is how a workflow that posts a daily summary ends up holding a credential that could delete the account.
+
+## Audit what is exposed today
+
+A genuinely useful afternoon, and something you can offer in your first month:
+
+1. Search the repository history for key patterns — `sk_live`, `Bearer `, `password`, `api_key`
+2. Export each workflow's JSON and search it for anything that looks like a secret
+3. Check error-workflow output for request dumps
+4. Check which credentials have no recorded owner or expiry
+5. Check which are over-scoped
+6. List every place a production key exists outside the credential store
+
+Write it up with counts and a priority order. It is concrete, it is unglamorous, and it finds something every single time.
+
+<Exercise
+  prompt="You find an API key committed to the repository three months ago and removed the next day. What do you do?"
+  accept={["rotate", "revoke", "new key"]}
+  hint="Does deleting the line help?"
+  solution="Rotate it immediately — create a new credential, update the store, verify, then revoke the old one. The key has been in the history, in every clone and in every fork for three months; removing the line achieved nothing. Clean the history afterwards if you like, but that is tidiness and the rotation is the fix."
+/>
+
+<Exercise
+  prompt="Why create the new credential before revoking the old one?"
+  accept={["outage", "overlap", "break", "downtime"]}
+  hint="What runs in between?"
+  solution="Because revoking first breaks every workflow using it until the new one is in place and verified — a self-inflicted outage, usually discovered by whatever runs next. An overlap of an hour costs nothing and lets you verify that the workflows actually picked up the new credential before the old one stops working."
+/>
+
+<Terms items={[
+  { term: "Credential store", meaning: "One place, so rotation is one edit." },
+  { term: "Committed once", meaning: "Compromised. Rotate; do not just delete the line." },
+  { term: "Loud expiry", meaning: "Recorded, alerted at 30/7/1 days, named in the failure." },
+  { term: "Overlap rotation", meaning: "New, update, verify, then revoke." },
+  { term: "Least privilege", meaning: "Read-only, per workflow, scoped, never the admin key." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Where do secrets most commonly leak in an automation?",
+    options: [
+      "A breach",
+      "Error messages and logs that include the whole request",
+      "The credential store",
+      "Encrypted backups"
+    ],
+    answer: 1,
+    why: "A failed HTTP node's error can carry the Authorization header straight into a channel through your error workflow."
+  },
+  {
+    q: "What is the correct order for rotating a credential?",
+    options: [
+      "Revoke, then create",
+      "Create, update the store, verify, then revoke",
+      "Create and revoke together",
+      "Revoke and wait"
+    ],
+    answer: 1,
+    why: "Revoking first is a self-inflicted outage discovered by whatever runs next."
+  },
+  {
+    q: "What makes an expiring credential dangerous?",
+    options: [
+      "The expiry itself",
+      "That nobody recorded the date, so the failure arrives unannounced at 02:00 on a Sunday",
+      "The cost of rotation",
+      "Nothing"
+    ],
+    answer: 1,
+    why: "Record every expiry in a queryable table and alert at 30, 7 and 1 days."
+  }
+]} />
+
+## Tomorrow
+
+Connecting a new tool, and the questions to ask before you do.

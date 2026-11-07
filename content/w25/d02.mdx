@@ -1,0 +1,177 @@
+Six months after an automation did something expensive, somebody will ask why. The audit trail is whether that question has an answer.
+
+## What a trail must support
+
+One test: **can you reconstruct the decision without asking anyone?**
+
+Which means, for every consequential action:
+
+| Element | Example |
+| --- | --- |
+| **What** | Refund of NGN 48,500 on `PAY-8842` |
+| **When** | 2026-11-10T14:22:11Z |
+| **Who or what** | `duplicate-charge-workflow`, run 88412 |
+| **On whose authority** | Approved by Chidi Okeke (`u_0431`) at 14:21:05Z |
+| **On what evidence** | Two charges, `PAY-8841` and `PAY-8842`, NGN 48,500 each, 14:02 and 14:03, both confirmed at the gateway |
+| **What rule applied** | Duplicate-charge policy v3: refund the later charge |
+| **Result** | Refund `REF-2291` accepted, `status=sent` |
+
+Seven fields, and together they answer every question an auditor, a regulator or an angry merchant can ask.
+
+<Callout kind="key">
+**Record the evidence, not just the decision.**
+
+"Approved" tells you an outcome. "Approved, having been shown these two charges at these times" tells you whether the approval was *reasonable* — which is the actual question when something has gone wrong.
+
+An approval with no record of what was shown cannot be defended, and cannot be learned from.
+</Callout>
+
+## A channel is not a person
+
+Yesterday's week 24 point, and it belongs here too.
+
+- `#ops` is not an approver
+- "the support team" is not an owner
+- "automated" is not an actor — *which* automation, which version, which run?
+- A shared login is not a person, and it destroys the trail entirely
+
+Every actor must be a **named individual or a named system with a version**. If your automation runs under a shared service account, the run id is what distinguishes one action from another, so it must be in the record.
+
+## Immutability
+
+An audit trail you can edit is not one.
+
+- **Append only.** Corrections are new rows that reference the old, never edits.
+- **Never delete.** Archive, with the archiving itself recorded.
+- **Separate from the operational data.** A trail living in the same table the workflow updates can be rewritten by the workflow.
+- **Timestamps from a trusted source**, in UTC, not from whatever the client claimed.
+
+When something is wrong, the correction is a new entry:
+
+```
+14:22  REFUND  PAY-8842  48,500  approved by u_0431
+15:40  CORRECTION of 14:22 entry — refunded the wrong charge;
+       PAY-8841 was the original. Reversal REF-2294 issued.
+       Approved by u_0109. Original entry retained.
+```
+
+Two entries. The mistake and its correction are both visible, which is the point — a trail that only shows the final tidy state is a trail somebody has cleaned.
+
+## What not to put in it
+
+The trail is permanent, widely readable and often exported. Week 11, 14 and 17's rule, at its strictest here because this record is designed to outlive everything:
+
+- **Never:** card numbers, tokens, passwords, full identity documents, raw request bodies
+- **Careful with:** names, email addresses, phone numbers. Prefer `cus_01` over `ada@example.com`
+- **Always:** ids, references, amounts, status values, rule versions, timestamps
+
+If a regulator needs to connect `cus_01` to a person, they can — through the system that owns that mapping, with the access controls that belong on it. That is the correct separation.
+
+## Reconstructing from the log
+
+The test of a trail is a real question. Take one:
+
+> *"On 10 November a merchant was refunded twice. Why?"*
+
+A good trail answers it in one query:
+
+```sql
+SELECT at, actor, action, reference, amount_minor, approved_by, evidence
+FROM audit
+WHERE reference IN ('PAY-8841', 'PAY-8842')
+ORDER BY at;
+```
+
+```
+14:02  gateway                  CHARGE    PAY-8841  48500  —       —
+14:03  gateway                  CHARGE    PAY-8842  48500  —       —
+14:21  duplicate-charge-wf:88412 REQUEST  PAY-8842  48500  —       two charges, 61s apart
+14:21  chidi.okeke (u_0431)     APPROVE   PAY-8842  48500  u_0431  shown both charges
+14:22  duplicate-charge-wf:88412 REFUND   PAY-8842  48500  u_0431  REF-2291 sent
+15:38  bola.adeyemi (u_0109)    REFUND    PAY-8841  48500  u_0109  manual, support tool
+```
+
+The last line is the answer: a human issued a second refund manually at 15:38, not knowing the workflow had already refunded at 14:22. Not a bug in the automation — a process gap between the automation and the support tool.
+
+**You could not have reached that conclusion without the actor column.** With "automated" and "support" as the only actors, the question has no answer.
+
+## Make it queryable
+
+A trail nobody can query is a trail nobody uses. Same lesson as week 22 day 4: a proper table, indexed on reference, actor and time.
+
+Then answer questions like these without asking anyone:
+
+```sql
+-- Which actions did this workflow take, and who approved them?
+SELECT action, COUNT(*), COUNT(approved_by)
+FROM audit WHERE actor LIKE 'duplicate-charge-wf%'
+GROUP BY action;
+
+-- Were any consequential actions taken with no approver?
+SELECT * FROM audit
+WHERE action IN ('REFUND','PAYOUT') AND approved_by IS NULL;
+```
+
+That second query is one every automation owner should run monthly, and most never have.
+
+<Exercise
+  prompt="Your audit log records actor as 'automated' for every workflow action. What question becomes unanswerable?"
+  accept={["which", "who", "run", "version"]}
+  hint="There is more than one automation."
+  solution="Which automation did it, running which version, in which run — so when two systems touch the same record you cannot tell them apart, and you cannot connect an action to the logic that produced it. Record the workflow name, its version and the run id; the run id is what distinguishes actions taken under a shared service account."
+/>
+
+<Exercise
+  prompt="A wrong refund was issued. Why is correcting the original audit entry the wrong move?"
+  accept={["immutable", "append", "clean", "hide"]}
+  hint="What does the trail then show?"
+  solution="Because an editable trail is not a trail: it would show only the tidy final state, with no record that a mistake happened or who made it. Append a correction entry referencing the original, keeping both. The mistake and its correction being visible together is the whole value — for the audit, and for learning why it happened."
+/>
+
+<Terms items={[
+  { term: "The seven fields", meaning: "What, when, who, authority, evidence, rule, result." },
+  { term: "Record the evidence", meaning: "So you can judge whether the approval was reasonable." },
+  { term: "Append only", meaning: "Corrections are new rows referencing the old." },
+  { term: "Named actor", meaning: "A person, or a system with a version and a run id." },
+  { term: "Ids not people", meaning: "cus_01, not the customer's email address." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What is the test of an audit trail?",
+    options: [
+      "It is complete",
+      "You can reconstruct the decision without asking anyone",
+      "It is encrypted",
+      "It is long"
+    ],
+    answer: 1,
+    why: "Everything else follows from that: the actor, the evidence, the authority and the rule version."
+  },
+  {
+    q: "How should an incorrect audit entry be handled?",
+    options: [
+      "Edit it",
+      "Delete and re-add it",
+      "Append a correction that references the original, keeping both",
+      "Leave it"
+    ],
+    answer: 2,
+    why: "A trail that can be edited is not a trail, and a tidy final state hides the thing worth learning from."
+  },
+  {
+    q: "Which belongs in an audit trail?",
+    options: [
+      "The customer's email address",
+      "The customer id",
+      "The full request body",
+      "The API token used"
+    ],
+    answer: 1,
+    why: "An id identifies the record; the mapping to a person lives in the system that owns it, behind its own access controls."
+  }
+]} />
+
+## Tomorrow
+
+Secrets, and making an expiry loud instead of silent.

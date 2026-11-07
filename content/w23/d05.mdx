@@ -1,0 +1,167 @@
+A model call that costs a fraction of a naira is free until it runs twelve thousand times a month. Then somebody asks what it costs, and the answer should not be a guess.
+
+## Tokens
+
+Billing is per **token** — roughly a word fragment. English averages about four characters per token, so 100 words is around 130 tokens.
+
+You pay for **input** tokens (prompt plus the text you send) and **output** tokens (what comes back), at different rates. Output is usually several times more expensive than input.
+
+Which gives the first lever: **a long prompt costs on every single call.** Three hundred words of instructions you never trimmed is a cost you pay twelve thousand times a month.
+
+## Estimating a run
+
+```
+Per call
+  System prompt            320 tokens
+  The message               180 tokens
+  Output                     40 tokens
+                           ----
+  Input total              500 tokens, output 40
+
+Per month, at 400 tickets a day
+  Calls                     12,000
+  Input tokens           6,000,000
+  Output tokens            480,000
+```
+
+Multiply by your provider's rate per million tokens and you have a number. Do this **before** building, and put it in the week 20 proposal — "about X a month at current volume" is the sentence that gets a project approved or sensibly redesigned.
+
+<Callout kind="key">
+**Estimate cost at the design stage, not after the first invoice.**
+
+The common failure is not an expensive workflow. It is an expensive workflow nobody costed, discovered three months later, and then switched off in a hurry — taking with it something the team had started relying on.
+
+A number in the proposal is cheap and it prevents that entirely.
+</Callout>
+
+## Routing
+
+Providers offer a range: small, fast, cheap models through to large, slow, capable ones. The large one is often many times the price of the small one.
+
+Most steps do not need the large one. Route by difficulty:
+
+| Step | Model |
+| --- | --- |
+| Classify into four buckets | Small |
+| Extract three fields from an email | Small |
+| Summarise twenty messages | Mid |
+| Draft a careful reply to an angry customer | Mid or large |
+| Decide a nuanced policy question | Large, with a human after it |
+
+The method: **start with the cheapest model and measure.** If it passes your eval set at your threshold, you are finished. Reaching for the largest model first is how a workflow ends up costing ten times what it needs to for accuracy nobody measured.
+
+A useful pattern is **escalation**: the small model runs, and anything it marks `low` confidence is re-run on the larger one. Most of the volume is cheap and the hard tail gets the better model.
+
+## Latency
+
+| | Rough |
+| --- | --- |
+| Small model, short output | under a second |
+| Mid, short output | one to three seconds |
+| Large, long output | several seconds and up |
+
+Fine for a webhook-triggered single item. Not fine inside a loop over 200 items, where three seconds each is ten minutes — and week 22 day 1 says that is now longer than your schedule interval.
+
+**Do not put a model call inside a per-item loop without checking the arithmetic.** It is the commonest way an automation becomes too slow to run.
+
+## Batching
+
+Where the task allows, classify twenty messages in one call rather than twenty calls:
+
+```
+Classify each message. Return a JSON array, one object per
+message, in the same order, each with its id.
+```
+
+Cheaper — one copy of the system prompt instead of twenty — and far faster.
+
+The cost: a single malformed response loses all twenty, and models get sloppier at the end of long lists. Keep batches modest, always include the id in each result rather than relying on order, and validate the count that comes back.
+
+## Caching
+
+Two kinds, both worth knowing.
+
+**Provider prompt caching.** Several providers cache a long, unchanging system prompt and charge less for it on later calls. Free money if your prompt is stable and you put the fixed part first.
+
+**Your own result cache.** If the same input can recur, store the result and check before calling.
+
+```
+key = hash(prompt_version + input_text)
+if cached: use it
+else: call, store, use
+```
+
+Include the **prompt version** in the key. Without it, a prompt change silently keeps serving results from the old one, and you will spend an afternoon wondering why your improvement had no effect.
+
+## Trimming the prompt
+
+The cheapest optimisation available, and nobody does it:
+
+- Remove examples that no longer earn their place
+- Remove instructions the model follows anyway
+- Remove politeness — "please" and "thank you" cost tokens and change nothing
+- Move anything that varies to the user message, keeping the system prompt stable and cacheable
+
+Then **re-run the evals**. A trimmed prompt that is 20% cheaper and 5% less accurate is usually a bad trade, and you only know which you got by measuring.
+
+<Exercise
+  prompt="A workflow runs a model call inside a loop over 200 items at 3 seconds each, on a 15-minute schedule. What is the problem?"
+  accept={["10 minutes", "slow", "overlap", "600"]}
+  hint="Do the multiplication."
+  solution="600 seconds — ten minutes — of model calls per run, on a fifteen-minute schedule. One slow day and runs overlap, which is the week 22 bug. Fix it by batching the calls, filtering to the items that actually need a model, routing to a faster model, or lengthening the interval."
+/>
+
+<Exercise
+  prompt="Why must a result cache key include the prompt version?"
+  accept={["old", "stale", "change", "no effect"]}
+  hint="What happens when you improve the prompt?"
+  solution="Because without it, a prompt change keeps serving results produced by the previous version — so your improvement appears to have no effect and the eval numbers do not move. Including the version in the key means a new prompt starts with a cold cache, which is correct."
+/>
+
+<Terms items={[
+  { term: "Token", meaning: "A word fragment. Input and output are priced differently." },
+  { term: "Routing", meaning: "Cheapest model that passes the evals, not the biggest." },
+  { term: "Escalation", meaning: "Small model, with low-confidence items re-run on a larger one." },
+  { term: "Batching", meaning: "Twenty in one call. Include ids; validate the count." },
+  { term: "Cache key", meaning: "Hash of the prompt version and the input." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which model should you start with?",
+    options: [
+      "The largest, then reduce",
+      "The cheapest, and measure against your eval set",
+      "Whichever is newest",
+      "It does not matter"
+    ],
+    answer: 1,
+    why: "If the cheap one passes your threshold you are done, and reaching for the largest first costs ten times as much for accuracy nobody measured."
+  },
+  {
+    q: "What is the risk of batching twenty items into one call?",
+    options: [
+      "It is slower",
+      "One malformed response loses all twenty, and models get sloppier late in a long list",
+      "It costs more",
+      "There is no risk"
+    ],
+    answer: 1,
+    why: "Keep batches modest, include an id with each result rather than trusting order, and validate the count."
+  },
+  {
+    q: "When should you estimate the cost of a workflow?",
+    options: [
+      "After the first invoice",
+      "At the design stage, in the proposal",
+      "After a month of running",
+      "Only if it is large"
+    ],
+    answer: 1,
+    why: "The failure is not an expensive workflow but an uncosted one, switched off in a hurry after the team came to rely on it."
+  }
+]} />
+
+## Tomorrow
+
+Build a classifier and measure whether it is good enough to ship.

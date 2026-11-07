@@ -1,0 +1,175 @@
+Documentation explains what something is. A runbook tells someone what to do at three in the morning when it is broken and they did not build it.
+
+Different document, different reader, different standard.
+
+## The shape
+
+One entry per failure mode:
+
+```
+FAILURE   Reconciliation fails: 503 from the provider
+
+LOOKS     Alert in #ops naming "Fetch payouts", HTTP 503 after
+LIKE      3 attempts. No summary posted in #finance by 08:10.
+
+MEANS     Today's reconciliation has not run. Finance expects the
+          summary by 09:00. Nothing has been written, so a re-run
+          is completely safe.
+
+CHECK     1 Provider status page
+          2 The execution log — exact error and timings
+          3 Whether other workflows on that provider also failed
+
+DO        Provider down: wait. Tell Finance it will be late, with
+          a time. Re-run manually once it is back; the workflow is
+          idempotent so a re-run creates nothing twice.
+          Provider up: the credential may have expired. Check the
+          expiry table, rotate if needed, then re-run.
+
+DO NOT    Do not reconcile by hand in a spreadsheet to save time.
+          It will not match the automated run and the difference
+          will cost more than the delay.
+          Do not disable the alert to stop the noise.
+
+RE-RUN    Open the workflow, Execute. Safe at any time. It reads
+          only and writes one summary row keyed on the date, so a
+          second run for the same date updates rather than
+          duplicates.
+
+ESCALATE  Still failing after 2 hours, or it is month end:
+          payments team, #inc-payments, tag the duty lead.
+
+OWNER     Peter
+```
+
+## The sections that earn their place
+
+**LOOKS LIKE** — so the reader can confirm they are in the right entry. Without it, somebody follows the recovery steps for a different failure.
+
+**MEANS** — the business impact, so they can decide urgency without understanding the system. "Finance expects this by 09:00" is actionable by anyone.
+
+**DO NOT** — the section almost nobody writes, and the one that matters most under pressure. The instinctive shortcut at 3am is usually the thing that makes it worse.
+
+**RE-RUN** — covered below, because it is the question every runbook gets asked and most do not answer.
+
+<Callout kind="key">
+**Write DO NOT before DO.**
+
+Under pressure people act fast and reach for the obvious move. Naming the wrong move explicitly — and saying why — is worth more than another paragraph of correct procedure, because the correct procedure was probably going to be followed anyway.
+
+"Do not reconcile by hand" prevents a specific, likely, expensive mistake. That is a better use of two lines than anything else on the page.
+</Callout>
+
+## Always say how to re-run safely
+
+Every runbook entry must answer it, because every incident ends with someone asking.
+
+Be specific about **why** it is safe:
+
+> **Safe.** Reads only, and writes one summary row keyed on the date — a second run for the same date updates it rather than creating a duplicate.
+
+> **Safe after 09:00 only.** Before then the provider's batch has not landed and it will reconcile against incomplete data, producing a false discrepancy.
+
+> **Not safe.** This sends emails and has no idempotency key. Re-running will send them again. To recover, identify which merchants were already notified from the run log and re-run only the remainder.
+
+That third one is uncomfortable to write and it is exactly what the person needs. A runbook that says "re-run it" about a workflow that sends emails twice has caused the second incident.
+
+## Three failure modes, minimum
+
+For any workflow, cover at least:
+
+**1. The dependency is down.** External API unavailable or erroring.
+
+**2. The credential failed.** Expired, rotated, revoked, wrong environment.
+
+**3. It did not run at all.** Paused, deleted, trigger broken, platform down. Week 22 day 5 — and this is the entry people forget, because it is the failure that produces no alert from the workflow itself.
+
+Add any mode you have actually seen. A failure that has happened once will happen again.
+
+## Prove it by following it
+
+A runbook that has never been followed is a guess about what would help.
+
+Test it the way week 22 day 6 tested the alerting: cause the failure, hand the runbook to someone else, and watch them follow it without helping.
+
+You will find:
+
+- A step that assumes access they do not have
+- A link that is wrong
+- A name that changed
+- A step that is obvious to you and meaningless to them
+- A missing step you do without thinking
+
+Fix all of it. Then **date the page and record who tested it** — an untested runbook and a tested one look identical, and only one of them works.
+
+## Keep it where the alert is
+
+Put the link in the alert itself:
+
+> `Finance: daily reconciliation` failed at `Fetch payouts` — HTTP 503 after 3 attempts.
+> **Runbook:** [link]
+> Execution 88412: [link]
+
+The person reading at 03:00 should not have to find anything. One click from the alert to the instructions is the difference between a five-minute recovery and a twenty-minute search followed by waking someone up.
+
+<Exercise
+  prompt="Your workflow sends emails and has no idempotency key. What does the RE-RUN section say?"
+  accept={["not safe", "again", "remainder", "run log"]}
+  hint="Do not say 'just re-run it'."
+  solution="That it is not safe: re-running will send the emails again. Then the recovery path — identify from the run log which recipients were already notified, and re-run only for the remainder. Uncomfortable to write, and far better than a runbook that says 're-run it' and causes the second incident."
+/>
+
+<Exercise
+  prompt="Which failure mode do runbooks most often omit, and why?"
+  accept={["did not run", "never ran", "paused", "silent"]}
+  hint="What produces no alert from the workflow?"
+  solution="'It did not run at all' — paused, deleted, broken trigger, platform down. It is omitted because it produces no alert from the workflow itself, so it never arrives as an incident that prompts someone to write an entry. It is also the longest-running failure there is, which is exactly why it needs one."
+/>
+
+<Terms items={[
+  { term: "LOOKS LIKE", meaning: "So the reader confirms they are in the right entry." },
+  { term: "MEANS", meaning: "Business impact, actionable without understanding the system." },
+  { term: "DO NOT", meaning: "Write it first. It prevents the likely expensive mistake." },
+  { term: "Re-run safety", meaning: "Say why, and say so plainly when it is not safe." },
+  { term: "Tested and dated", meaning: "An untested runbook looks identical to a working one." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What must every runbook entry answer?",
+    options: [
+      "Who built it",
+      "Whether and how it is safe to re-run, and why",
+      "The error code",
+      "The cost"
+    ],
+    answer: 1,
+    why: "Every incident ends with that question, and a wrong answer causes the second incident."
+  },
+  {
+    q: "Why is the DO NOT section the most valuable one?",
+    options: [
+      "It is shortest",
+      "Under pressure people reach for the obvious shortcut, which is usually what makes it worse",
+      "It is required",
+      "It is easiest to write"
+    ],
+    answer: 1,
+    why: "The correct procedure was likely to be followed anyway; the wrong instinct is what needs naming."
+  },
+  {
+    q: "How do you know a runbook works?",
+    options: [
+      "You reviewed it",
+      "Someone else followed it during a real or simulated failure, without help",
+      "It is detailed",
+      "It was approved"
+    ],
+    answer: 1,
+    why: "It reveals the missing step you do without thinking, which you cannot find by re-reading your own writing."
+  }
+]} />
+
+## Tomorrow
+
+The repository as the source of truth.

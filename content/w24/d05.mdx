@@ -1,0 +1,162 @@
+An automation that writes to customers should create drafts. Not as a cautious first phase to be relaxed later — **as the design**.
+
+This is the single most useful rule in this phase, and the one people most want to argue with.
+
+## Why it is permanent, not provisional
+
+The usual framing is a ladder: draft for a month, build confidence, then send automatically. It sounds sensible and it is wrong, for four reasons.
+
+**Sending is irreversible.** You cannot unsend. Every other step in a workflow can be re-run, corrected, reversed. This one cannot, and that asymmetry does not improve with confidence.
+
+**The failure is public and permanent.** A wrong internal record is a cleanup. A wrong message to four hundred customers is a reputational event, a possible regulatory one, and a thing people screenshot.
+
+**Confidence is not the variable.** The system being right 99.7% of the time means three wrong messages per thousand. At scale that is not a small number, and the three will not be random — they will cluster on the unusual cases, which are the ones where being wrong matters most.
+
+**The saving is small.** The slow part is reading the ticket, finding the facts and composing the reply. That is what the automation does. Pressing send is two seconds, and it buys a human reading what is about to go out in their name.
+
+<Callout kind="key">
+**Draft-and-hold keeps nearly all the value and removes nearly all the risk.**
+
+Ninety per cent of the time saved is in the drafting. The human cost is a glance and a click. The risk removed is the entire category of irreversible public mistakes.
+
+That trade is so lopsided that "we will send automatically once we trust it" is usually a decision to take a large risk for a small gain — and it is worth saying so plainly when it comes up.
+</Callout>
+
+## What this applies to
+
+- Email and SMS to customers
+- Messages in a shared channel visible to customers
+- Public posts of any kind
+- Anything with your company's name on it going outside the building
+
+What it does **not** apply to: internal notes, ticket categorisation, record updates, alerts to your own team. Those are reversible and private, and holding them achieves nothing.
+
+## Verify that it drafted
+
+The check that matters, and the one nobody writes.
+
+A misconfiguration, a library default, a changed API parameter or a copied node can silently turn a draft into a send. The workflow succeeds either way, the logs look identical, and the first signal is a customer replying to something nobody approved.
+
+So **assert it**:
+
+```js
+// Creating a draft must return a draft id and no sent timestamp.
+if (!result.draftId) {
+  throw new Error("Expected a draft id; the message may have been sent.");
+}
+if (result.sentAt) {
+  throw new Error(`ALERT: message was SENT, not drafted — ${result.id}`);
+}
+```
+
+And then the independent check, because the first one trusts the same call that may have misbehaved:
+
+```
+Daily: count messages sent by the automation's account.
+Expected: 0.
+Anything above 0 is an incident, not a warning.
+```
+
+That second check is the one that catches the case where the API's own response is wrong or the parameter changed meaning. Week 22's principle: **assert the outcome, not the execution.**
+
+## Make the draft good enough to send unedited
+
+The goal is not a rough draft requiring rewriting — that saves nobody anything. It is a message a human reads, agrees with, and sends.
+
+Which means the draft must carry everything from week 18: acknowledge, own, next step, time. Plain language. No invented facts. The right tone.
+
+Measure it: **what fraction of drafts are sent unedited?** If it is high, the drafting is working. If people rewrite most of them, the automation is making work rather than saving it, and that is worth knowing before you add more of it.
+
+## The send-by-accident drill
+
+From week 22 day 6, applied here. Deliberately:
+
+1. Point the workflow at a test address you control
+2. Change the configuration so it would send rather than draft
+3. Confirm the assertion fires and the run fails
+4. Confirm the daily sent-count check reports it
+5. Put it back
+
+If neither check catches it, you do not have draft-and-hold. You have a workflow that happens to be drafting today.
+
+<Callout kind="watch">
+**The dangerous version is the one that works for months.**
+
+Draft-and-hold that was never asserted sends nothing for eleven months and then, after a library upgrade changes a default, sends four hundred messages on a Tuesday.
+
+Nothing in the workflow changed. Nothing failed. Nobody was notified. The first signal is replies.
+</Callout>
+
+## Saying it to a manager
+
+You will be asked to remove the human step. The answer is not caution, it is arithmetic:
+
+> The drafting saves about nine tenths of the time either way — the slow part is reading the ticket and composing the reply, and that is automated whichever we choose. What the human step costs is a glance and a click.
+>
+> What it buys is that nothing irreversible leaves the building unread. At 99.7% accuracy and 400 messages a day, that is roughly one wrong message a day going out in our name, and they will not be the easy cases — they will be the unusual ones, where being wrong matters most.
+>
+> I would keep the gate and spend the effort on making drafts good enough to send unedited. We can measure that: right now 86% go out unchanged.
+
+Numbers, the asymmetry, and a better thing to do with the effort.
+
+<Exercise
+  prompt="Your draft-and-hold workflow has worked for eleven months. Why is that not evidence it is safe?"
+  accept={["assert", "default", "change", "never checked", "silent"]}
+  hint="What would a library upgrade do?"
+  solution="Because nothing has verified that it is still drafting — a changed library default, an API parameter that shifted meaning, or a copied node can turn a draft into a send with no error and identical logs. Eleven quiet months is consistent with both 'working' and 'about to send four hundred messages'. Assert the draft id, assert no sent timestamp, and run an independent daily count of messages sent by that account, expecting zero."
+/>
+
+<Exercise
+  prompt="Why does high accuracy not justify removing the human send step?"
+  accept={["irreversible", "cluster", "unusual", "public"]}
+  hint="Two reasons, one about reversibility and one about which cases fail."
+  solution="Because sending is irreversible and public, so the failure cannot be corrected the way every other step can — and because the errors are not randomly distributed. They cluster on the unusual cases, which are exactly the ones where a wrong message does the most damage. 99.7% at 400 a day is also roughly one wrong message daily, which is not a small number."
+/>
+
+<Terms items={[
+  { term: "Draft-and-hold", meaning: "The design, not a phase to be relaxed." },
+  { term: "Irreversibility", meaning: "The asymmetry that confidence does not change." },
+  { term: "Assert the draft", meaning: "Draft id present, sent timestamp absent." },
+  { term: "Independent sent count", meaning: "Expected zero. Anything else is an incident." },
+  { term: "Sent-unedited rate", meaning: "How you measure whether the drafting is good." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Why is draft-and-hold a permanent design rather than a first phase?",
+    options: [
+      "Models are not good enough yet",
+      "Sending is irreversible and public, and the saving from removing the human step is tiny",
+      "It is a legal requirement",
+      "It is faster"
+    ],
+    answer: 1,
+    why: "Nine tenths of the time saved is in the drafting; the click costs seconds and removes the whole category of irreversible public mistakes."
+  },
+  {
+    q: "What is the independent check that catches a draft silently becoming a send?",
+    options: [
+      "Reading the logs",
+      "A daily count of messages sent by the automation's account, expected to be zero",
+      "Asking the provider",
+      "Checking the prompt"
+    ],
+    answer: 1,
+    why: "The in-workflow assertion trusts the same call that may have misbehaved. Assert the outcome independently."
+  },
+  {
+    q: "How do you measure whether the drafting is actually good?",
+    options: [
+      "Model accuracy",
+      "The fraction of drafts sent unedited",
+      "Time saved",
+      "Customer satisfaction"
+    ],
+    answer: 1,
+    why: "If people rewrite most drafts, the automation is making work rather than saving it."
+  }
+]} />
+
+## Tomorrow
+
+Write an agent brief, including what it must never do.

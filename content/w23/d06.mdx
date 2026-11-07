@@ -1,0 +1,128 @@
+One model step, measured properly. This is the day the week's ideas become a number you can defend.
+
+## The task
+
+Classify an incoming support message into **billing, technical, account** or **sales**, so it lands in the right queue.
+
+A realistic first automation for a support team, and a good interview answer — because the hard part is not the classifier, it is knowing whether it is good enough.
+
+## Run the evals
+
+<EvalRunner />
+
+Run **v1** first: 65%, thirteen of twenty. Read the seven failures before looking at v2 — they are the ones a keyword matcher always gets wrong, and each one tells you exactly what rule is missing.
+
+Then run **v2**, which adds three rules taken from exactly those failures and nothing else. It scores 100%, and the component says the right thing about that: a perfect score on twenty cases means **write harder cases**, not that you are finished.
+
+That loop — measure, read the failures, write one rule per failure, measure again — is the whole method.
+
+## Reading the confusion matrix
+
+Rows are what it should have been, columns what it predicted. The diagonal is correct; everything else is a misroute.
+
+The pattern matters more than the total:
+
+- **One row scattered everywhere** — that category is badly defined. Fix the definition before anything else.
+- **One cell dominating off-diagonal** — two categories overlap. Add the rule that separates them.
+- **A column with too much in it** — the model's default when unsure. Give it a real escape instead.
+
+That last one is the most common. A classifier with no `unclear` option dumps its uncertainty into whichever category sounds most general.
+
+## Held out means held out
+
+The twenty cases must not be the examples in your prompt.
+
+If you write a rule for *"is there a discount for annual billing?"* and then test on that sentence, you have measured nothing except your own copying. **Keep a set the prompt has never seen**, and when you use a case to fix a rule, write a new one to replace it in the set.
+
+## Is it good enough to ship?
+
+Accuracy alone does not answer this. Three further questions:
+
+**1. What does a mistake cost?** A misrouted ticket goes to the wrong queue and gets moved — minutes, mildly annoying. Compare with a misrouted *refund approval*, which is money. Same accuracy, completely different decision.
+
+**2. What is the baseline?** What happens today? If messages currently go into one undifferentiated queue, 85% accurate routing is a large improvement. If a person currently routes them at 99%, 85% is a downgrade dressed as progress.
+
+**3. Does a mistake get caught?** A misroute a human notices within minutes is survivable at a much lower accuracy than one that disappears.
+
+<Callout kind="key">
+**Accuracy is meaningless without the cost of a mistake and the current baseline.**
+
+"92% accurate" is not a result. "92% accurate, against a baseline of everything landing in one queue, with every misroute visible and correctable in the queue it lands in" is a result — and it is shippable at a number that would be unacceptable elsewhere.
+</Callout>
+
+## Shipping it safely
+
+Even at a good number, do not route silently on day one:
+
+**Stage 1 — shadow.** Classify, record the prediction, change nothing. Compare against what humans actually did for a week. This is the only measurement that uses real traffic, and it costs nothing if it is wrong.
+
+**Stage 2 — suggest.** Show the predicted category as a default a human can change. Record how often they change it; that is your real-world accuracy.
+
+**Stage 3 — route, with a floor.** Act on `high` confidence, send `low` and `unclear` to a human queue.
+
+**Stage 4 — monitor.** Track the rate of manual re-categorisation. A rise means something drifted — the model, the prompt, or the kinds of messages arriving.
+
+Never skip stage 1. A week of shadow mode on real traffic tells you more than a hundred invented test cases.
+
+## What to record
+
+```
+CLASSIFIER — support ticket routing
+Prompt       classify-ticket.v2
+Model        (small), temperature 0
+Eval set     20 held-out messages, none used in the prompt
+Accuracy     18/20 = 90%
+Failures     "payment page will not load" → billing (should be technical)
+             "who can approve invoices now" → billing (should be account)
+Baseline     Today: one undifferentiated queue, ~4 min to route by hand
+Cost of      Low — misroute is visible and correctable in the queue
+  error      it lands in
+Decision     Ship in shadow mode for one week, then suggest.
+             Re-evaluate before routing automatically.
+Threshold    Route automatically only above 95% on a 50-case set.
+```
+
+That page is the deliverable. It states what was measured, on what, what failed, what the alternative is, and what would change the decision.
+
+<Callout kind="job">
+Most people demonstrating an AI feature show it working on three examples they chose.
+
+Arriving with an eval set, an accuracy figure, the failures named, a baseline and a staged rollout plan is a completely different conversation — and it is the one that gets the thing actually turned on.
+</Callout>
+
+## Check yourself
+
+- Were the eval cases genuinely held out of the prompt?
+- Did I write one rule per observed failure, rather than rewriting the prompt wholesale?
+- Do I know the baseline, or only my own number?
+- What does a mistake cost, and would anyone notice?
+- Am I shipping in shadow mode first?
+
+<Exercise
+  prompt="Your classifier scores 90%. Name the two things you still need before deciding to ship."
+  accept={["baseline", "cost", "mistake"]}
+  hint="A number compared with what, and risking what?"
+  solution="The baseline — what happens today, since 90% beats one undifferentiated queue and loses badly to a human at 99% — and the cost of a mistake, including whether anyone would notice. A misroute corrected in minutes is survivable at 90%; a wrong refund approval is not survivable at 99%."
+/>
+
+<Exercise
+  prompt="Why does the eval set have to exclude the examples used in the prompt?"
+  accept={["measured nothing", "copying", "memoris", "leak"]}
+  hint="What are you actually testing?"
+  solution="Because testing on an example you put in the prompt measures your own copying, not the classifier's ability to generalise. It produces a flattering number that collapses on real traffic. When you use a case to fix a rule, move it into the prompt and write a new held-out case to replace it."
+/>
+
+<Terms items={[
+  { term: "Held-out set", meaning: "Cases the prompt has never seen." },
+  { term: "Confusion matrix", meaning: "The pattern of misroutes tells you the next rule." },
+  { term: "Baseline", meaning: "What happens today. Accuracy means nothing without it." },
+  { term: "Shadow mode", meaning: "Predict, record, change nothing. Never skip it." },
+]} />
+
+## Week 23 in one line
+
+A model is one step among many: give it the facts, constrain its output, validate everything, and never let it count.
+
+## Next week
+
+Agents — the thing everyone wants to build first and should build last.

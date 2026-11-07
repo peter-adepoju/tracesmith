@@ -1,0 +1,149 @@
+A language model is one step in a workflow. A good one, for certain jobs, and a liability for others. This week is knowing which is which.
+
+<Video id="ai-agents-ibm" />
+
+## What it is actually doing
+
+A language model predicts likely continuations of text. It was trained on an enormous amount of writing, and it is very good at producing text that fits the pattern of its input.
+
+That is the whole mechanism, and everything useful and everything dangerous follows from it.
+
+**Useful**, because an enormous number of real tasks are pattern work: classify this, summarise that, rewrite this in another register, pull the structured fields out of this unstructured mess.
+
+**Dangerous**, because *likely-looking* and *true* are different properties, and the model has no way to tell them apart. Text that is wrong and text that is right look equally plausible from the inside.
+
+<Callout kind="key">
+**A model never knows that it does not know.**
+
+It cannot distinguish recalling a fact from constructing something that resembles one. Asked for a transaction reference it has never seen, it will produce something shaped exactly like a transaction reference.
+
+This is not a bug being fixed in the next version. It is what the mechanism is.
+
+So: a model is for **transforming text you give it**, not for supplying facts it must retrieve from somewhere.
+</Callout>
+
+## What it suits
+
+- **Classification** — which of these four buckets is this message?
+- **Extraction** — pull the amount, date and reference out of this email
+- **Summarising** — twenty messages into a paragraph
+- **Rewriting** — this blunt sentence, made appropriate for a customer
+- **Drafting** — a first reply for a human to check
+- **Matching** — do these two descriptions refer to the same thing?
+
+The pattern: **the answer is contained in the input**, and the job is to reshape it.
+
+## What it does not suit
+
+- **Arithmetic.** Covered below, and it is the big one
+- **Facts it has to retrieve** — balances, prices, statuses. Fetch those and pass them in
+- **Anything needing the same answer every time** — it is probabilistic by construction
+- **Decisions with no recoverable mistake** — refunds, deletions, anything irreversible
+- **Rules you can simply write** — if a regular expression does it, use the regular expression
+
+## Never trust it to count
+
+Worth its own section, because it surprises people who have accepted everything else.
+
+Models handle text as tokens, not as quantities. So:
+
+- Summing a column of figures: unreliable
+- Counting items in a list: unreliable
+- Comparing two amounts: unreliable
+- Dates and durations: unreliable
+- Percentages: unreliable
+
+And it fails **confidently**. You get a number, formatted correctly, that is wrong in a way nothing in the output signals.
+
+In a payments context that is not a quirk. It is a defect with money attached.
+
+<Callout kind="watch">
+**Do the arithmetic in code and give the model the result.**
+
+Not: *"here are 40 transactions, what is the total?"*
+
+Instead: calculate `4850000` in a Code node, then: *"the total is NGN 48,500.00; write one sentence summarising this for the merchant."*
+
+The model does the writing, which it is good at. The code does the counting, which it is good at. Week 23 day 4 is entirely about finding places where this separation has been missed.
+</Callout>
+
+## Hallucination, plainly
+
+When a model produces something plausible and false, that is a hallucination. It is not lying — there is no mechanism for intent — it is doing exactly what it does, which is produce likely text.
+
+You reduce it by:
+
+- **Giving it the facts** in the prompt rather than asking it to recall them
+- **Telling it what to do when it does not know**, explicitly: *"if the answer is not in the text above, return `unknown`"*
+- **Constraining the output** to a fixed set of values — day 3
+- **Validating** everything before it is used
+- **Never letting it be the only check** on anything that matters
+
+You do not eliminate it. You design so that it cannot do harm when it occurs.
+
+## Non-determinism
+
+The same prompt can give different answers on different runs. Lower the temperature setting and it varies less; it does not stop varying.
+
+Which means: anything requiring an identical answer every time should not have a model in that step. A reconciliation that reconciles slightly differently on Tuesday is not a reconciliation.
+
+<Exercise
+  prompt="You need a workflow to total 40 transactions and write a summary for the merchant. Which part does the model do?"
+  accept={["summary", "writing", "sentence", "not the total"]}
+  hint="Split the job in two."
+  solution="Only the writing. Calculate the total in a Code node, then pass the finished figure into the prompt: 'the total is NGN 48,500.00 across 40 transactions — write one sentence for the merchant.' Models cannot be trusted with arithmetic and fail at it confidently, producing a correctly formatted number that is simply wrong."
+/>
+
+<Exercise
+  prompt="Why is 'it will improve in the next model version' not an answer to hallucination?"
+  accept={["mechanism", "what it is", "not a bug", "likely"]}
+  hint="Is it a defect or a property?"
+  solution="Because it is not a defect being fixed — it is what the mechanism is. The model produces likely continuations, and it has no way to distinguish recalling something true from constructing something that resembles it. Better models hallucinate less often; none of them gain the ability to know that they do not know. So you design so it cannot do harm rather than waiting for it to stop."
+/>
+
+<Terms items={[
+  { term: "Hallucination", meaning: "Plausible and false. A property, not a bug." },
+  { term: "The answer is in the input", meaning: "What a model suits." },
+  { term: "Confident arithmetic", meaning: "A correctly formatted number that is wrong." },
+  { term: "Non-determinism", meaning: "Different answers to the same prompt. Reducible, not removable." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which task is a model well suited to?",
+    options: [
+      "Summing 40 transaction amounts",
+      "Classifying a message into one of four buckets",
+      "Looking up a customer's balance",
+      "Deciding whether to issue a refund"
+    ],
+    answer: 1,
+    why: "The answer is contained in the input and the job is to reshape it — which is exactly what the mechanism does well."
+  },
+  {
+    q: "Why must a model never be trusted to count?",
+    options: [
+      "It is slow",
+      "It handles text as tokens, not quantities, and fails confidently with a well-formatted wrong number",
+      "It is expensive",
+      "It refuses"
+    ],
+    answer: 1,
+    why: "Nothing in the output signals that the number is wrong, which is what makes it dangerous rather than merely unreliable."
+  },
+  {
+    q: "What should a prompt say about facts the model does not have?",
+    options: [
+      "Nothing",
+      "Explicitly: return 'unknown' if the answer is not in the text above",
+      "Ask it to guess",
+      "Ask it to search"
+    ],
+    answer: 1,
+    why: "Without an explicit escape, the likeliest continuation is a plausible invention rather than an admission."
+  }
+]} />
+
+## Tomorrow
+
+Prompts as specifications, versioned like code.

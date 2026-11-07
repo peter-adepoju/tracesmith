@@ -1,0 +1,172 @@
+A model that returns prose is a model whose output you have to parse with a regular expression, and that regular expression will break on the day the model writes a slightly different sentence.
+
+Ask for JSON, and then do not trust it.
+
+## Ask for a fixed shape
+
+```
+Return only this JSON, with no other text:
+{"category": "billing|technical|account|sales|unclear",
+ "confidence": "high|low",
+ "reason": "at most 12 words"}
+```
+
+Three things that does: names every field, constrains the values to a fixed set, and bounds the free-text field so it cannot run away.
+
+Better still, where the provider supports it: **structured output** or **JSON mode**, where you supply a schema and the API guarantees the shape. Use it when it exists. It removes a whole class of failure, and it is usually one parameter.
+
+## Validate anyway
+
+Even with JSON mode. Especially without it.
+
+```js
+const ALLOWED = ["billing", "technical", "account", "sales", "unclear"];
+
+let parsed;
+try {
+  parsed = JSON.parse($json.modelOutput);
+} catch {
+  return [{ json: { ok: false, reason: "not valid JSON", raw: $json.modelOutput } }];
+}
+
+if (!ALLOWED.includes(parsed.category)) {
+  return [{ json: { ok: false, reason: `unknown category: ${parsed.category}` } }];
+}
+
+if (parsed.confidence !== "high" && parsed.confidence !== "low") {
+  return [{ json: { ok: false, reason: "bad confidence value" } }];
+}
+
+return [{ json: { ok: true, ...parsed } }];
+```
+
+Four checks: it parses, the field exists, the value is in the allowed set, and the other fields are shaped as promised.
+
+<Callout kind="key">
+**Treat model output exactly like input from the internet.**
+
+It is untrusted, unpredictable and occasionally malformed. Everything week 14 said about validating what arrives from outside applies here unchanged.
+
+Never interpolate it into a database query. Never execute it. Never send it to a customer unreviewed. Never let a value from it choose a branch without checking it is one of the values you expect.
+</Callout>
+
+## The ways it breaks
+
+**Markdown fences.** The commonest by far:
+
+````
+```json
+{"category": "billing"}
+```
+````
+
+`JSON.parse` fails on that. Strip the fences before parsing, because asking the model not to add them works most of the time, and most of the time is the problem.
+
+**Preamble.** *"Here is the JSON you requested:"* followed by the JSON.
+
+**A value outside the set.** `"Billing"` capitalised, or `"billing/technical"`, or a category it invented.
+
+**Trailing commas**, single quotes, or a comment — none of which are valid JSON.
+
+**Truncation**, when the output hits the token limit mid-object. Set a limit generously, and treat a parse failure on a long output as a likely truncation.
+
+**A different shape** — a bare string, or the object wrapped in an array.
+
+A reasonable defensive parse handles the first two before giving up:
+
+```js
+function parseModelJson(text) {
+  const cleaned = text
+    .replace(/^[\s\S]*?```(?:json)?\s*/i, "")  // drop any preamble and fence
+    .replace(/```[\s\S]*$/, "")                // drop the closing fence
+    .trim();
+  try {
+    return { ok: true, value: JSON.parse(cleaned) };
+  } catch {
+    return { ok: false, raw: text };
+  }
+}
+```
+
+## What to do when it fails
+
+Decide in advance. In order of preference:
+
+1. **Retry once**, with the same prompt. Non-determinism means the second attempt often succeeds, and this is the one place where retrying a model call is clearly right.
+2. **Fall back to the safe value** — `unclear`, which routes to a human.
+3. **Route to a human** with the raw output attached.
+4. **Never** guess, and never let a malformed response become a default that quietly means something.
+
+That last point matters. A validation failure that falls through to `category = "billing"` because that happened to be first in a list is worse than an error, because it is invisible.
+
+## Confidence is not a probability
+
+If you ask for `"confidence": "high|low"`, you get a word the model generated, not a measured quantity. It correlates loosely with correctness and it is not calibrated.
+
+It is still useful: route `low` to a human and let `high` proceed automatically. That is a reasonable design.
+
+What it is not is a number you can threshold precisely, or report as an accuracy figure.
+
+<JsonExplorer />
+
+<Exercise
+  prompt="Your parse fails intermittently on output that looks like valid JSON. What is the most likely cause?"
+  accept={["fence", "markdown", "backtick", "code block"]}
+  hint="What does a model like to wrap code in?"
+  solution="Markdown code fences — the model wrapping the JSON in triple backticks, sometimes. Asking it not to works most of the time, which is exactly the problem. Strip any fence and preamble before parsing rather than relying on the instruction being followed."
+/>
+
+<Exercise
+  prompt="A validation failure falls through to the first category in your list. Why is that worse than throwing an error?"
+  accept={["invisible", "silent", "wrong", "no signal"]}
+  hint="What does anyone see?"
+  solution="Because it is invisible: a malformed response becomes a confident, plausible classification and nothing anywhere records that validation failed. An error is loud and gets fixed; a silent default routes tickets into the wrong queue indefinitely with a healthy-looking success rate."
+/>
+
+<Terms items={[
+  { term: "JSON mode", meaning: "Provider-guaranteed shape. Use it where it exists." },
+  { term: "Validate anyway", meaning: "Parses, exists, in the allowed set, right shape." },
+  { term: "Code fences", meaning: "The commonest parse failure." },
+  { term: "Safe fallback", meaning: "unclear, routed to a human. Never a silent default." },
+  { term: "Confidence", meaning: "A generated word, not a calibrated probability." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "How should you treat a model's output?",
+    options: [
+      "As trusted internal data",
+      "As untrusted input from outside, validated before any use",
+      "As a string to display",
+      "As already validated by JSON mode"
+    ],
+    answer: 1,
+    why: "Never interpolate it into a query, execute it, or let it pick a branch without checking it is a value you expect."
+  },
+  {
+    q: "Validation fails. What is the best first response?",
+    options: [
+      "Use a default category",
+      "Retry once, then fall back to a safe value that routes to a human",
+      "Drop the item",
+      "Log and continue"
+    ],
+    answer: 1,
+    why: "Non-determinism means a retry often succeeds; a silent default is the worst option because nothing records it."
+  },
+  {
+    q: "What does a 'confidence: high' field actually tell you?",
+    options: [
+      "A calibrated probability",
+      "A generated word that correlates loosely with correctness",
+      "Nothing at all",
+      "The token likelihood"
+    ],
+    answer: 1,
+    why: "Useful for routing low to a human; not a number to threshold precisely or report as accuracy."
+  }
+]} />
+
+## Tomorrow
+
+The step that should not have been a model call at all.

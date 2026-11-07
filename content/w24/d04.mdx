@@ -1,0 +1,155 @@
+A gate is a point where the system stops and waits for a named person to say yes. It is the mechanism that lets an automation touch things that matter.
+
+## Where a gate goes
+
+- Money leaving the business — refunds, payouts, anything above a threshold
+- Anything sent to a customer in your name, until the drafting is genuinely proven
+- Deleting or overwriting anything
+- Changing permissions or access
+- Anything legal, compliance or regulatory
+- Anything affecting more than a threshold of records at once
+
+That last one is the general rule from week 20: **automate the action, cap the blast radius.** A workflow trusted on four records should stop and ask at four thousand.
+
+## What a gate must record
+
+An approval that is not recorded did not happen, as far as anyone afterwards is concerned.
+
+| Field | Why |
+| --- | --- |
+| **Who** | A named individual, not a team or a channel |
+| **When** | Timestamp with timezone |
+| **What exactly** | The specific action, with the specific values |
+| **On what evidence** | What they were shown when they decided |
+| **Outcome** | Approved, rejected, expired |
+| **Reason** | For a rejection especially |
+
+<Callout kind="key">
+**A channel is not a person.**
+
+"Approved in `#ops`" is not an audit trail. Three months later nobody can say who approved it, whether they had the authority, or what they were actually looking at when they did.
+
+Record the individual, and record **what they were shown**. An approval of "refund PAY-8841" means nothing if the amount changed between the request and the execution.
+</Callout>
+
+## The shape
+
+```
+1  The agent or workflow prepares the action, fully
+2  It writes a pending record: what, how much, why, evidence
+3  It notifies the approver with a link and a summary
+4  It stops. Nothing else happens.
+5  The approver opens it, sees the full detail, decides
+6  The decision is recorded with their identity and the time
+7  On approval, the action executes — using the recorded values
+8  The result is recorded against the approval
+```
+
+Step 7 is the subtle one. **Execute the values that were approved**, read back from the pending record — not whatever the data says at execution time. Otherwise an approval of NGN 48,500 can execute as NGN 485,000 if something changed in between, and the audit trail will show it as approved.
+
+## Preventing the wrong person approving
+
+**Identity, not a click.** A button in a chat message that anyone in the channel can press is not an approval. Use something that knows who acted — a signed link, a login, your tool's own approval feature.
+
+**Authorisation, not just authentication.** Knowing who pressed it is not enough; check they are permitted. A support agent should not be able to approve a payout above their limit because they received the message.
+
+**Not the requester.** Whoever or whatever initiated it must not approve it. For an agent-initiated action this is automatic. For a human-initiated one, enforce it.
+
+**Expiry.** A pending approval should expire — 24 hours, or whatever suits — and expiring is a *rejection*, not a quiet pass. An approval sitting unanswered for three weeks and then executing is its own incident.
+
+## Make the decision easy
+
+A gate ignored is a gate removed. The notification must let someone decide without opening five tabs:
+
+> **Approval needed: refund NGN 48,500 to ADA NWOSU (cus_01)**
+>
+> Order `ORD-1008`, paid 6 Nov, delivered 9 Nov.
+> Reason: duplicate charge — `PAY-8841` and `PAY-8842`, both NGN 48,500, 14:02 and 14:03.
+> Checked: both charges confirmed at the gateway; no refund issued yet.
+> This refunds the **later** charge only.
+>
+> [Approve] [Reject] — expires in 24 hours
+>
+> Requested by: duplicate-charge workflow, run 88412
+
+Everything needed to decide, in one message. If approving requires investigation, people will batch-approve without looking, and the gate becomes a formality that still carries the word "approved" into your audit log.
+
+<Callout kind="watch">
+**A gate that is always approved is not a control, and it is worse than nothing.**
+
+If a gate has fired four hundred times and been rejected zero times, one of two things is true: the automation is reliable enough that the gate is theatre, or people are clicking without reading.
+
+Either way the audit trail now says a human reviewed four hundred actions that nobody reviewed — which is a stronger claim than you could have made with no gate at all.
+
+Measure the rejection rate. Zero over a large number is a finding.
+</Callout>
+
+## Timeouts and escalation
+
+What happens when nobody responds?
+
+- **Expire and reject.** The safe default for anything irreversible.
+- **Escalate to a second approver** after a period, for things that must happen.
+- **Never auto-approve on timeout.** It converts a gate into a delay, and it will happen at 2am on a public holiday when nobody was watching.
+
+<Exercise
+  prompt="An approval is recorded as 'approved in #ops by the team'. Name two things wrong with it."
+  accept={["who", "person", "evidence", "shown", "authority"]}
+  hint="One about identity, one about content."
+  solution="No named individual, so nobody can say who decided or whether they had the authority; and no record of what they were shown, so there is no way to know whether the amount or details changed between the request and the execution. An audit trail needs a person, a timestamp, the exact action and the evidence presented."
+/>
+
+<Exercise
+  prompt="Your gate has fired 400 times and been rejected 0 times. What does that tell you?"
+  accept={["theatre", "not reading", "rubber", "no control"]}
+  hint="Two possibilities, both bad."
+  solution="Either the automation is reliable enough that the gate is theatre, or people are approving without reading. Either way the audit trail now claims human review of 400 actions nobody reviewed — a stronger and falser claim than having no gate. Measure the rejection rate; zero over a large number is a finding worth raising."
+/>
+
+<Terms items={[
+  { term: "Gate", meaning: "Stop, wait for a named person, record the decision." },
+  { term: "A channel is not a person", meaning: "Record the individual, not the room." },
+  { term: "Execute what was approved", meaning: "Read the values back from the pending record." },
+  { term: "Expire as reject", meaning: "Never auto-approve on timeout." },
+  { term: "Rejection rate", meaning: "Zero over 400 means the gate is not a control." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What must a gate execute?",
+    options: [
+      "The current values at execution time",
+      "The exact values that were shown and approved",
+      "Whichever is larger",
+      "A recalculated amount"
+    ],
+    answer: 1,
+    why: "Otherwise an approval of 48,500 can execute as 485,000 and the audit trail will call it approved."
+  },
+  {
+    q: "Nobody responds to a pending approval for 24 hours. What should happen?",
+    options: [
+      "Auto-approve",
+      "Expire and reject, or escalate to a second approver",
+      "Wait indefinitely",
+      "Retry the notification forever"
+    ],
+    answer: 1,
+    why: "Auto-approval on timeout turns a gate into a delay, and it will fire at 2am on a holiday."
+  },
+  {
+    q: "Why is a button anyone in a channel can press not an approval?",
+    options: [
+      "It is slow",
+      "It records no identity, and does not check the presser is permitted to approve",
+      "Buttons are unreliable",
+      "It is fine"
+    ],
+    answer: 1,
+    why: "Authentication tells you who acted; authorisation tells you whether they were allowed to."
+  }
+]} />
+
+## Tomorrow
+
+Draft, never send — as a permanent design rather than a safety setting.

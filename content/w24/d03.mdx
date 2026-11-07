@@ -1,0 +1,176 @@
+An agent decides its own steps, which means it decides how many. Left alone it will sometimes decide on a great many, and every one costs money and time.
+
+Bounds are not a safety feature you add later. They are part of the definition.
+
+## Four budgets
+
+**Steps.** The maximum number of tool calls. Five to ten for most investigative tasks. If it cannot find the answer in ten focused calls, it is not going to find it in thirty.
+
+**Time.** A wall-clock limit. Stops a run that is waiting on a slow tool forever.
+
+**Spend.** A token or cost ceiling per run, and ideally a daily one across all runs. The daily cap is the one that saves you from a loop discovered on Monday morning.
+
+**Tool-specific limits.** A single tool called at most three times. Repeated identical calls are the signature of an agent that is stuck.
+
+```
+Bounds for "investigate a failed payment"
+  Max steps            8
+  Max wall clock       60s
+  Max spend per run    ~2,000 output tokens
+  Max per tool         3 calls
+  Daily spend cap      across all runs, alerting at 80%
+```
+
+<Callout kind="key">
+**Every bound needs a defined behaviour when it is hit — and that behaviour is never "carry on".**
+
+Hitting a limit is not an error. It is a result: *"I did not reach a conclusion within the budget. Here is what I found."*
+
+An agent that stops cleanly and hands a human partial findings is working correctly. An agent that silently truncates, or returns a confident answer it had not actually established, is the failure.
+</Callout>
+
+## Stop conditions
+
+Budgets are the backstop. A stop condition is the real finish line, and it is positive rather than numeric:
+
+- **Success:** the goal is met — a cause identified, the fields extracted, the question answered
+- **Determined impossible:** it has established the answer is not available. A valid and underused outcome
+- **Needs a human:** it has hit something requiring judgement or permission
+- **Budget spent:** the backstop
+
+Write them into the prompt explicitly:
+
+```
+Stop and report when any of these is true:
+- You have identified the cause, with the evidence for it
+- You have established the cause cannot be determined from
+  the tools available
+- The next useful step needs an action you have no tool for
+- You have made 8 tool calls
+
+Do not continue past a stop condition. Returning "I could not
+determine this, here is what I ruled out" is a correct and
+useful answer.
+```
+
+That last sentence matters more than it looks. Without permission to fail, the likeliest continuation is a confident guess — the same mechanism as week 23 day 1.
+
+## Why agents loop
+
+**No progress check.** It calls the same tool with the same arguments repeatedly because nothing tells it that it already did.
+
+**A tool that always returns something.** A search returning "no results" reads as a reason to search again, slightly differently, forever.
+
+**A goal that cannot be met.** "Find the cause" when there is no cause findable from the tools available.
+
+**Ambiguous success.** It does not know what finished looks like, so it keeps improving.
+
+## Detecting and breaking a loop
+
+```js
+// Three identical calls means it is not making progress.
+const signature = `${toolName}:${JSON.stringify(args)}`;
+seen[signature] = (seen[signature] ?? 0) + 1;
+
+if (seen[signature] >= 3) {
+  return {
+    stop: true,
+    reason: "repeated_tool_call",
+    message: `Called ${toolName} with the same arguments three times. Stopping and reporting what was found.`,
+  };
+}
+```
+
+Cheap, and it catches the commonest loop. Add to it:
+
+- **No new information** across three consecutive steps → stop
+- **Alternating between two tools** with no new findings → stop
+- **The same tool more than its per-tool cap** → stop
+
+In each case, stop and report. Never stop silently.
+
+## The partial result
+
+When an agent stops without finishing, the output must still be useful:
+
+> **Could not determine the cause within the step budget (8 calls).**
+>
+> Established: the payment `PAY-8841` authorised successfully at 14:02 and the webhook was delivered with a `200`. The merchant's order system has no record of it.
+>
+> Ruled out: the payment itself, our delivery, and the merchant's endpoint availability.
+>
+> Not checked: the merchant's internal processing, which I have no tool for.
+>
+> Suggested next step: ask the merchant to search their logs for `PAY-8841`.
+
+That is a good outcome. It is week 18's escalation — evidence, what was ruled out, what is needed — produced by an agent that knew when to stop.
+
+<Callout kind="watch">
+**A daily spend cap across all runs, not only per run.**
+
+A per-run cap limits one bad run. It does nothing about a trigger firing four hundred times because an upstream webhook started duplicating — four hundred well-behaved runs, each inside its budget, and an invoice nobody expected.
+
+Cap the day, alert at 80%, and make exceeding it stop the agent rather than page someone after the money is gone.
+</Callout>
+
+<Exercise
+  prompt="Your agent hits its step budget without finding the cause. What should it return?"
+  accept={["what it found", "partial", "ruled out", "report"]}
+  hint="Not silence, and not a guess."
+  solution="A partial result: what it established, what it ruled out, what it could not check and why, and a suggested next step. Hitting a budget is a result rather than an error, and that output is a perfectly good escalation for a human. What it must not do is guess a cause or stop silently."
+/>
+
+<Exercise
+  prompt="Why is a per-run spend cap insufficient on its own?"
+  accept={["many runs", "daily", "trigger", "duplicate", "volume"]}
+  hint="What if it runs four hundred times?"
+  solution="Because a trigger misfiring — a duplicated webhook, a loop upstream — produces hundreds of runs that are each individually within budget, and the total is the problem. Add a daily cap across all runs that stops the agent when reached, with an alert at 80%, so you find out before the invoice does."
+/>
+
+<Terms items={[
+  { term: "Four budgets", meaning: "Steps, time, spend, per-tool calls." },
+  { term: "Stop condition", meaning: "Positive and explicit. Budgets are the backstop." },
+  { term: "Permission to fail", meaning: "Without it, the likeliest output is a confident guess." },
+  { term: "Repeated-call detector", meaning: "Three identical calls means stuck." },
+  { term: "Daily cap", meaning: "What a per-run cap does not cover." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "An agent hits its step limit. What is the correct behaviour?",
+    options: [
+      "Carry on, it is close",
+      "Stop and report what it found, what it ruled out and what it could not check",
+      "Return the best guess",
+      "Retry from the start"
+    ],
+    answer: 1,
+    why: "Hitting a budget is a result, and a partial finding with the evidence is a perfectly good escalation."
+  },
+  {
+    q: "What is the signature of a stuck agent?",
+    options: [
+      "Slow tools",
+      "The same tool called with the same arguments repeatedly",
+      "Long output",
+      "High cost"
+    ],
+    answer: 1,
+    why: "Hash the tool name and arguments, count them, and stop at three."
+  },
+  {
+    q: "Why must the prompt explicitly permit 'I could not determine this'?",
+    options: [
+      "Politeness",
+      "Without permission to fail, the likeliest continuation is a confident guess",
+      "To save tokens",
+      "It is not needed"
+    ],
+    answer: 1,
+    why: "Same mechanism as hallucination: a plausible answer is a likelier continuation than an admission."
+  }
+]} />
+
+## Tomorrow
+
+Human approval gates, and recording who said yes.
