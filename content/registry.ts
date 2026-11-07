@@ -115,6 +115,18 @@ import w19d03 from "./w19/d03.mdx";
 import w19d04 from "./w19/d04.mdx";
 import w19d05 from "./w19/d05.mdx";
 import w19d06 from "./w19/d06.mdx";
+import w20d01 from "./w20/d01.mdx";
+import w20d02 from "./w20/d02.mdx";
+import w20d03 from "./w20/d03.mdx";
+import w20d04 from "./w20/d04.mdx";
+import w20d05 from "./w20/d05.mdx";
+import w20d06 from "./w20/d06.mdx";
+import w21d01 from "./w21/d01.mdx";
+import w21d02 from "./w21/d02.mdx";
+import w21d03 from "./w21/d03.mdx";
+import w21d04 from "./w21/d04.mdx";
+import w21d05 from "./w21/d05.mdx";
+import w21d06 from "./w21/d06.mdx";
 
 export const LESSONS: Record<string, ComponentType> = {
   w01d01,
@@ -231,6 +243,18 @@ export const LESSONS: Record<string, ComponentType> = {
   w19d04,
   w19d05,
   w19d06,
+  w20d01,
+  w20d02,
+  w20d03,
+  w20d04,
+  w20d05,
+  w20d06,
+  w21d01,
+  w21d02,
+  w21d03,
+  w21d04,
+  w21d05,
+  w21d06,
 };
 
 export function hasLesson(key: string): boolean {

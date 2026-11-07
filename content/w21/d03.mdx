@@ -1,0 +1,167 @@
+n8n has a few hundred ready-made nodes. The HTTP Request node is worth more than all of them, because it talks to everything else.
+
+Everything from Phase 2 applies here unchanged: method, URL, headers, body, status, response.
+
+## The fields
+
+**Method** — `GET`, `POST`, `PUT`, `PATCH`, `DELETE`.
+
+**URL** — supports expressions:
+
+```
+https://api.example.com/v1/customers/{{ $json.customerId }}
+```
+
+**Authentication** — use a **credential**, never a header you typed. More on that below.
+
+**Query parameters** — key/value pairs, encoded for you. Do not hand-build a query string.
+
+**Headers** — `Content-Type`, `Idempotency-Key`, anything the API needs.
+
+**Body** — for `POST`/`PUT`/`PATCH`. Either field-by-field, or a JSON body using expressions.
+
+## A real call
+
+```
+POST  https://api.example.com/v1/payouts
+Auth: credential "Example API — production"
+Headers:
+  Content-Type: application/json
+  Idempotency-Key: {{ $json.payoutId }}
+Body (JSON):
+{
+  "reference": "{{ $json.payoutId }}",
+  "amountMinor": {{ $json.amountMinor }},
+  "currency": "NGN",
+  "destination": "{{ $json.bankAccountId }}"
+}
+```
+
+Two details that matter.
+
+`"{{ $json.payoutId }}"` is **in quotes** because it is a string. `{{ $json.amountMinor }}` is **not**, because it is a number — quote it and you send `"4850000"`, and a server that is strict about types will reject it.
+
+The `Idempotency-Key` is week 13 and week 20 arriving together. This node may run twice: n8n retries, a workflow gets re-run, someone presses Execute again. Derive the key from the data — the payout id — so a retry is recognised as the same intention.
+
+<Callout kind="key">
+**Credentials, never typed secrets.**
+
+Create a credential in n8n and select it on the node. Then:
+
+- The value is encrypted at rest and masked in the interface
+- It never appears in an execution log, which is readable by anyone with access
+- It never travels in an exported workflow JSON
+- Changing a rotated key is one edit, not fourteen nodes
+
+A key typed into a header field is in the workflow export, in the execution history, and in any screenshot anyone takes of that node. Week 11's redaction rule, in a new place.
+</Callout>
+
+## Pagination
+
+An API returning a list almost never returns all of it. The HTTP Request node has built-in pagination — cursor, page number, or a next-URL from the response.
+
+The thing to remember is from Phase 2: **check whether there is a next page.** A workflow that quietly processes only the first 50 of 1,240 records is the missing-record problem from week 20 day 4, and it reports nothing.
+
+## When it is not 200
+
+By default a non-2xx fails the node and stops the workflow. Sometimes right, often not.
+
+The options worth knowing:
+
+**Never Error** — the node continues and you inspect the status yourself. Use when a 404 is a legitimate answer ("this customer has no record yet") rather than a failure.
+
+**Continue (using error output)** — the node gets a second output for failures, so you can route them to a log, a retry, or an alert while the successes carry on.
+
+**Retry on Fail** — with attempts and a wait. Use for transient failures: timeouts, `502`, `503`, `429`.
+
+```
+Retry on Fail:  3 attempts, 5000ms between
+```
+
+<Callout kind="watch">
+**Do not retry a `4xx`.**
+
+A `400`, `401`, `403` or `422` means the request was wrong, and sending exactly the same wrong request three more times will produce exactly the same answer three more times. It wastes rate limit and delays the real failure.
+
+Retry `429`, `500`, `502`, `503`, `504` and timeouts. Those are conditions that can change on their own.
+
+And never retry a `POST` that writes **without** an idempotency key. That is the duplicate-payment bug, built deliberately.
+</Callout>
+
+## Reading the documentation
+
+<EndpointBuilder />
+
+Before building the node, settle three things from the API's documentation: where each value goes (path, query or body), what authentication it wants, and what it returns on success and on failure. Fifteen minutes of reading saves an afternoon of guessing — and the path-versus-query mistake produces a `404` that looks like a broken API.
+
+<CurlReader />
+
+Many docs give a `curl` example. Reading it tells you exactly what to put in each field of the node.
+
+## Testing safely
+
+- **Sandbox credentials first.** Most providers have a test mode.
+- **Pin the data** from the previous node so you are not re-fetching while you iterate.
+- **One item first.** Add a Limit node set to 1 while building, then remove it. This is the difference between testing a payout workflow and making forty payouts.
+
+<Exercise
+  prompt={'Your JSON body sends "amountMinor": "{{ $json.amountMinor }}" (in quotes) and the API rejects it. Why?'}
+  accept={["string", "quotes", "number", "type"]}
+  hint="Look at the quotation marks."
+  solution={'The quotes make it a string, so you send "4850000" where the API expects the number 4850000. A strict API rejects it on type; a lax one may coerce it and work until the day it does not. Remove the quotes for numbers and booleans, keep them for strings.'}
+/>
+
+<Exercise
+  prompt="Which status codes are worth retrying, and which must not be?"
+  accept={["429", "500", "502", "503", "timeout", "not 4xx"]}
+  hint="What can change on its own?"
+  solution="Retry 429, 500, 502, 503, 504 and timeouts — transient conditions that may resolve. Do not retry 400, 401, 403, 404 or 422: the request itself is wrong and will be equally wrong on the third attempt, wasting rate limit and delaying the real failure. And never retry a writing POST without an idempotency key."
+/>
+
+<Terms items={[
+  { term: "Credential", meaning: "Encrypted, masked, excluded from exports and logs." },
+  { term: "Idempotency-Key", meaning: "Derived from the data, so a retry is the same intention." },
+  { term: "Never Error", meaning: "For when a 404 is a legitimate answer." },
+  { term: "Error output", meaning: "A second branch for failures while successes continue." },
+  { term: "Limit 1 while building", meaning: "The difference between a test and forty payouts." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Why use a credential rather than typing the key into a header?",
+    options: [
+      "It is faster",
+      "It is encrypted, masked, and excluded from execution logs and workflow exports",
+      "It is required",
+      "It allows pagination"
+    ],
+    answer: 1,
+    why: "A typed key is in the export, in the execution history, and in any screenshot of that node."
+  },
+  {
+    q: "A call returns 422. Should the node retry?",
+    options: [
+      "Yes, three times",
+      "No — the request is wrong and will be equally wrong on the third attempt",
+      "Only with a delay",
+      "Yes, with a different key"
+    ],
+    answer: 1,
+    why: "Retry only conditions that can change on their own: 429, 5xx and timeouts."
+  },
+  {
+    q: "What should you add while building a workflow that writes?",
+    options: [
+      "More retries",
+      "A Limit node set to 1, removed once it works",
+      "A longer timeout",
+      "A second credential"
+    ],
+    answer: 1,
+    why: "It is the difference between testing a payout workflow and making forty payouts."
+  }
+]} />
+
+## Tomorrow
+
+Code nodes: when logic should leave the canvas.

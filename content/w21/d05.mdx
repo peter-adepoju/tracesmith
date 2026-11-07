@@ -1,0 +1,174 @@
+A single workflow run can hold data in its own items. The moment two runs — or two workflows — need to agree about something, that data has to live somewhere outside both of them.
+
+## What state is for
+
+- **What have I already processed?** The deduplication record from week 20 day 2
+- **Where did I get to?** A cursor for polling
+- **What is in flight?** Things started and not yet finished
+- **What did I learn?** A mapping built up over time — a customer id against an external id
+
+Without it, every run starts blind, which means it either redoes work or skips it.
+
+## Where it belongs
+
+| Place | Verdict |
+| --- | --- |
+| **A data table** | Yes. Typed, queryable, safe for concurrent runs |
+| A proper database | Yes, when the volume justifies it |
+| `$getWorkflowStaticData` | Small things only — a cursor, a counter |
+| A spreadsheet | No |
+| A document or channel message | No |
+| A variable in the workflow | Gone when the run ends |
+
+<Callout kind="key">
+**State does not live in a document.**
+
+A spreadsheet looks like a database and is not one. It has no types, no constraints, no atomic updates — and two runs writing at once produce a result nobody can reconstruct afterwards.
+
+It is also *editable by a human who is just tidying up*, which is how a cursor silently moves backwards and a month of records gets reprocessed.
+
+Documents are for people to read. State is for systems to read.
+</Callout>
+
+## Designing a shared table
+
+For a workflow that chases missing KYC documents:
+
+| Column | Type | Why |
+| --- | --- | --- |
+| `merchant_id` | text, **unique** | The key. Uniqueness is what makes upsert possible |
+| `status` | text | `awaiting`, `chasing`, `complete`, `abandoned` |
+| `missing` | text | Which documents are outstanding |
+| `first_seen` | datetime | When they entered this state |
+| `last_chased` | datetime | So the next run knows whether to chase again |
+| `chase_count` | number | So it stops after three |
+| `updated_at` | datetime | The only evidence of what changed last |
+
+Four principles behind that:
+
+**A unique key.** Without one you cannot upsert, and you will create duplicates.
+
+**Explicit status, not inferred.** `status = 'chasing'` beats working it out from three date columns every time you read it.
+
+**Timestamps on everything.** They are the only forensics you will have.
+
+**A counter for anything repeating.** It is what stops the workflow chasing someone eleven times.
+
+## Upsert, not insert
+
+The operation you want is almost always **update if it exists, insert if it does not**, matched on the unique key.
+
+```
+Operation:  Upsert
+Match on:   merchant_id
+Columns:    status, missing, last_chased, chase_count, updated_at
+```
+
+A plain insert creates a second row every run, and by Friday the table has four thousand rows describing thirty merchants. Then a human looks at it, concludes the data is a mess, and stops trusting the automation.
+
+## Read, decide, write
+
+The safe shape for any stateful step:
+
+```
+1. Read the row for this key
+2. Decide, using what it says
+3. Do the work
+4. Write the result
+```
+
+Step 4 comes **after** step 3. Writing `last_chased` before sending the chase means a failed send is recorded as a successful one, and that merchant is never chased again.
+
+Week 20 day 2 said the same thing about processed-event records: write after success, never before.
+
+<Callout kind="watch">
+**Two runs at once will happen.**
+
+A schedule overlapping itself, a manual run during a scheduled one, two webhooks arriving together.
+
+Both read the row, both see `chase_count = 1`, both send a chase, both write `2`. The merchant gets two identical emails and the count says one.
+
+Defend with the **unique key** doing the work: make the thing you are protecting against a constraint the table enforces, rather than a check your code performs. A `chase_log` table with a unique key of `merchant_id + chase_number` means the second write fails rather than duplicating — and a failed write is visible, while a duplicate email is not.
+</Callout>
+
+## Clean up
+
+A state table grows forever unless something removes rows.
+
+- Delete or archive completed rows after a period
+- Keep a count of what you deleted, so the shrinkage is explainable
+- Never delete anything you might need to explain to a regulator — archive it instead
+
+## Where this meets week 20
+
+The counting job from week 20 day 4 belongs here:
+
+```
+Merchants awaiting documents:  30
+Rows in the chase table:       30
+                               --
+Difference:                     0
+```
+
+A daily job comparing those two is how you find out that the workflow has silently stopped adding rows. Its silence on a good day is the point.
+
+<Exercise
+  prompt="Your chase workflow writes last_chased before sending the email. What goes wrong?"
+  accept={["fail", "never chased", "lost", "not sent"]}
+  hint="What if the send fails?"
+  solution="If the send fails, the row says the merchant was chased when they were not — and because the next run reads that timestamp, they will never be chased again. Nothing errors visibly and the merchant simply falls out of the process. Write after the work succeeds, never before."
+/>
+
+<Exercise
+  prompt="Two runs overlap and both chase the same merchant. Why is a unique constraint a better defence than a check in your code?"
+  accept={["race", "between", "atomic", "enforce", "database"]}
+  hint="When does the check happen relative to the write?"
+  solution="Because a check in code happens before the write, and both runs can pass it before either writes — that gap is the race. A unique constraint is enforced by the table at the moment of writing, so the second write simply fails. And a failed write is visible in the execution, while a duplicate email is not visible anywhere."
+/>
+
+<Terms items={[
+  { term: "Upsert", meaning: "Update if present, insert if not. Needs a unique key." },
+  { term: "Explicit status", meaning: "A status column, not a state inferred from dates." },
+  { term: "Write after success", meaning: "Or a failure is recorded as a success." },
+  { term: "Unique constraint", meaning: "Enforced at write time. Beats a check in code." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Why is a spreadsheet a bad place for automation state?",
+    options: [
+      "It is slow",
+      "No types or atomic updates, and a human tidying it can silently move a cursor",
+      "It costs money",
+      "It is hard to read"
+    ],
+    answer: 1,
+    why: "Two concurrent writes produce a result nobody can reconstruct, and it invites human editing."
+  },
+  {
+    q: "What does an insert-every-run table look like by Friday?",
+    options: [
+      "Correct",
+      "Four thousand rows describing thirty merchants, which nobody trusts",
+      "Empty",
+      "Locked"
+    ],
+    answer: 1,
+    why: "Upsert on a unique key is almost always the operation you actually wanted."
+  },
+  {
+    q: "When should a workflow write 'last_chased'?",
+    options: [
+      "Before sending, to prevent duplicates",
+      "After the send succeeds",
+      "At the start of the run",
+      "It does not matter"
+    ],
+    answer: 1,
+    why: "Writing first means a failed send is recorded as a success and that merchant is never chased again."
+  }
+]} />
+
+## Tomorrow
+
+Build it: trigger, call, record — and run it twice with no duplicates.

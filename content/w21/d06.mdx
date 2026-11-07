@@ -1,0 +1,166 @@
+One workflow, three steps, built by you: **trigger, call, record.** It must run twice with no duplicates, and it must be documented on one page.
+
+That is the smallest thing that is genuinely production-shaped, and everything larger is this with more nodes.
+
+## What to build
+
+**Daily GitHub release watcher.** A real, useful workflow that needs no credentials and no money:
+
+1. **Trigger** — manual at first, schedule later
+2. **Call** — fetch the latest releases of a repository you care about
+3. **Record** — write new ones to a data table, skipping any already seen
+4. **Notify** — a message for anything new
+
+Substitute any API you like. The shape is the lesson.
+
+## Step by step
+
+**1. Manual Trigger.** Week 20 day 2, and week 21 day 1. Start here.
+
+**2. HTTP Request** — name it `Fetch releases`.
+
+```
+GET https://api.github.com/repos/n8n-io/n8n/releases?per_page=10
+```
+
+Execute it. You get one item containing an array of ten.
+
+**3. Split Out** on `releases`… except the array *is* the response, so the HTTP node already gives you ten items. Check the item count before adding nodes — this is exactly the confusion from day 2, and the fix is to look rather than assume.
+
+**4. Edit Fields** — name it `Shape release`. Keep only what you need:
+
+| Field | Value |
+| --- | --- |
+| `release_id` | `{{ $json.id }}` |
+| `tag` | `{{ $json.tag_name }}` |
+| `published_at` | `{{ $json.published_at }}` |
+| `url` | `{{ $json.html_url }}` |
+
+Shaping early makes everything downstream readable, and it means a change in the API's response touches one node.
+
+**5. The data table** — `seen_releases`:
+
+| Column | Type |
+| --- | --- |
+| `release_id` | text, **unique** |
+| `tag` | text |
+| `published_at` | datetime |
+| `notified_at` | datetime |
+
+**6. Look it up** — read the table for this `release_id`.
+
+**7. IF** — name it `New?`. True when the lookup found nothing.
+
+**8. On the true branch:** send the notification, **then** upsert the row with `notified_at`.
+
+That order is week 21 day 5's rule and it is the heart of the exercise: **record after the work succeeds**, so a failed notification is retried rather than silently marked done.
+
+## Run it twice
+
+```
+Run 1:  10 releases fetched, 10 new, 10 notified, 10 rows written
+Run 2:  10 releases fetched,  0 new,  0 notified,  0 rows written
+```
+
+If run 2 notifies anything, the deduplication is wrong. Find out why before going further — that is the entire point of the exercise, and it is the same run-twice test from week 13, now on your own build.
+
+Then make run 3 interesting: delete one row from the table and run again. Exactly one notification, for exactly that release.
+
+## Then promote it
+
+Only once it has passed the twice test:
+
+- Change the trigger to **Schedule**, `0 8 * * *` — and write the timezone in a note on the canvas
+- Turn on **single instance**, so a slow run cannot overlap the next
+- Set **Retry on Fail**: 3 attempts, for the HTTP node only
+- Add an **error branch** that posts the failure somewhere a human will see it
+- **Activate** it
+
+<Callout kind="key">
+**Add the heartbeat before you walk away.**
+
+The workflow should report every successful run, even one that found nothing: *"Checked 10 releases, 0 new."* Then alert when that message **stops arriving**.
+
+Without it you cannot distinguish "no new releases" from "stopped running in March", and week 20 day 5 says that silent failure is the one that destroys trust in the whole thing.
+</Callout>
+
+## Document it on one page
+
+```
+WORKFLOW   Ops: notify on new n8n releases — daily 08:00 WAT
+
+WHAT       Checks the ten most recent releases of n8n-io/n8n each
+           morning and posts a message for any not seen before.
+
+TRIGGER    Schedule, 07:00 UTC (08:00 WAT), weekdays and weekends.
+           Single instance on.
+
+STEPS      1 Fetch releases (GitHub API, no auth, 10 per page)
+           2 Shape release (keep id, tag, date, url)
+           3 Look up release_id in seen_releases
+           4 If not found: notify, then upsert the row
+           5 Always: post a heartbeat with the counts
+
+STATE      Data table seen_releases, unique on release_id.
+           Rows are never deleted; the table is small.
+
+HOW TO     A heartbeat appears in #ops each morning. Normal is
+KNOW IT    "Checked 10 releases, N new" with N usually 0.
+WORKS      No heartbeat for two days means it has stopped.
+
+HOW TO     Deactivate it on the canvas. Nothing depends on it;
+TURN OFF   the only consequence is nobody is told about releases.
+
+FAILS      GitHub rate limit (unauthenticated, 60/hour) — would
+LIKE       show as a 403 on step 1. Add a token if it becomes
+           a problem.
+
+OWNER      Peter. Reviewed quarterly.
+```
+
+Those are the four handover questions from week 20 day 5 — what it does, how to tell it works, how to turn it off, who owns it — plus the failure mode you already know about.
+
+<Callout kind="job">
+This one page is the deliverable that distinguishes someone who builds automations from someone who leaves automations behind.
+
+Most workflows in most companies have none of this. The person who writes it is the person whose work is still running, and still trusted, two years later.
+</Callout>
+
+## Check yourself
+
+- Did run 2 produce zero notifications?
+- Do I write the row **after** the notification, not before?
+- Is single instance on?
+- Does a successful run with nothing to do still say something?
+- Is there a named owner?
+- Could someone else turn it off without asking me?
+
+<Exercise
+  prompt="Run 2 notifies about all ten releases again. Name the two most likely causes."
+  accept={["upsert", "insert", "lookup", "key", "not written"]}
+  hint="Either nothing was stored, or nothing was found."
+  solution="Either the rows were never written — the upsert is on the wrong branch, or it ran before the notification and failed — or the lookup is not finding them, usually a type mismatch where release_id was stored as a number and is being compared as a string. Open run 1's execution and check the table node actually wrote ten rows; that distinguishes the two in seconds."
+/>
+
+<Exercise
+  prompt="Why must the heartbeat fire on a run that found nothing new?"
+  accept={["stopped", "silent", "distinguish", "not running"]}
+  hint="What does silence mean otherwise?"
+  solution="Because 'no new releases' and 'the workflow has not run since March' produce exactly the same observable result — nothing. A heartbeat on every successful run makes silence itself the alert, which is the only defence against the silent failure that week 20 called the one to design against first."
+/>
+
+<Terms items={[
+  { term: "Trigger, call, record", meaning: "The smallest production-shaped workflow." },
+  { term: "The twice test", meaning: "Run 2 must change nothing. Week 13, on your own build." },
+  { term: "Record after success", meaning: "So a failure retries instead of being marked done." },
+  { term: "Heartbeat", meaning: "Reports even when there was nothing to do." },
+  { term: "The one page", meaning: "What, how to tell, how to stop, who owns." },
+]} />
+
+## Week 21 in one line
+
+The canvas moves data, code decides, state lives in a table, and nothing is finished until it has run twice and told you it is still alive.
+
+## Next week
+
+Making workflows reliable in earnest: errors, retries, alerting and the things that break at three in the morning.

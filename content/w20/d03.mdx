@@ -1,0 +1,164 @@
+Nobody can describe their own process accurately. Not because they are careless — because the awkward parts have been absorbed into habit and stopped being visible.
+
+Mapping is how you find them before you build on top of them.
+
+## Three columns
+
+For each step: **what happens, who does it, which system.**
+
+```
+STEP                        WHO              SYSTEM
+1  Merchant signs up        Merchant         Website
+2  Welcome email sent       Automatic        Mailer
+3  Documents uploaded       Merchant         Portal
+4  Documents reviewed       Compliance       Portal
+5  Account approved         Compliance       Admin
+6  API keys issued          Automatic        Platform
+7  Keys emailed             ???              ???
+8  Merchant goes live       Merchant         Their site
+```
+
+Step 7 is the point of the exercise. Nobody could name the owner or the system — and in reality one person on the team does it by hand, from memory, when they notice.
+
+<Callout kind="key">
+**The step with no owner is where the process actually fails.**
+
+It is invisible in conversation because it has always been absorbed by someone being conscientious. It becomes visible the moment they are on leave.
+
+Mapping finds it. That alone is worth the hour, whether or not you automate anything.
+</Callout>
+
+## Draw it
+
+Boxes and arrows beat prose, because a diagram makes gaps and loops visible in a way a numbered list does not.
+
+```
+  [Signup] → [Welcome email] → [Upload docs]
+                                     ↓
+                            [Compliance review]
+                               ↓           ↓
+                         approved       rejected
+                               ↓           ↓
+                       [Issue keys]   [Ask for more] ──┐
+                               ↓           ↑            │
+                        [Email keys]       └────────────┘
+                               ↓
+                           [Go live]
+```
+
+Loops are where time disappears. "Ask for more documents" going back to upload can run three times, and nobody counts it — so everyone believes onboarding takes two days when it averages nine.
+
+## The decision nobody writes down
+
+Every real process has at least one.
+
+> **Step 4: compliance reviews the documents.** On what basis? What makes a document acceptable?
+
+The documented answer is "they check it is valid". The real answer, once you ask, is a list of eleven things someone has in their head, three of which contradict the written policy, and one of which is "if it is a referral from a partner we are more lenient".
+
+You cannot automate a decision nobody has written down. So:
+
+1. Ask the person who makes it to talk you through five recent examples
+2. Write down the rule you observe, not the rule they describe
+3. Show it back and let them correct it
+4. **Automate only the clear cases** and route the rest to a human
+
+That fourth point is the whole art. A rule that handles 80% confidently and escalates the remaining 20% is far more valuable than one that handles 100% badly — and it is much easier to build.
+
+## What to record for each step
+
+- **Trigger** — what makes this step start?
+- **Input** — what does it need?
+- **Output** — what does it produce?
+- **Owner** — a named person or team, or *nobody*, written honestly
+- **System** — where it happens
+- **Duration** — how long it takes, and how long it waits
+- **Failure** — what happens when it goes wrong, and who finds out
+
+The last two are the ones people skip, and they are where the automation case usually lives. A step taking four minutes and waiting two days is not a four-minute step.
+
+## Wait time against work time
+
+Map them separately. Most processes are mostly waiting:
+
+```
+Work time:  45 minutes
+Wait time:  7 days
+```
+
+That tells you something important: automating the 45 minutes saves 45 minutes. **Automating the chase that removes four of the seven days is worth far more.**
+
+New automators optimise the work and leave the waiting. The waiting is where the value is.
+
+## Map the real process, not the official one
+
+Ask these, and expect the answers to be uncomfortable:
+
+- What do you do when the normal route does not work?
+- What do you check that nobody asked you to check?
+- What is the last thing that went wrong, and what did you do?
+- Which part do you dread?
+- What do you do on the days you are busy that you would not do otherwise?
+
+That last question finds the shortcuts, and the shortcuts are the real process.
+
+<Exercise
+  prompt="You map a process and find a step with no named owner. What is the right response, and why is it valuable even if you build nothing?"
+  accept={["owner", "assign", "name", "ask"]}
+  hint="It is already failing."
+  solution="Name it as a finding and get an owner assigned. It is valuable with no automation at all, because an unowned step is being absorbed by someone being conscientious — and it fails silently the first time that person is on leave. Mapping made visible something that was invisible in every conversation about the process."
+/>
+
+<Exercise
+  prompt="A process has 45 minutes of work and 7 days of waiting. Where is the value in automating it?"
+  accept={["wait", "waiting", "chase", "days"]}
+  hint="Which number is larger?"
+  solution="In the waiting. Automating the 45 minutes of work saves 45 minutes; automating the chasing and handoffs that cause the delay can remove days of calendar time — which is what the business actually feels. New automators consistently optimise the work and leave the waiting alone."
+/>
+
+<Terms items={[
+  { term: "Three columns", meaning: "What happens, who does it, which system." },
+  { term: "The unowned step", meaning: "Absorbed by someone conscientious. Fails on their leave." },
+  { term: "The undocumented decision", meaning: "Observe five examples; write the real rule." },
+  { term: "Wait time", meaning: "Usually larger than work time, and worth more to remove." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What does mapping most reliably reveal?",
+    options: [
+      "The slowest step",
+      "A step with no owner that someone has been absorbing",
+      "The cost",
+      "The tooling"
+    ],
+    answer: 1,
+    why: "It is invisible in conversation precisely because it has always been handled by someone being conscientious."
+  },
+  {
+    q: "A decision at one step has no written rule. What do you do?",
+    options: [
+      "Skip the step",
+      "Observe five real examples, write the rule you see, confirm it, then automate only the clear cases",
+      "Ask for the policy document",
+      "Automate it anyway"
+    ],
+    answer: 1,
+    why: "The described rule and the real rule differ, and handling 80% confidently beats handling 100% badly."
+  },
+  {
+    q: "Why record wait time separately from work time?",
+    options: [
+      "For reporting",
+      "Most processes are mostly waiting, and removing the waiting is worth more",
+      "To calculate cost",
+      "It is not necessary"
+    ],
+    answer: 1,
+    why: "45 minutes of work inside 7 days of waiting means the chase, not the work, is the thing to automate."
+  }
+]} />
+
+## Tomorrow
+
+Sources of truth, and why two systems always drift apart.

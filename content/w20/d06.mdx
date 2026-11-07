@@ -1,0 +1,115 @@
+Five processes. Map each, score each, rank them, and write the one-paragraph proposal for the winner.
+
+This is the deliverable that gets an automation project approved, and it is almost entirely judgement rather than building.
+
+## The five
+
+**A — Daily settlement reconciliation.** Pull yesterday's payouts, match against transactions, post a summary. Every working day, 40 minutes, done by one person who dislikes it.
+
+**B — New merchant onboarding chase.** Welcome email, check which documents are missing, chase at 3 and 7 days. About 30 merchants a month, 12 minutes each, currently done when someone remembers.
+
+**C — Weekly competitor price check.** Visit six websites, record prices, update a spreadsheet. Weekly, 50 minutes. Two of the six sites were redesigned last quarter.
+
+**D — Monthly invoice generation.** Pull usage per customer, generate invoices, email them. Monthly, 3 hours, errors are expensive and visible.
+
+**E — Quarterly board pack.** Gather figures from four systems, assemble a deck. Quarterly, 4 hours, high stakes.
+
+## Score them
+
+<AutomationScorer />
+
+The figure covers four of these shapes. Do the arithmetic for all five yourself before looking.
+
+```
+            per month   minutes   hours/yr   build   payback   stability
+A  Recon          22        40        176     12h      0.8mo      5
+B  Onboard        30        12         72     10h      1.7mo      4
+C  Prices          4        50         40      8h      2.4mo      1
+D  Invoices        1       180         36     20h      6.7mo      4
+E  Board pack    0.33      240         16     25h     18.8mo      4
+```
+
+## The ranking, and the reasoning
+
+**1. A — reconciliation.** 176 hours a year, payback under a month, maximum stability. The clearest yes available. Build the counting job as part of it.
+
+**2. B — onboarding chase.** 72 hours a year, payback under two months. The real win is not the 72 hours: it is that the chase currently happens *when someone remembers*, so merchants sit unverified for days. This removes wait time, which week 20 day 3 said is where the value is.
+
+**3. D — invoices.** 36 hours a year, payback under seven months, which is marginal on hours alone. It earns its place on **error cost**: invoicing mistakes are expensive and visible to customers. Build it with a human approval step before anything is sent — the time saving survives, the risk does not.
+
+**4. C — prices.** Stop. Payback looks fine at 2.4 months and **stability is 1**: two of the six sites were redesigned last quarter, so a scraper will break repeatedly and silently. It would cost more in maintenance than it saves, and silent breakage on a price feed means decisions made on stale numbers. Revisit if the sites stabilise or an API appears.
+
+**5. E — board pack.** Stop, for the opposite reason. Rock solid and high stakes, and four runs a year will not repay 25 hours within any horizon worth planning over. Document the steps properly, and automate only the figure-gathering — about two hours of work that removes most of the error risk.
+
+<Callout kind="key">
+**C and E are both rejected and they are not the same rejection.**
+
+C fails on **stability**: it would break. It becomes a yes if the sites settle down or expose an API.
+
+E fails on **volume**: it works perfectly and does not happen often enough. It becomes a yes only if it becomes monthly.
+
+Saying which kind of no it is tells the person asking what would change your mind — and that is what makes a no land as a judgement rather than a refusal.
+</Callout>
+
+## The proposal
+
+One paragraph. This is the artefact.
+
+> **Automate the daily settlement reconciliation.** It runs every working day and takes about 40 minutes, so roughly 176 hours a year, and it is done late in the day by one person for whom it is the dullest task they have — which is where reconciliation errors come from. The process has not changed in two years and touches two systems that both have APIs, so I estimate about 12 hours to build, paying back inside a month.
+>
+> I would build it as a scheduled job at 07:00 that pulls both sides, matches them, posts a summary to the finance channel, and raises an alert when the counts differ — rather than attempting to correct anything, since an automatic fixer that picks the wrong side makes a discrepancy worse and harder to find.
+>
+> Risks: the reconciliation rules have one judgement step for partial settlements that is not written down anywhere, so I would map that with Finance first and route anything ambiguous to a human rather than guessing. I would also want a named owner before it goes live.
+>
+> **Not recommended right now:** the competitor price check, because two of the six sites changed last quarter and a scraper would break faster than it repays; and the quarterly board pack, which is stable and important but runs four times a year and would not repay 25 hours of build.
+
+What that paragraph does:
+
+- Leads with the recommendation, not the analysis
+- Gives the numbers that justify it
+- Describes the **design**, including the deliberate decision not to auto-fix
+- Names the risk honestly, including the undocumented decision
+- Asks for an owner
+- Says what it is **not** recommending, and why — which is what makes the recommendation credible
+
+<Callout kind="job">
+That last paragraph is the one that gets you believed.
+
+Anyone can propose building something. Someone who arrives having costed five options and rejected three of them for stated reasons is doing the job above the one they were hired for, and it is visible immediately.
+</Callout>
+
+## Check yourself
+
+- Did I calculate payback, or decide by feeling?
+- Did I check **stability** separately from frequency?
+- Did I say which kind of no each rejection is?
+- Did I budget maintenance at all?
+- Does my design include how anyone will know it is still working?
+- Did I name an owner?
+
+<Exercise
+  prompt="Process D pays back in 6.7 months, which is marginal, yet it is ranked third and recommended. Why?"
+  accept={["error", "cost of error", "expensive", "visible"]}
+  hint="Hours are not the only axis."
+  solution="Because the cost of error is high and visible to customers — invoicing mistakes are expensive and embarrassing. Consistency, not time saved, is the main benefit, so the marginal payback is acceptable. The design must carry a human approval step before anything is sent, which keeps the time saving while keeping the judgement where the consequences are."
+/>
+
+<Exercise
+  prompt="Write the two-sentence rejection of process C for the person who asked for it."
+  solution="Something like: 'I would hold off on the price check. Two of the six sites were redesigned last quarter, so a scraper would break repeatedly — and silently, which means decisions made on stale prices — costing more in maintenance than the 40 hours a year it saves. If those sites settle down, or any of them offer an API, it moves straight onto the list.' The reason, the specific risk, and the condition that changes the answer."
+/>
+
+<Terms items={[
+  { term: "Payback period", meaning: "Build hours over hours saved per month." },
+  { term: "Two kinds of no", meaning: "Unstable becomes yes later; infrequent usually does not." },
+  { term: "Report, do not fix", meaning: "An auto-fixer that picks the wrong side makes it worse." },
+  { term: "The proposal", meaning: "Recommendation, numbers, design, risk, owner, rejections." },
+]} />
+
+## Week 20 in one line
+
+Choosing well is worth more than building well, and saying which kind of no you are giving is what makes the yes credible.
+
+## Next week
+
+Hands on the canvas: n8n, and your first working workflow.

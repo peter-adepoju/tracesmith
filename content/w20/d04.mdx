@@ -1,0 +1,148 @@
+Every fact in a business lives in some system. The trouble starts when it appears to live in three.
+
+## One owner per fact
+
+For each piece of information, exactly one system is **authoritative**. Everything else holds a copy, and a copy is allowed to be stale.
+
+| Fact | Owner |
+| --- | --- |
+| Whether a payment succeeded | The payment gateway |
+| What the customer ordered | The order system |
+| A merchant's KYC status | The compliance system |
+| A ticket's status | The support tool |
+| The current price of a product | The catalogue |
+| Whether an email was delivered | The mail provider |
+
+Write this down for your own context. Most disagreements about data are really disagreements about which system owns the fact, conducted by people who have not noticed that is the question.
+
+<Callout kind="key">
+**Two sources of truth is zero sources of truth.**
+
+The moment two systems can both be edited for the same fact, they will disagree — and nobody will be able to say which is right, because by construction both are authoritative.
+
+Write once, read many. Copies are fine, and copies must be read-only.
+</Callout>
+
+## Why drift is inevitable
+
+Not carelessness. Structural:
+
+- **A write fails** on one side and succeeds on the other
+- **A webhook is missed**, so the copy never updates — week 19
+- **Someone edits the copy directly**, because it was faster
+- **A sync job dies quietly** and nobody notices for a month
+- **Two writes race** and the slower one wins
+- **A deletion propagates nowhere**, leaving orphans everywhere
+
+So the question is never *will these drift*. It is **how will we notice**, and that has to be designed in.
+
+## Designing for drift
+
+**Reconcile on a schedule.** A job that compares the two and reports differences. Not fixes — reports. An automatic fixer that is wrong about which side is right makes the problem worse and harder to see.
+
+**Count both sides.** Even without comparing records, the counts should match. A daily "we have 14,208 and they have 14,203" is cheap and catches a lot.
+
+**Alert on the difference, not on the error.** A sync job can run successfully and still be wrong. Alert when the numbers diverge, not only when something throws.
+
+**Timestamp everything.** `updated_at` on both sides tells you which changed last, which is the only evidence you will have.
+
+## The missing-record problem
+
+The commonest shape in automation, and the hardest to see.
+
+System A has a record. System B should have a matching one. It does not — and nothing failed, because nothing ever tried. The webhook was missed, or the run that would have created it was skipped, or an error was swallowed.
+
+**Absence is silent.** Everything looks fine: no error, no red, nothing in the logs. The only way to notice is to go looking.
+
+```
+Payments in the gateway yesterday:   1,284
+Orders created in our system:        1,281
+                                     -----
+Missing:                                 3
+```
+
+Three customers charged with no order. No alarm anywhere, and the only reason anyone knows is that someone built a job to count both sides.
+
+<Callout kind="watch">
+**Build the counting job before you build the automation.**
+
+It is the single highest-value piece of an automated process and the one most often left out, because it produces nothing — on a good day it just says the numbers match.
+
+That is exactly what makes it valuable. It is the only thing that can tell you nothing silently stopped working.
+</Callout>
+
+## Where state belongs
+
+Automations need to remember things: what has been processed, what the cursor is, what is in flight.
+
+| Place | Verdict |
+| --- | --- |
+| A proper table or data store | **Yes.** Queryable, durable, concurrent-safe |
+| The tool's own storage | Usually fine |
+| A spreadsheet | No. Races, no types, someone will sort it |
+| A document or a channel message | No |
+| Nowhere — re-derived each run | Only if genuinely cheap and exact |
+| A variable inside one workflow | Gone the moment it restarts |
+
+Tomorrow's and Thursday's lessons build on this. **Shared state goes in a table**, and the reason is concurrency: two runs touching the same spreadsheet row produce a result nobody can reconstruct afterwards.
+
+<Exercise
+  prompt="A sync job has run successfully every day for a month, and the two systems disagree. How is that possible, and what should have caught it?"
+  accept={["silent", "missed", "never tried", "count", "counts"]}
+  hint="A successful run is not a correct run."
+  solution="Successful means it did not throw, not that it did the right thing — an event may never have arrived to sync, or an error was swallowed, or a record was skipped. A daily job comparing counts on both sides catches this, because it checks the outcome rather than the execution. Alert on the difference, not on the error."
+/>
+
+<Exercise
+  prompt="Why should a reconciliation job report differences rather than fix them automatically?"
+  accept={["wrong", "which side", "worse", "hide"]}
+  hint="What if it picks the wrong side?"
+  solution="Because fixing requires knowing which side is right, and if the job is wrong about that it propagates bad data confidently and erases the evidence of the original discrepancy. Reporting keeps a human in the decision while still catching the drift immediately, which is the part that was actually missing."
+/>
+
+<Terms items={[
+  { term: "Source of truth", meaning: "The one system that owns a fact. Exactly one." },
+  { term: "Drift", meaning: "Structural, not careless. Design for noticing it." },
+  { term: "Missing-record problem", meaning: "Nothing failed, because nothing tried." },
+  { term: "Counting job", meaning: "Build it before the automation. Its silence is the signal." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Two systems can both be edited for the same fact. What do you have?",
+    options: [
+      "Redundancy",
+      "Zero sources of truth — they will disagree and nobody can say which is right",
+      "A backup",
+      "Good availability"
+    ],
+    answer: 1,
+    why: "Write once, read many. Copies are fine as long as they are read-only."
+  },
+  {
+    q: "What makes the missing-record problem so hard to spot?",
+    options: [
+      "It is rare",
+      "Nothing failed — nothing ever tried, so there is no error anywhere",
+      "It only affects old data",
+      "The logs are too long"
+    ],
+    answer: 1,
+    why: "Absence is silent. Only a job that counts both sides will ever surface it."
+  },
+  {
+    q: "Where should an automation's shared state live?",
+    options: [
+      "A spreadsheet",
+      "A proper table or data store",
+      "A channel message",
+      "A workflow variable"
+    ],
+    answer: 1,
+    why: "Two concurrent runs on a spreadsheet row produce a result nobody can reconstruct afterwards."
+  }
+]} />
+
+## Tomorrow
+
+The ways an automation makes things worse.

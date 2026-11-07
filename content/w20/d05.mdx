@@ -1,0 +1,145 @@
+Automation is usually sold on what it saves. This lesson is the other column, and it is the one that makes you trustworthy to a team that has been burned before.
+
+## Seven ways it goes wrong
+
+**1. It fails silently.** The worst, and the most common. It stops running, or runs and does nothing, and nobody notices for weeks because nobody watches something automatic.
+
+**2. It does the wrong thing at scale.** A human doing it wrong affects one record. A system doing it wrong affects four thousand before anyone looks.
+
+**3. It hides the process.** Nobody remembers how it works. The person who built it has left. It cannot be changed because nobody understands it, and it cannot be removed because something depends on it.
+
+**4. It becomes load-bearing.** It was a convenience. Eighteen months later the business cannot operate without it, and it still has no owner, no monitoring and no documentation.
+
+**5. It removes the human who was catching things.** The person doing it manually also noticed the odd ones. That check vanishes with the task, and nobody counted it as part of the work.
+
+**6. It multiplies a bad process.** Week 20 day 1: you get a bad process running faster, in more places, with nobody watching.
+
+**7. It costs more to maintain than it saves.** Death by a thousand small breakages, none individually worth mentioning.
+
+<Callout kind="key">
+**Silent failure is the one to design against first.**
+
+A loud failure is fine — someone fixes it within the hour. A silent failure runs for six weeks, and when it is finally found nobody can say when it started, which records were affected, or what to do about the ones that were.
+
+Everything else on the list is recoverable. This one destroys trust in the whole automation, and often in automation generally.
+</Callout>
+
+## Designing against silence
+
+**Heartbeats.** The workflow reports every successful run. Alert when a heartbeat is *missing*, not when an error occurs — that catches "it stopped running entirely", which an error alert never will.
+
+**Count both sides.** Yesterday's lesson. `1,284 payments, 1,281 orders` is the alert.
+
+**Alert on zero.** A job that normally processes 40 items and processes 0 is almost certainly broken, not idle. "Zero is suspicious" catches a surprising number of failures.
+
+**Fail loudly and stop.** When something is wrong, stop and shout. Do not carry on with partial data — half a reconciliation is worse than none, because it looks like a whole one.
+
+**Log what it did, not just that it ran.** "Processed 40 payments, created 40 orders, 0 errors" is useful. "Workflow completed" is not.
+
+## Keeping the human in
+
+For anything irreversible or customer-facing, the automation prepares and a person approves.
+
+```
+Automated:  gather, check, draft, queue
+Human:      approve
+Automated:  send, record, confirm
+```
+
+That shape keeps nearly all the time saving — the gathering and drafting is the slow part — while keeping judgement where the consequences are.
+
+What always needs approval:
+
+- Money leaving the business
+- Anything sent to a customer in your name, until the drafting is genuinely trusted
+- Deleting anything
+- Anything legal, compliance or safety related
+- Anything affecting more than some threshold of records at once
+
+That last one is a good general rule: **automate the action, cap the blast radius.** A job that would modify 4,000 records should stop and ask.
+
+## When manual is right
+
+Say so, out loud, more often than feels natural:
+
+- It runs rarely
+- It is still changing
+- Judgement is the main content of the work
+- It is irreversible and the checking would cost more than the doing
+- Nobody will own the automation
+- The process is wrong and should be fixed first
+
+"I do not think we should automate this, and here is why" is a more valuable sentence from an automation person than another workflow. It is also the thing that gets you believed the next time you say yes.
+
+<Callout kind="job">
+When you hand over an automation, hand over four things:
+
+1. **What it does**, in one paragraph a non-technical person can read
+2. **How to tell it is working** — where the heartbeat is, what normal looks like in numbers
+3. **How to turn it off**, and what breaks when you do
+4. **Who owns it**
+
+Without the fourth it is already orphaned. Without the third nobody will dare touch it during an incident.
+</Callout>
+
+<Exercise
+  prompt="Your workflow alerts on errors. Why is that not enough?"
+  accept={["stopped", "not running", "heartbeat", "zero", "silent"]}
+  hint="What produces no error at all?"
+  solution="Because a workflow that has stopped running produces no errors — there is nothing to throw. Error alerting cannot distinguish 'working fine' from 'dead since March'. Add a heartbeat on every successful run and alert when the heartbeat is missing, plus an alert when the processed count is zero."
+/>
+
+<Exercise
+  prompt="Name the check that disappears when you automate a manual task, and how to replace it."
+  accept={["human", "noticing", "odd", "eyeball", "sanity"]}
+  hint="What else was the person doing besides the task?"
+  solution="The human noticing the odd ones — the amount that looked wrong, the name that was clearly a test, the duplicate. That check was never written down and nobody counted it as part of the work. Replace it with explicit validation on the things they were implicitly checking, plus an anomaly alert, plus a human approval step on anything irreversible."
+/>
+
+<Terms items={[
+  { term: "Silent failure", meaning: "Design against this first. Everything else is recoverable." },
+  { term: "Heartbeat", meaning: "Alert on a missing success, not only on an error." },
+  { term: "Zero is suspicious", meaning: "A job that normally does 40 and did 0 is broken." },
+  { term: "Blast radius", meaning: "Cap it. Stop and ask above a threshold." },
+  { term: "Load-bearing", meaning: "The convenience the business now depends on." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which failure mode should you design against first?",
+    options: [
+      "Slow execution",
+      "Silent failure",
+      "High cost",
+      "Complexity"
+    ],
+    answer: 1,
+    why: "Everything else is recoverable. A silent failure runs for weeks and destroys trust in automation generally."
+  },
+  {
+    q: "What does 'automate the action, cap the blast radius' mean in practice?",
+    options: [
+      "Run it less often",
+      "Stop and ask a human when an action would affect more than a threshold of records",
+      "Use a smaller server",
+      "Log more"
+    ],
+    answer: 1,
+    why: "A job about to modify 4,000 records should require a human, however trusted it is on 4."
+  },
+  {
+    q: "What must a handover include that is most often missing?",
+    options: [
+      "The source code",
+      "A named owner, and how to tell it is working",
+      "A diagram",
+      "The build date"
+    ],
+    answer: 1,
+    why: "Without an owner it is already orphaned, and without a definition of 'working' nobody can tell when it stopped."
+  }
+]} />
+
+## Tomorrow
+
+Map and score five processes, and write the proposal for the winner.

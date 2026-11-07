@@ -1,0 +1,166 @@
+Most of building a workflow is getting the right value from one node into the right field of another. Today is that, and the debugging method that goes with it.
+
+## The item shape
+
+```json
+[
+  { "json": { "id": "cus_01", "email": "ada@example.com" } },
+  { "json": { "id": "cus_02", "email": "bola@example.com" } }
+]
+```
+
+Two items. A node receiving this runs twice, once per item, with `$json` bound to each in turn.
+
+Items can also carry **binary** data — a file, a PDF, an image — under a separate `binary` property. You will meet it when handling attachments.
+
+## Expressions
+
+Anywhere you see the expression toggle, you can write `{{ ... }}` and reference data.
+
+```
+{{ $json.email }}                     this item, this field
+{{ $json.customer.address.city }}     nested
+{{ $json.items[0].productId }}        an array element
+{{ $json.amountMinor / 100 }}         arithmetic
+{{ $json.name.toUpperCase() }}        JavaScript methods work
+{{ $json.email ?? 'unknown' }}        a fallback when missing
+{{ $now.toISO() }}                    current time, Luxon
+{{ $execution.id }}                   this run's id
+```
+
+The content between the braces is JavaScript, so anything short and expression-shaped works. Anything longer belongs in a Code node — Thursday's lesson.
+
+## Reaching back to earlier nodes
+
+`$json` is only the *immediately preceding* node. To reach further back, name the node:
+
+```
+{{ $('Fetch customer').item.json.email }}
+{{ $('Fetch customer').first().json.id }}
+{{ $('Fetch customer').all().length }}
+```
+
+<Callout kind="key">
+**`$('Node name')` is why naming nodes matters.**
+
+Rename a node and every expression referring to it breaks — silently, producing `undefined` rather than an error, which then flows downstream as a blank field in an email.
+
+So: name nodes properly on the first day, and when you do rename one, search the workflow for the old name.
+</Callout>
+
+`.item` is the clever one: it finds the item in that earlier node that *corresponds* to the item you are currently processing, following the chain back. For straightforward one-to-one flows it does what you want. When the item counts change midway — a node that splits or merges — prefer `.first()` or an explicit index, because the pairing becomes ambiguous and n8n has to guess.
+
+## Shaping data
+
+**Edit Fields (Set)** — build a clean object with exactly the fields you want. Use it generously; a tidy shape between stages makes everything after it readable.
+
+**Filter** — drop items that do not match. Five in, two out.
+
+**IF** — two outputs, true and false, each going somewhere different.
+
+**Switch** — several outputs by value. Better than three nested IFs.
+
+**Merge** — combine two branches. Append, or match on a field.
+
+**Split Out** — turn one item containing an array into one item per array element. Constantly needed: an API returns `{ "data": [ ...50 orders... ] }` as a single item, and you want fifty.
+
+**Aggregate** — the reverse. Fifty items into one, so you can send a single summary rather than fifty messages.
+
+<Callout kind="job">
+**Split Out and Aggregate are the pair that fixes most beginner confusion.**
+
+"Why did it send fifty emails?" — you forgot to Aggregate.
+
+"Why did it only process the first order?" — you forgot to Split Out, so the whole array was one item and your expression read `[0]`.
+
+When item counts are not what you expect, one of these two is almost always the answer.
+</Callout>
+
+## Reading what you got
+
+<JsonExplorer />
+
+Before writing an expression, look at the actual data in the previous node's output panel and click down to the field you want. n8n shows the expression path as you hover, and copying it is more reliable than typing it from memory.
+
+## Debugging
+
+The method, in order:
+
+1. **Execute and open the node.** Does its input look right?
+2. **If the input is wrong**, the problem is upstream. Move back one node and repeat.
+3. **If the input is right and the output is wrong**, the problem is this node's configuration.
+4. **Check the item count** at each step. An unexpected 1 or 50 means a missing Split Out or Aggregate.
+5. **Pin data** on a node while iterating, so you are not hammering a live API on every test.
+
+**Pin data** deserves emphasis: it freezes a node's output so downstream nodes get the same input every time. Essential when the upstream call is slow, rate-limited, or sends something real.
+
+## Undefined
+
+The commonest problem, and it is quiet. An expression that cannot resolve gives `undefined` rather than an error, so it travels onward and becomes an empty field somewhere embarrassing.
+
+Causes: a typo in a field name, a renamed node, a field that exists in some items and not others, a nested path where an intermediate level is missing.
+
+Defend with `??`:
+
+```
+{{ $json.customer?.name ?? 'there' }}
+```
+
+`Hi there,` is survivable. `Hi undefined,` is the email everybody has sent once.
+
+<Exercise
+  prompt={'An API returns { "data": [ 50 orders ] } and your workflow only ever processes the first one. What is missing?'}
+  accept={["split out", "splitout", "split"]}
+  hint="How many items does the node see?"
+  solution="A Split Out node on the data field. The API response is one item containing an array, so downstream nodes run once and your expressions see only the array — typically index 0. Split Out turns it into fifty items, after which every node runs fifty times as you intended."
+/>
+
+<Exercise
+  prompt="You rename a node from 'Get customer' to 'Fetch customer'. What breaks, and how does it show up?"
+  accept={["expression", "undefined", "silent", "reference"]}
+  hint="Not with an error."
+  solution="Every expression using $('Get customer') now resolves to nothing, and it does so silently — producing undefined rather than an error, which flows downstream and becomes a blank field in whatever you send. Search the workflow for the old name after any rename, and use ?? fallbacks so a miss is visible as 'unknown' rather than empty."
+/>
+
+<Terms items={[
+  { term: "$json", meaning: "The current item's data." },
+  { term: "$('Node name')", meaning: "Reach back to an earlier node. Breaks on rename." },
+  { term: "Split Out", meaning: "One item with an array becomes many items." },
+  { term: "Aggregate", meaning: "Many items become one. Stops fifty emails." },
+  { term: "Pin data", meaning: "Freeze a node's output while you iterate downstream." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Your workflow sent fifty emails instead of one summary. What was missing?",
+    options: ["A Filter", "An Aggregate", "A Split Out", "An IF"],
+    answer: 1,
+    why: "Fifty items means fifty runs of the email node. Aggregate reduces them to one before sending."
+  },
+  {
+    q: "An expression references a renamed node. What happens?",
+    options: [
+      "An error is thrown",
+      "It resolves to undefined and travels downstream silently",
+      "The workflow stops",
+      "n8n updates it automatically"
+    ],
+    answer: 1,
+    why: "Which is why it surfaces as a blank field in a customer email rather than a red node."
+  },
+  {
+    q: "What does pinning data do?",
+    options: [
+      "Saves the workflow",
+      "Freezes a node's output so downstream nodes get the same input while you iterate",
+      "Locks the node",
+      "Caches the credential"
+    ],
+    answer: 1,
+    why: "Essential when the upstream call is slow, rate-limited or does something real."
+  }
+]} />
+
+## Tomorrow
+
+The HTTP Request node, and calling any API in the world.

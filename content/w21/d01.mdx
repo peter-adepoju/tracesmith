@@ -1,0 +1,169 @@
+Enough judgement. This week your hands are on the canvas.
+
+n8n, because it is the spine most small teams actually run: self-hostable, it talks to anything with an HTTP API, and it does not charge per step while you are learning.
+
+<Video id="n8n-course" />
+
+## Getting one running
+
+The quickest way to have something in front of you:
+
+```bash
+npx n8n
+```
+
+It starts on `http://localhost:5678`. Nothing is sent anywhere; everything stays on your machine, which is the right place to learn.
+
+The alternative is n8n Cloud, which is the same canvas with no setup. Either is fine for this week. Self-hosted is worth knowing because it is what most Nigerian teams run — a small VPS costs a few dollars a month and there is no per-execution charge.
+
+## The canvas
+
+**Nodes** are the boxes — a trigger, an action, a transformation.
+
+**Connections** are the lines, and they carry **data** from one node to the next.
+
+**A workflow** is the whole canvas, saved under a name.
+
+**An execution** is one run of it, recorded, with the data each node produced.
+
+That last one is what makes n8n good to learn on: you can open any past execution and see exactly what every node received and produced. Most debugging is just reading that.
+
+## Your first workflow
+
+Three nodes.
+
+**1. Manual Trigger.** Add it first. Week 20 day 2: start manual, always.
+
+**2. HTTP Request.** Method `GET`, URL:
+
+```
+https://api.github.com/repos/n8n-io/n8n
+```
+
+A public endpoint, no credential, returns JSON.
+
+**3. Edit Fields (Set).** Add two fields:
+
+| Name | Value |
+| --- | --- |
+| `name` | `{{ $json.full_name }}` |
+| `stars` | `{{ $json.stargazers_count }}` |
+
+Connect them in order and press **Execute Workflow**.
+
+Each node now shows its output. Click the HTTP Request node and read what came back — it is the same JSON you would see in the Network panel, and the same reading skill from week 5.
+
+<Callout kind="key">
+**Everything in n8n is an array of items.**
+
+Even one result is an array of one. Each item has a `json` property holding the data:
+
+```json
+[
+  { "json": { "full_name": "n8n-io/n8n", "stargazers_count": 48210 } }
+]
+```
+
+`{{ $json.full_name }}` means *this item's `json.full_name`*.
+
+And the rule that follows: **if a node receives five items, it runs five times.** One HTTP Request node fed five items makes five requests. This surprises everyone once, usually when they send five emails by accident.
+</Callout>
+
+## Reading an execution
+
+Open **Executions** in the sidebar and click your run. For each node:
+
+- **Input** — what it received
+- **Output** — what it produced
+- How long it took
+
+When something is wrong, the question is always *which node first produced something unexpected?* Walk forward until the data stops looking right. That node is the problem, not the one that threw the error.
+
+## Naming
+
+Rename every node to what it does. The default names — `HTTP Request1`, `HTTP Request2` — are unreadable within a week.
+
+| Default | Better |
+| --- | --- |
+| `HTTP Request` | `Fetch yesterday's payouts` |
+| `Edit Fields` | `Shape payout summary` |
+| `IF` | `Settled?` |
+
+A convention for workflows themselves:
+
+```
+[area] what it does — trigger
+Finance: daily settlement reconciliation — 07:00
+Support: chase missing KYC documents — daily
+Ops: post incident summary — webhook
+```
+
+<Callout kind="watch">
+**Save, and turn it off.**
+
+A new workflow is inactive by default and runs only when you press Execute. Leave it that way until you have watched it do the right thing several times.
+
+Activating is the moment it starts running without you — and week 20 day 5 is entirely about what happens next if nobody is watching.
+</Callout>
+
+<Exercise
+  prompt="Your HTTP Request node is fed five items from the node before it. How many requests does it make?"
+  accept={["five", "5"]}
+  hint="Once per item."
+  solution="Five. Every node runs once per input item, which is the single most important thing to internalise about n8n. It is useful when you mean it and alarming when you do not — the classic version is an email node receiving five items and sending five emails. If you want one call, reduce to one item first."
+/>
+
+<Exercise
+  prompt="A workflow produces the wrong final output. What is the method for finding where it went wrong?"
+  accept={["execution", "each node", "walk", "output", "forward"]}
+  hint="You can see every node's data."
+  solution="Open the execution and walk forward through the nodes, reading each one's output, until you find the first node whose output is not what you expected. That node is the problem — not necessarily the one that threw an error, which is often several steps downstream of the actual mistake."
+/>
+
+<Terms items={[
+  { term: "Node", meaning: "A box. Trigger, action or transformation." },
+  { term: "Item", meaning: "One unit of data. Everything is an array of these." },
+  { term: "$json", meaning: "The current item's data." },
+  { term: "Execution", meaning: "One recorded run, with every node's input and output." },
+  { term: "Once per item", meaning: "Five items in means the node runs five times." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What does `{{ $json.email }}` refer to?",
+    options: [
+      "A global variable",
+      "The current item's json.email",
+      "The first item in the workflow",
+      "An environment variable"
+    ],
+    answer: 1,
+    why: "Expressions are evaluated per item, which is why a node fed five items produces five results."
+  },
+  {
+    q: "Where do you look when a workflow produced the wrong answer?",
+    options: [
+      "The error message",
+      "The execution, walking forward to the first node whose output is wrong",
+      "The logs",
+      "The trigger"
+    ],
+    answer: 1,
+    why: "The node that threw is often downstream of the node that actually went wrong."
+  },
+  {
+    q: "What should a new workflow's trigger be?",
+    options: [
+      "A schedule",
+      "Manual",
+      "A webhook",
+      "Whatever is fastest"
+    ],
+    answer: 1,
+    why: "Watch it do the right thing several times before it runs without you."
+  }
+]} />
+
+## Tomorrow
+
+Data between nodes, and the expressions that reach back to earlier ones.

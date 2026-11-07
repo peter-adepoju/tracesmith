@@ -8,6 +8,7 @@ import { Video } from "@/components/Video";
 import { AccessibleName } from "@/components/interactive/AccessibleName";
 import { AccessMatrix } from "@/components/interactive/AccessMatrix";
 import { AssertionLab } from "@/components/interactive/AssertionLab";
+import { AutomationScorer } from "@/components/interactive/AutomationScorer";
 import { BoxModel } from "@/components/interactive/BoxModel";
 import { BugReportGrader } from "@/components/interactive/BugReportGrader";
 import { ConsoleLab } from "@/components/interactive/ConsoleLab";
@@ -53,6 +54,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     AccessibleName,
     AccessMatrix,
     AssertionLab,
+    AutomationScorer,
     BoxModel,
     BugReportGrader,
     Callout,

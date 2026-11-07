@@ -1,0 +1,136 @@
+Phase 5. Seven weeks on moving repeatable work onto systems that run themselves — and it starts, like Phase 3's automation week, with the judgement rather than the tool.
+
+**Choosing what to automate is worth more than knowing any tool.** Tools change every eighteen months. The judgement does not.
+
+## The three questions
+
+**How often does it happen?** Twenty times a month is a strong case. Four times a year is not, however annoying it is each time.
+
+**How stable is it?** Does the process work the same way it did six months ago, and will it in six more? An automation built on something actively changing breaks before it has repaid the build.
+
+**What does a wrong result cost?** This does not decide whether to automate — it decides **how much checking to build in**. High cost of error means a human approves before anything leaves the building.
+
+## Score them
+
+<AutomationScorer />
+
+Decide each one before revealing the scores. Then read the two rejections carefully: they fail for different reasons, and only one of them becomes a yes later.
+
+## The arithmetic
+
+```
+Hours a year saved  = (times per month × minutes each × 12) / 60
+Payback in months   = build hours / hours saved per month
+```
+
+A reasonable bar: **payback within six months**, plus stability of at least 3 out of 5.
+
+Then add the part nobody budgets for. Maintenance is real and recurring — something between 10% and 30% of the build cost, every year, forever. A thing built in 12 hours costs two to four hours a year to keep alive, and more in a year when a dependency changes under it.
+
+<Callout kind="key">
+**The time saved is not the only benefit, and often not the main one.**
+
+**Consistency.** A person doing a 40-step reconciliation at 6pm on a Friday makes mistakes. A system does it the same way every time.
+
+**Speed.** Something that happens within a minute instead of the next working day changes what the business can promise.
+
+**Visibility.** An automated process leaves a record. A manual one leaves whatever someone remembered to write down.
+
+**Attention.** The real prize. The person freed from the daily report is doing something only a person can do.
+</Callout>
+
+## Bad candidates
+
+**Unstable.** Built on something being redesigned. You will rewrite it before it has paid for itself.
+
+**Infrequent.** Four times a year will not repay twenty-five hours in any horizon worth planning over.
+
+**Judgement-heavy.** If a human has to decide something difficult at every step, you are not automating the work — you are adding a layer between the person and the work.
+
+**Already broken.** Automating a bad process gives you a bad process that runs faster, in more places, with nobody watching. Fix the process first.
+
+**Nobody owns it.** An automation without an owner is an outage waiting for a volunteer.
+
+<Callout kind="watch">
+**Fewer working pieces beat many broken ones.**
+
+The commonest failure in automation is not a bad build. It is twelve half-finished workflows, three of which silently stopped running in March and nobody noticed — because nobody was watching something that was supposed to be automatic.
+
+One reliable automation with alerting is worth more than six that mostly work. Every piece you add is a piece someone has to maintain, monitor and eventually debug.
+
+Resist the pull to build more. It is strong, because building is fun and maintaining is not.
+</Callout>
+
+## Rejecting a candidate well
+
+Someone will ask for something that should not be built. Say no with the arithmetic:
+
+> This happens four times a year and takes about four hours each time — so roughly sixteen hours a year. Building it is around twenty-five hours, plus maintenance, so it would not pay back for several years even if nothing changed underneath it.
+>
+> What I would do instead: write the steps down properly so anyone can run it, and automate the one part that is genuinely fiddly — pulling the four figures — which is about two hours of work and removes most of the error risk.
+>
+> If it becomes monthly, it moves straight to the top of my list.
+
+The numbers, the alternative, and the condition that would change the answer. Exactly the structure from week 16's priority defence, because it is the same conversation.
+
+<Exercise
+  prompt="A process takes 30 minutes, runs 20 times a month, and would take 15 hours to build. Does it pay back, and what else must you check?"
+  accept={["yes", "1.5", "two months", "stability"]}
+  hint="Do the arithmetic, then ask the other question."
+  solution="10 hours a month saved, so payback is about 1.5 months — comfortably within any reasonable bar. But check stability before building: if the process or the systems it touches are changing, it may break before it repays. Also budget 10-30% of the build cost per year for maintenance, which nobody does."
+/>
+
+<Exercise
+  prompt="Why is automating a broken process worse than leaving it manual?"
+  accept={["faster", "scale", "nobody watching", "hides"]}
+  hint="What does automation do to the problem?"
+  solution="You get a broken process that runs faster, in more places, with nobody watching it. Manual execution at least puts a human in front of each instance, who may notice something is wrong. Automation removes that check and multiplies the output, so the flaw scales and the discovery is delayed."
+/>
+
+<Terms items={[
+  { term: "Payback period", meaning: "Build hours divided by hours saved per month." },
+  { term: "Stability", meaning: "Will this work the same way in six months?" },
+  { term: "Cost of error", meaning: "Decides how much checking, not whether to build." },
+  { term: "Maintenance", meaning: "10-30% of build cost, every year, forever." },
+  { term: "Fewer working pieces", meaning: "One reliable automation beats six that mostly work." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which is the weakest automation candidate?",
+    options: [
+      "A daily 40-minute report, unchanged for two years",
+      "A weekly scrape of a page currently being redesigned",
+      "Chasing documents from 30 new merchants a month",
+      "Drafting replies to 400 tickets a month"
+    ],
+    answer: 1,
+    why: "It is built on something actively changing, so it breaks before it repays — and a scraper is the most fragile thing you can build."
+  },
+  {
+    q: "What does a high cost of error decide?",
+    options: [
+      "Whether to automate",
+      "How much checking to build in, including human approval",
+      "The build time",
+      "The priority"
+    ],
+    answer: 1,
+    why: "High-stakes work can be automated; it just needs a human approving before anything irreversible happens."
+  },
+  {
+    q: "What is the commonest failure mode in automation?",
+    options: [
+      "A badly written workflow",
+      "Twelve half-finished workflows, three silently stopped since March",
+      "Choosing the wrong tool",
+      "Slow execution"
+    ],
+    answer: 1,
+    why: "Nobody watches something that is supposed to be automatic, so silent failures persist for months."
+  }
+]} />
+
+## Tomorrow
+
+Triggers: schedules, webhooks, and the one that must never fire twice.

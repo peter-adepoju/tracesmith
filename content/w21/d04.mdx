@@ -1,0 +1,207 @@
+A canvas is excellent at showing how data moves and poor at expressing logic. Past a certain point, a diagram of your `if` statements is harder to read than the `if` statements.
+
+## The rule
+
+**The canvas moves data. Code decides things.**
+
+| Keep on the canvas | Put in code |
+| --- | --- |
+| Fetching from an API | Working out which of eight categories something is |
+| Sending an email | Parsing an awkward string |
+| Writing to a table | Arithmetic over a list |
+| One or two branches | Reconciling two arrays against each other |
+| The overall shape | Anything with more than two conditions |
+
+The test: **can someone understand the workflow by looking at it?** If the canvas has become a maze, the logic belongs in one Code node with a comment at the top.
+
+<Callout kind="key">
+**Ten nested IF nodes are a smell.**
+
+They are hard to read, hard to change, impossible to test on their own, and they hide the rule inside the geometry of the diagram.
+
+The same rule in a Code node is twelve lines you can read top to bottom, change in one place, and explain to a colleague in a sentence.
+</Callout>
+
+## The two modes
+
+**Run Once for All Items** — the default. Your code sees every item and returns a new array.
+
+```js
+// All items at once. Return an array of { json: ... }.
+const items = $input.all();
+
+const total = items.reduce(
+  (sum, item) => sum + item.json.amountMinor,
+  0,
+);
+
+return [{ json: { count: items.length, totalMinor: total } }];
+```
+
+Fifty items in, one item out — Aggregate's job, done with arithmetic.
+
+**Run Once for Each Item** — your code runs per item and returns one.
+
+```js
+// One item. $json is this item's data.
+const name = ($json.customerName ?? "").trim();
+const [first = ""] = name.split(" ");
+
+return {
+  json: {
+    ...$json,
+    firstName: first,
+    greeting: first ? `Hi ${first},` : "Hello,",
+  },
+};
+```
+
+Note the fallback. Week 21 day 2's `undefined` problem, handled where it occurs — `Hello,` rather than `Hi undefined,`.
+
+## A real transformation
+
+Reconciling payouts against transactions, which is the week 20 example made concrete:
+
+```js
+// Match yesterday's payouts to our transaction records and
+// report differences. Report only — never auto-correct, because
+// a fixer that picks the wrong side makes the drift worse.
+const payouts = $('Fetch payouts').all().map((i) => i.json);
+const transactions = $('Fetch transactions').all().map((i) => i.json);
+
+const byReference = new Map(
+  transactions.map((t) => [t.reference, t]),
+);
+
+const unmatched = [];
+let matchedMinor = 0;
+
+for (const payout of payouts) {
+  const match = byReference.get(payout.reference);
+
+  if (!match) {
+    unmatched.push({ reference: payout.reference, issue: "no transaction" });
+  } else if (match.amountMinor !== payout.amountMinor) {
+    unmatched.push({
+      reference: payout.reference,
+      issue: "amount differs",
+      payoutMinor: payout.amountMinor,
+      transactionMinor: match.amountMinor,
+    });
+  } else {
+    matchedMinor += payout.amountMinor;
+  }
+}
+
+return [{
+  json: {
+    payouts: payouts.length,
+    transactions: transactions.length,
+    matched: payouts.length - unmatched.length,
+    matchedMinor,
+    unmatched,
+    clean: unmatched.length === 0,
+  },
+}];
+```
+
+Thirty lines, one node, and it would be twenty nodes of IF and Merge on the canvas — unreadable and unchangeable.
+
+The `clean` flag is deliberate: one IF node after this routes to "post the summary" or "post the summary **and** raise an alert", which is exactly the amount of branching a canvas is good at.
+
+<Callout kind="watch">
+**Comment why, not what.**
+
+```js
+// Match on reference, not on amount: two payouts can share an
+// amount on the same day and we would pair them wrongly.
+```
+
+In six months that comment is the only thing standing between the next person and a plausible-looking change that reintroduces the bug.
+</Callout>
+
+## What you can and cannot do
+
+**Can:** plain JavaScript, `$input`, `$json`, `$('Node name')`, `$now`, `console.log` (output appears in the node panel), `async`/`await`, and `$getWorkflowStaticData` for small persistent state.
+
+**Cannot, by default:** import arbitrary npm packages on n8n Cloud. Self-hosted can allow specific modules through an environment variable.
+
+**Should not:** make HTTP calls from a Code node. Use the HTTP Request node — you get retries, credentials, pagination and visible errors for free, and the call appears on the canvas where someone can see it.
+
+## Debugging
+
+```js
+console.log("payouts", payouts.length, "unmatched", unmatched.length);
+```
+
+Output shows in the node's panel after execution. Remove the noisy ones before you finish, and keep any that would help during an incident.
+
+Practise the JavaScript itself here first if it is not yet comfortable:
+
+<ConsoleLab />
+
+## Keep it one node
+
+Resist chaining three Code nodes. If the logic is big enough to want splitting, it is big enough to want a comment and a clear structure inside one node — where it can be read in one place rather than across three boxes and two connections.
+
+<Exercise
+  prompt="A workflow has eight nested IF nodes classifying a ticket. What is wrong, and what do you do?"
+  accept={["code node", "code", "one node", "unreadable"]}
+  hint="Where should logic live?"
+  solution="The rule lives in the geometry of the diagram, where it cannot be read, changed in one place, or tested on its own. Replace them with one Code node that returns a category field, and keep a single IF or Switch after it for the routing. Canvas moves data, code decides."
+/>
+
+<Exercise
+  prompt="Why not make an HTTP call from inside a Code node?"
+  accept={["retries", "credential", "visible", "canvas", "error"]}
+  hint="What do you lose?"
+  solution="You lose retries, credential handling, pagination and visible error output — all of which the HTTP Request node gives you — and the call disappears from the canvas, so nobody reading the workflow can see that it talks to that API at all. Logic in code, calls on the canvas."
+/>
+
+<Terms items={[
+  { term: "Canvas moves data, code decides", meaning: "The whole rule." },
+  { term: "Run Once for All Items", meaning: "$input.all(), return an array." },
+  { term: "Run Once for Each Item", meaning: "$json, return one object." },
+  { term: "Comment why", meaning: "The what is in the code. The why is not." },
+  { term: "Calls on the canvas", meaning: "Retries, credentials and visibility, free." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Where does complex branching logic belong?",
+    options: [
+      "Nested IF nodes",
+      "One Code node, with a single IF after it for routing",
+      "Several Code nodes",
+      "The HTTP Request node"
+    ],
+    answer: 1,
+    why: "Ten nested IFs hide the rule in the shape of the diagram, where it cannot be read or tested."
+  },
+  {
+    q: "In 'Run Once for All Items' mode, what must the code return?",
+    options: [
+      "A single object",
+      "An array of objects each with a json property",
+      "A string",
+      "Nothing"
+    ],
+    answer: 1,
+    why: "Items are always an array, even when there is one of them."
+  },
+  {
+    q: "What should a comment in a Code node explain?",
+    options: [
+      "What each line does",
+      "Why the approach was chosen, especially where an obvious alternative is wrong",
+      "Who wrote it",
+      "The node name"
+    ],
+    answer: 1,
+    why: "The what is already in the code. The why is the only thing preventing a plausible change that reintroduces a bug."
+  }
+]} />
+
+## Tomorrow
+
+Shared state, and the table two workflows can both use.

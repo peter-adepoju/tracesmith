@@ -1,0 +1,142 @@
+Every automation starts with something making it run. Choosing that something badly is how you get a workflow that fires twice, fires at 3am in the wrong timezone, or never fires at all.
+
+## The three kinds
+
+**Schedule.** Runs at a fixed time. "Every weekday at 07:00."
+
+- Use for: reports, batch jobs, reconciliation, chasing, clean-up
+- Watch for: timezones, holidays, overlapping runs, and the fact that it runs whether or not there is anything to do
+
+**Webhook.** Something else calls you when an event happens.
+
+- Use for: reacting to a payment, a new signup, a form submission, a ticket
+- Watch for: duplicates, retries, out-of-order arrival, and events you receive while already processing one
+- **Always verify the signature.** Week 19's rule: an unverified webhook endpoint accepts any POST as a real event
+
+**Manual.** A person presses a button.
+
+- Use for: anything irreversible, anything rare, anything still being tested
+- Underrated. A manual trigger with a good workflow behind it is often the right answer, and it is always the right first version
+
+<Callout kind="key">
+**Start manual, then schedule, then event-driven.**
+
+A manual trigger lets you watch the thing run, see its output, and fix it before it has run unattended fifty times doing the wrong thing.
+
+Promote it to a schedule once you trust it. Promote it to events once you trust it *and* latency matters.
+
+Building straight to event-driven is how you discover a bug after it has sent three hundred emails.
+</Callout>
+
+## Polling, and why to avoid it
+
+Checking every five minutes whether something changed. Sometimes the only option, usually the worst one:
+
+- Wasteful — hundreds of calls to find nothing
+- Slow — up to five minutes late by design
+- Rate limits — you will meet them
+- It needs state: *what have I already seen?* Get that wrong and you reprocess everything
+
+If the source offers a webhook, take it. If it does not, poll on a **cursor** — the id or timestamp of the last thing you handled — never on "the last five minutes", which loses records whenever a run is slow or skipped.
+
+## Timezones
+
+The thing that bites hardest and is easiest to get right once.
+
+- **Store and schedule in UTC.** Convert for display only.
+- Your server, your tool and your user may be in three different zones. WAT is UTC+1 and does not observe daylight saving, which means your European integrations shift relative to you twice a year.
+- "Every day at midnight" is ambiguous. Midnight where?
+- "The last 24 hours" across a daylight-saving change is 23 or 25 hours.
+- Month-end is not a fixed day, and a job scheduled for the 31st does not run in February.
+
+> Schedule: `0 7 * * 1-5` — 07:00 UTC, weekdays. That is 08:00 WAT.
+
+Write the comment. In six months nobody will remember which zone the cron was written in, and the comment is cheaper than the incident.
+
+## A trigger that cannot fire twice
+
+Three protections, and you want more than one:
+
+**An idempotency key** on anything that writes. Week 13's lesson, now at the trigger: derive a key from the event — `payment:PAY-8841` — and refuse to process a key you have already handled.
+
+**A processed-events record.** A table of event ids you have seen. Check before acting, write after succeeding. Not the other way around, or a crash mid-run loses the event.
+
+**A lock or single-instance setting**, so a slow run does not overlap the next scheduled one. A 20-minute job on a 15-minute schedule will eventually be two copies of itself fighting over the same records.
+
+<Callout kind="watch">
+**Overlapping runs are the quietest bug in automation.**
+
+Everything works for months. Then the data grows, a run takes longer than the interval, and two instances process the same records at once — producing duplicate emails, duplicate payments, or a corrupted state nobody can explain from the logs.
+
+Set the single-instance option on every scheduled workflow, on the first day, before it is a problem.
+</Callout>
+
+## Retries, and what they do to you
+
+Most sources retry. That is good for delivery and dangerous for you: your workflow must be safe to run twice on the same event, because sooner or later it will be.
+
+The test from week 13, unchanged: **send the same event twice and count the rows.**
+
+<WebhookSimulator />
+
+<Exercise
+  prompt="A workflow is scheduled every 15 minutes. It usually takes 4 minutes. What happens as the data grows, and what prevents it?"
+  accept={["overlap", "two", "same time", "single instance", "lock"]}
+  hint="What happens when it takes 16 minutes?"
+  solution="Once a run exceeds 15 minutes, the next one starts while the first is still going, so two instances process the same records at once — duplicate output or corrupted state, months after it last worked. Prevent it with a single-instance or lock setting from day one, and alert when a run exceeds some fraction of the interval."
+/>
+
+<Exercise
+  prompt="Why poll on a cursor rather than on 'everything in the last five minutes'?"
+  accept={["miss", "lose", "skipped", "slow", "gap"]}
+  hint="What if a run is late or fails?"
+  solution="Because a time window silently loses records whenever a run is late, slow or skipped — the gap is never revisited and nothing reports it. A cursor records the id or timestamp of the last item actually processed, so a missed run simply means the next one picks up more. Missing data is far worse than duplicate data, because duplicates are visible."
+/>
+
+<Terms items={[
+  { term: "Schedule / webhook / manual", meaning: "The three triggers. Start manual." },
+  { term: "Polling on a cursor", meaning: "Last item handled, not last five minutes." },
+  { term: "Idempotency key", meaning: "Derived from the event. Refuse what you have handled." },
+  { term: "Single instance", meaning: "Stops a slow run overlapping the next." },
+  { term: "UTC", meaning: "Store and schedule in it. Convert only for display." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What is the right order to promote a trigger?",
+    options: [
+      "Event, schedule, manual",
+      "Manual, schedule, event-driven",
+      "Schedule, manual, event",
+      "Straight to event-driven"
+    ],
+    answer: 1,
+    why: "A manual trigger lets you watch it run before it has done the wrong thing fifty times unattended."
+  },
+  {
+    q: "Where should a processed-event id be written?",
+    options: [
+      "Before processing",
+      "After the processing succeeds",
+      "It does not matter",
+      "Only on failure"
+    ],
+    answer: 1,
+    why: "Writing first means a crash mid-run marks the event handled when it was not, and nothing will reprocess it."
+  },
+  {
+    q: "Why write the timezone in a cron comment?",
+    options: [
+      "Convention",
+      "Nobody will remember in six months which zone it was written in",
+      "The tool requires it",
+      "For the logs"
+    ],
+    answer: 1,
+    why: "A comment is considerably cheaper than the incident that follows the wrong assumption."
+  }
+]} />
+
+## Tomorrow
+
+Mapping a process before you build it — and finding the step nobody owns.
