@@ -1,0 +1,180 @@
+Your automation tool keeps an execution history. It is not a record, and treating it as one is how a question becomes unanswerable.
+
+## Why execution history is not enough
+
+**It expires.** Most tools prune executions after days or weeks, by default and for good reasons — they are large.
+
+**It is not queryable.** "How many payouts did we process last month, and how many failed?" is not a question an execution list can answer.
+
+**It is tied to the tool.** Move from n8n to something else and the history does not come.
+
+**It records the run, not the outcome.** A successful execution that did nothing useful looks identical to one that did everything right.
+
+<Callout kind="key">
+**Write your own log, to your own table, as part of the work.**
+
+The execution history is for debugging *this* run. A run log is for answering questions about *all* runs — which is what anybody actually asks you.
+
+It is one extra node and it is the difference between "I think it has been fine" and "it has run 412 times, 408 succeeded, 4 failed, all four on the 3rd when the provider was down".
+</Callout>
+
+## What every run writes
+
+One row per run:
+
+| Column | Why |
+| --- | --- |
+| `run_id` | The execution id, to find the detail |
+| `workflow` | Which one |
+| `started_at` / `finished_at` | Duration, and the window it covers |
+| `status` | `success`, `partial`, `failed`, `skipped` |
+| `items_in` | How many it was given |
+| `items_processed` | How many it handled |
+| `items_failed` | How many it could not |
+| `summary` | One line a human can read |
+| `error` | The message, when there is one |
+
+**`items_in` against `items_processed` is the pair that matters.** A run with 50 in and 50 processed is healthy. One with 50 in and 12 processed succeeded, and is wrong — and `status = success` will never tell you that.
+
+## Status needs four values, not two
+
+| Status | Means |
+| --- | --- |
+| `success` | Everything it was given, it handled |
+| `partial` | Some succeeded, some failed. Needs attention, not panic |
+| `failed` | It could not do its job |
+| `skipped` | It ran and correctly did nothing — no new data |
+
+`skipped` is the one people leave out, and without it you cannot tell "nothing to do" from "found nothing because it is broken". Tomorrow's lesson is built on that distinction.
+
+## Write a summary a person can read
+
+```
+"Reconciled 1,284 payouts against 1,281 transactions. 3 unmatched."
+"Chased 7 merchants. 2 skipped — already chased today."
+"No new releases."
+"Processed 0 of 40 — provider returned 503 on every attempt."
+```
+
+Six months later this is what you will read, and a one-line summary beats scrolling a node's output panel every time.
+
+## Log what you decided, not only what you did
+
+The genuinely useful entries are the decisions:
+
+```
+"MER-4421 skipped: chase_count already 3"
+"PAY-8841 not retried: no idempotency key, outcome unknown"
+"ORD-1001 routed to human: amount above 500,000 threshold"
+```
+
+Those answer the question that actually gets asked — *why did it not do the thing I expected?* — and that question is unanswerable from a log that only records successes.
+
+## Querying your own log
+
+The payoff. Once the table exists:
+
+```sql
+-- Has it been healthy this month?
+SELECT status, COUNT(*)
+FROM runs
+WHERE workflow = 'daily-reconciliation'
+  AND started_at >= '2026-11-01'
+GROUP BY status;
+
+-- Is it getting slower?
+SELECT DATE(started_at) AS day,
+       AVG((julianday(finished_at) - julianday(started_at)) * 86400) AS seconds
+FROM runs
+WHERE workflow = 'daily-reconciliation'
+GROUP BY day
+ORDER BY day DESC
+LIMIT 30;
+
+-- Did it ever silently process nothing?
+SELECT * FROM runs
+WHERE status = 'success' AND items_processed = 0;
+```
+
+Week 13's SQL, pointed at your own automation. That last query is the one that finds the bug nobody reported.
+
+<SqlConsole />
+
+## What not to log
+
+<Callout kind="watch">
+**A log is forever, searchable, and read by more people than you think.**
+
+Never: card numbers, tokens, passwords, full request bodies, customer names and email addresses, identity documents.
+
+Instead: the customer id, the transaction reference, the error code, the counts.
+
+The same rule as week 11, week 14 and week 17 — and it is easiest to break here, because logging the whole object is one line shorter than logging the three fields you need.
+</Callout>
+
+## Retention
+
+Keep run summaries for a long time; they are small. Keep detailed payloads briefly, or not at all.
+
+Say what the retention is, in the one-page document from week 21. "Run summaries: kept indefinitely. Item-level detail: 30 days." A log with no stated retention either grows forever or gets deleted by someone who assumed it did not matter.
+
+<Exercise
+  prompt="A run reports status=success with items_in 50 and items_processed 12. What happened, and why did nothing alert?"
+  accept={["partial", "38", "silent", "swallow"]}
+  hint="Nothing threw."
+  solution="38 items were not handled and nothing threw — they were probably skipped by a filter or swallowed by a per-item error setting. Nothing alerted because the run completed, and 'completed' is what success means to the tool. This is exactly why you log both counts and why status needs a 'partial' value: the pair is the only evidence that the run did less than it was given."
+/>
+
+<Exercise
+  prompt="Why does the status field need 'skipped' as well as success, partial and failed?"
+  accept={["nothing to do", "distinguish", "broken", "zero"]}
+  hint="What else produces zero output?"
+  solution="To distinguish 'ran correctly and there was nothing to do' from 'found nothing because something is broken'. Both produce zero output and both look like success, and only one of them is fine. Without the distinction, a workflow that silently stopped finding work looks exactly like a quiet week."
+/>
+
+<Terms items={[
+  { term: "Run log", meaning: "Your own table, one row per run. Outlives the tool." },
+  { term: "items_in vs items_processed", meaning: "The pair that reveals a quiet partial run." },
+  { term: "skipped", meaning: "Ran, correctly did nothing. Not the same as success." },
+  { term: "Log decisions", meaning: "Why it did not do the thing is the question people ask." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Why is execution history not a run log?",
+    options: [
+      "It is hard to read",
+      "It expires, is not queryable, and is tied to the tool",
+      "It is inaccurate",
+      "It is too detailed"
+    ],
+    answer: 1,
+    why: "It is for debugging this run. Questions about all runs need a table you own."
+  },
+  {
+    q: "Which two columns together reveal a quietly partial run?",
+    options: [
+      "started_at and finished_at",
+      "items_in and items_processed",
+      "status and error",
+      "run_id and workflow"
+    ],
+    answer: 1,
+    why: "50 in and 12 processed is a successful execution that did less than a third of its job."
+  },
+  {
+    q: "What belongs in a run log instead of the customer's email address?",
+    options: [
+      "Their name",
+      "The customer id",
+      "The full request body",
+      "Nothing"
+    ],
+    answer: 1,
+    why: "An id identifies the record without putting personal data into something searchable and permanent."
+  }
+]} />
+
+## Tomorrow
+
+Heartbeats: noticing the job that never ran at all.

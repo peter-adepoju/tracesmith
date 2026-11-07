@@ -1,0 +1,182 @@
+Yesterday was one call. Today is the whole workflow, because a run that is half-finished and then repeated is the shape most automation failures actually take.
+
+## Assume it will run twice
+
+Not as a possibility. As a fact, because all of these happen:
+
+- A retry, at the call level or the workflow level
+- A webhook delivered twice, which every provider does
+- Someone pressing Execute to see what it does
+- A schedule overlapping itself
+- A failed run restarted after a fix
+- Two triggers for the same event
+
+**A workflow that is only correct when run once is a workflow that is sometimes incorrect.**
+
+## The key
+
+An idempotency key identifies **one intention**. The rules:
+
+**Derive it from the data, never generate it fresh.** `payout:PAY-8841` is derivable by any run looking at the same record. A UUID generated at the start of the run is different every time and protects nothing.
+
+**Make it specific enough.** `payout:PAY-8841` is right. `payout:2026-11-10` collides with every other payout that day.
+
+**Make it stable.** It must be identical on the retry. Anything involving the current time is not.
+
+```
+Good:  order:ORD-1001
+       payout:PAY-8841
+       chase:MER-4421:attempt-2
+       invoice:CUS-01:2026-11
+
+Bad:   {{ $execution.id }}        new every run
+       {{ $now.toISO() }}         new every millisecond
+       payout:2026-11-10          collides with the day's others
+```
+
+## Three layers
+
+Defend at more than one level, because each catches something the others do not.
+
+**1. At the call.** Send `Idempotency-Key` on every write. The other system refuses the duplicate.
+
+**2. In your own state.** A table of what you have processed. Check before, write after success — week 21 day 5.
+
+**3. At the trigger.** Deduplicate events by id before any work starts.
+
+Layer 1 only works if the other system supports keys, and many do not. Layer 2 always works, which is why it is the one you build yourself.
+
+## Make the write the guard
+
+The strongest version, from week 21 day 5: do not *check then write*. Let the write itself be the check.
+
+```
+Weak:    read the table; if no row, send the email; insert a row
+Strong:  insert a row with a unique key; if the insert succeeded,
+         send the email
+```
+
+In the weak version two concurrent runs both read, both see nothing, and both send. In the strong version the second insert fails on the unique constraint, so the second run simply does nothing — and a failed insert is visible in the execution, while a duplicate email is not visible anywhere.
+
+<Callout kind="key">
+**Check-then-act is a race. Act-as-check is not.**
+
+The gap between reading and writing is where every concurrency bug lives, and it is small enough to feel impossible until the day the data grows and two runs overlap.
+
+Push the uniqueness into the database, where it is enforced at the moment of writing.
+</Callout>
+
+## Order matters
+
+Within a run, do the **irreversible** thing as late as possible and record it immediately after.
+
+```
+1  Read state           cheap, reversible
+2  Fetch data           cheap, reversible
+3  Transform            cheap, reversible
+4  Validate             cheap, reversible
+5  Send the email       IRREVERSIBLE
+6  Record that you sent it
+```
+
+If the run dies at step 3, nothing happened. If it dies at step 5, the gap between 5 and 6 is your exposure — so keep it as small as possible, and prefer a design where step 6 can be derived by asking the other system rather than only by your own record.
+
+## The run-twice test
+
+Week 13's test, now on a whole workflow:
+
+```
+1  Note the state: count the rows, count the records elsewhere
+2  Run it. Record what changed.
+3  Run it again, with the same input.
+4  Count again.
+
+Pass: the second run changed nothing.
+```
+
+Then the harder version, which is the one that finds real bugs:
+
+```
+5  Run it and kill it halfway through.
+6  Run it again.
+
+Pass: it completes the work, exactly once.
+```
+
+<Callout kind="watch">
+**Most workflows pass the first test and fail the second**, because they are written as though failure happens between runs rather than inside one.
+
+The half-finished run is the realistic case: the API call succeeded, the state write did not, and the next run has no idea the work was done. That is the gap an idempotency key at the *other* system covers, and your own state cannot.
+</Callout>
+
+## When you genuinely cannot be idempotent
+
+Some operations have no key support and no way to check afterwards.
+
+Then: **do not retry**, record that the outcome is unknown, and alert a human.
+
+> `payout:PAY-8841` — request timed out after 30s. The provider supports no idempotency key and no lookup by our reference. **Outcome unknown.** Not retried. A human must check the provider dashboard before any further action.
+
+That is a worse outcome than a key, and it is a far better outcome than a duplicate payout. "I do not know, and I have not guessed" is a legitimate and professional state for a system to be in.
+
+<Exercise
+  prompt="Why is `{{ $execution.id }}` a useless idempotency key?"
+  accept={["different", "new", "every run", "not stable"]}
+  hint="What does a retry need it to be?"
+  solution="Because it is different on every run, including the retry — so the receiving system sees a brand new intention and happily creates a second record. A key must be derivable from the data, so that any run looking at the same record produces the identical key. Use payout:PAY-8841, not the execution id."
+/>
+
+<Exercise
+  prompt="Your workflow passes the run-twice test but fails when killed halfway and restarted. What is the likely gap?"
+  accept={["between", "write", "state", "after", "recorded"]}
+  hint="Where did it die?"
+  solution="The irreversible action succeeded and the state write did not, so the next run has no record that the work was done and does it again. Shrink the gap between acting and recording, and where possible make the check something you can ask the other system — an idempotency key there covers exactly the window your own state cannot."
+/>
+
+<Terms items={[
+  { term: "Derived key", meaning: "From the data, so a retry produces the same one." },
+  { term: "Three layers", meaning: "The call, your state, the trigger." },
+  { term: "Act-as-check", meaning: "Let a unique constraint be the guard, not a read." },
+  { term: "The kill test", meaning: "Stop it halfway, run again. Most workflows fail this." },
+  { term: "Outcome unknown", meaning: "A legitimate state. Better than a guess." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which is a usable idempotency key?",
+    options: [
+      "The execution id",
+      "order:ORD-1001",
+      "The current timestamp",
+      "A fresh UUID"
+    ],
+    answer: 1,
+    why: "It is derivable from the data, so any run looking at the same record produces exactly the same key."
+  },
+  {
+    q: "Why is 'read, then write if absent' unsafe?",
+    options: [
+      "It is slow",
+      "Two concurrent runs can both read before either writes",
+      "It needs more code",
+      "It is safe"
+    ],
+    answer: 1,
+    why: "The gap between the read and the write is the race. A unique constraint closes it at write time."
+  },
+  {
+    q: "An operation supports no idempotency key and no lookup. The call times out. What do you do?",
+    options: [
+      "Retry three times",
+      "Do not retry; record the outcome as unknown and alert a human",
+      "Assume it failed",
+      "Assume it succeeded"
+    ],
+    answer: 1,
+    why: "Assuming either way is a guess with money attached. 'I do not know and I have not guessed' is a legitimate system state."
+  }
+]} />
+
+## Tomorrow
+
+Error workflows and alerts that people actually read.

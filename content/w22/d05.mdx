@@ -1,0 +1,160 @@
+Everything so far catches a job that ran and went wrong. None of it catches a job that **did not run at all** — because a job that does not run produces no error, no log line and no alert.
+
+It produces nothing. Which is exactly what a quiet week also produces.
+
+## The four states
+
+A monitoring system has to tell these apart:
+
+| State | What happened | Is it fine? |
+| --- | --- | --- |
+| **Ran, did work** | 40 items processed | Yes |
+| **Ran, nothing to do** | 0 items, correctly | Yes |
+| **Did not run** | Paused, deleted, trigger broken, host down | **No** |
+| **Ran and failed** | Error, alert fired | No, and you know |
+
+Rows two and three produce identical observable output: nothing happened and nobody said anything.
+
+<Callout kind="key">
+**Only a heartbeat distinguishes "nothing to do" from "dead since March".**
+
+Every other signal you have is triggered by activity, and the failure you are trying to catch is the absence of activity. You cannot detect an absence by listening for a message; you have to expect a message and notice when it does not come.
+
+This is the single most important monitoring idea in automation, and it takes one extra node.
+</Callout>
+
+## The heartbeat
+
+At the end of every run, successful or not, write a timestamp. To a table, a monitoring service, or a low-traffic channel.
+
+```
+2026-11-10 07:04  daily-reconciliation  success  1284 in, 1284 processed
+2026-11-11 07:04  daily-reconciliation  success  1301 in, 1301 processed
+2026-11-12 07:03  daily-reconciliation  skipped  0 in — public holiday
+2026-11-13 07:04  daily-reconciliation  success  1198 in, 1198 processed
+```
+
+Note the third line. The job ran, correctly did nothing, and **said so**. Without it, 12 November is indistinguishable from the job having stopped.
+
+## Alert on the absence
+
+Then a separate watcher — a different workflow, ideally on a different schedule — checks for missing heartbeats:
+
+```
+For each job with an expected frequency:
+  If the last heartbeat is older than the expected window:
+    ALERT: "daily-reconciliation has not reported since
+            11 Nov 07:04 — expected every 24h, now 31h ago."
+```
+
+Two things about the watcher:
+
+**It must not depend on the thing it watches.** Same host, same tool, same trigger mechanism — if the platform is down, the watcher is down with it and nothing is reported. A watcher running somewhere else, or a third-party dead-man's-switch service, is meaningfully better.
+
+**Its own heartbeat matters too.** Who watches the watcher? In practice: make its alert channel one somebody reads daily, so a silent watcher is noticeable within a day.
+
+## Expected windows
+
+Every job gets a declared frequency and a tolerance:
+
+| Job | Expected | Alert after |
+| --- | --- | --- |
+| Daily reconciliation | Every 24h | 26h |
+| Chase missing documents | Every 24h | 26h |
+| Webhook processor | Continuous | 1h with no events |
+| Monthly invoices | Monthly | 2 days past the 1st |
+| Weekly report | Weekly | 8 days |
+
+The tolerance stops a run that started four minutes late from paging anybody. Make it generous enough to avoid noise and tight enough to matter — roughly 10% over the interval is a good default.
+
+The webhook row is the interesting one. A continuous processor has no schedule, so the signal is **unusual quiet**: an endpoint that normally sees two hundred events an hour and has seen none for an hour is almost certainly broken, not idle. Learn the normal range and alert outside it.
+
+## Zero is suspicious
+
+Related, and cheap:
+
+```
+If items_in == 0 and this job normally processes > 0:
+  Flag it. Not necessarily an alert, but a question.
+```
+
+A reconciliation that finds zero payouts on a Tuesday is not a quiet day. It is a broken query, an expired credential, or a changed field name — and it will report `success` every single time.
+
+## Distinguishing paused from broken
+
+One more state worth capturing explicitly. A job deliberately paused — during a migration, a holiday, an incident — should be **recorded as paused**, not just switched off.
+
+```
+daily-reconciliation   PAUSED until 2026-11-20
+Reason: provider migration. Owner: Peter.
+```
+
+Otherwise the watcher alerts every day for a week, everyone learns to ignore it, and the alert is still being ignored on the 21st when it becomes real. That is alert fatigue created deliberately, and it is entirely avoidable.
+
+<Callout kind="job">
+A heartbeat table with expected windows is perhaps two hours of work and it covers every automation a team has, including the ones built before you arrived.
+
+It is also the most visible thing you can build, because it is the first time anyone can answer "is everything running?" with a screen rather than an opinion.
+</Callout>
+
+<Exercise
+  prompt="Your job alerts on errors and logs every run. It was paused by accident three weeks ago. When do you find out?"
+  accept={["never", "someone notices", "when asked", "not until"]}
+  hint="What signal does a paused job produce?"
+  solution="Not until somebody notices the output is missing — which for a daily report might be a week, and for a reconciliation might be a quarter-end. A paused job produces no errors and no log lines, so error alerting and logging are both blind to it. Only a watcher expecting a heartbeat and noticing its absence catches this."
+/>
+
+<Exercise
+  prompt="Why should the heartbeat watcher not run on the same platform as the jobs it watches?"
+  accept={["down", "same", "both", "host", "platform"]}
+  hint="What fails together?"
+  solution="Because if the platform is down, the watcher is down too — and the one failure it most needs to report is exactly the one that stops it reporting. A watcher elsewhere, or a third-party dead-man's-switch that expects a ping and alerts when it stops, removes the shared failure."
+/>
+
+<Terms items={[
+  { term: "Heartbeat", meaning: "Every run reports, including ones that did nothing." },
+  { term: "Expected window", meaning: "Declared frequency plus tolerance." },
+  { term: "Unusual quiet", meaning: "The signal for a continuous processor." },
+  { term: "Zero is suspicious", meaning: "Normally non-zero and now zero is a question." },
+  { term: "Recorded pause", meaning: "So the watcher stays quiet and stays trusted." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which two states produce identical observable output?",
+    options: [
+      "Failed and skipped",
+      "Ran with nothing to do, and did not run at all",
+      "Success and partial",
+      "Paused and failed"
+    ],
+    answer: 1,
+    why: "Both produce nothing and say nothing, which is why a heartbeat on every run is the only way to tell them apart."
+  },
+  {
+    q: "A webhook processor normally sees 200 events an hour and has seen none for an hour. What is that?",
+    options: [
+      "A quiet period",
+      "Unusual quiet — almost certainly broken, and worth alerting",
+      "Expected",
+      "A rate limit"
+    ],
+    answer: 1,
+    why: "A continuous processor has no schedule, so the absence of normal volume is the signal."
+  },
+  {
+    q: "Why record a deliberate pause rather than just switching the job off?",
+    options: [
+      "For audit",
+      "So the watcher stays quiet instead of alerting daily and training everyone to ignore it",
+      "To restart it later",
+      "It makes no difference"
+    ],
+    answer: 1,
+    why: "A week of ignorable alerts is alert fatigue you created yourself, and it persists after the pause ends."
+  }
+]} />
+
+## Tomorrow
+
+Break it on purpose, and find out whether any of this works.

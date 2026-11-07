@@ -29,6 +29,7 @@ import { QueueTriage } from "@/components/interactive/QueueTriage";
 import { RedactionDrill } from "@/components/interactive/RedactionDrill";
 import { RegressionPicker } from "@/components/interactive/RegressionPicker";
 import { RequestJourney } from "@/components/interactive/RequestJourney";
+import { RetryPlanner } from "@/components/interactive/RetryPlanner";
 import { RunTwice } from "@/components/interactive/RunTwice";
 import { RiskMatrix } from "@/components/interactive/RiskMatrix";
 import { SelectorLab } from "@/components/interactive/SelectorLab";
@@ -79,6 +80,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     RegressionPicker,
     RequestInspector,
     RequestJourney,
+    RetryPlanner,
     RiskMatrix,
     RunTwice,
     SelectorLab,

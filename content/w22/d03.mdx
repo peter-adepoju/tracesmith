@@ -1,0 +1,158 @@
+A workflow that fails and tells nobody has not failed once. It fails every day after that, quietly, until someone happens to look.
+
+## Attach an error handler to everything
+
+In n8n, an **error workflow** runs whenever another workflow fails. Set it in the workflow's settings, and set it on every workflow you activate — the one without a handler is the one that breaks.
+
+Build one error workflow and point everything at it:
+
+```
+Error Trigger
+   → Shape the message
+   → Post to the team channel
+   → If severity is high: also send email or SMS
+   → Record it in an errors table
+```
+
+The error trigger receives the failed workflow's name, the node that failed, the error message and the execution id. That is nearly everything a useful alert needs.
+
+## What a useful alert says
+
+| Weak | Strong |
+| --- | --- |
+| Workflow failed | `Finance: daily reconciliation` failed at `Fetch payouts` |
+| Error occurred | HTTP 503 from `api.provider.test` after 3 attempts |
+| Check the logs | Execution 88412 — link |
+| — | Impact: today's reconciliation has not run. Finance expects it by 09:00 |
+| — | Last successful run: yesterday 07:04 |
+
+Five lines, and the person reading at 07:15 knows what broke, where, what it means and where to look.
+
+<Callout kind="key">
+**An alert must say what it means, not only what happened.**
+
+"HTTP 503 from the provider" tells an engineer something. "Today's reconciliation has not run; Finance expects it by 09:00" tells *anyone* something, including the person on call who has never seen this workflow.
+
+The impact line is what turns an alert into a decision.
+</Callout>
+
+## Two channels, and verify both
+
+One channel is one point of failure. If the alert goes only to a chat channel, then a chat outage — or a muted channel, or a weekend — means silence.
+
+**Channel one:** where the team works. Chat, usually.
+**Channel two:** something that reaches a person. Email, SMS, a phone alert, for high severity only.
+
+<Callout kind="watch">
+**Test that the alert actually arrives. Then test it again in a month.**
+
+Alerting is the only part of a system whose failure is, by definition, silent. A broken webhook to a channel that was renamed, an email going to spam, an SMS credit that ran out — all of these produce exactly the same experience as everything being fine.
+
+Break something on purpose and confirm the message lands. Friday's lesson is that exercise, and it is not optional.
+</Callout>
+
+## Alert fatigue
+
+The failure mode that destroys alerting, and it is not technical.
+
+If alerts fire often and most mean nothing, people stop reading them. Then the one that matters arrives into a channel nobody opens, and the system is worse than if it had no alerting at all — because everyone believes they are covered.
+
+Defences:
+
+**Alert on the thing, not every symptom.** One alert for "reconciliation failed", not one per failed item.
+
+**Deduplicate.** The same failure forty times in an hour is one alert with a count, not forty messages.
+
+**Separate severities.** Not everything is a page. A clear split:
+
+| Severity | Means | Goes where |
+| --- | --- | --- |
+| **Critical** | Money, or a business process stopped | Chat **and** phone, immediately |
+| **Warning** | Degraded, retrying, or one item failed | Chat only |
+| **Info** | Heartbeats, counts, routine | A low-traffic channel, or a daily digest |
+
+**Alert on what a human must do.** If nobody will act on it, it is a log line, not an alert.
+
+**Delete alerts nobody acts on.** If something has fired forty times and nobody has ever done anything, it is noise. Remove it, and say you did.
+
+## Retry, then alert
+
+Do not alert on the first transient failure. Let the retries run, and alert when they are exhausted:
+
+```
+Attempt 1  fails  → log, no alert
+Attempt 2  fails  → log, no alert
+Attempt 3  fails  → ALERT: three attempts exhausted
+```
+
+Alerting on attempt 1 trains everybody that alerts mean nothing, since most of them resolve themselves ten seconds later.
+
+## What the error workflow must not do
+
+- **Must not fail silently itself.** An error workflow that throws produces no alert and no notification that it produced no alert. Keep it simple and test it.
+- **Must not retry the original work.** It reports; it does not fix. An error workflow that attempts a repair can turn one failure into two.
+- **Must not include secrets.** Error payloads often carry request bodies and headers. Week 11 and week 14 apply: redact before posting to a channel the whole company can read.
+
+That last one catches people. A failed HTTP node's error message can contain the full request, `Authorization` header included — posted automatically into a public channel, forever.
+
+<Exercise
+  prompt="Your error alert says 'Workflow failed: HTTP 503'. Add the three things that make it useful."
+  accept={["which workflow", "impact", "link", "node", "last success"]}
+  hint="Who is reading it, and at what hour?"
+  solution="Which workflow and which node failed; what it means in business terms ('today's reconciliation has not run; Finance expects it by 09:00'); and a link to the execution. Optionally the last successful run, which tells the reader whether this is new. Together they let someone who has never seen this workflow decide what to do."
+/>
+
+<Exercise
+  prompt="Why is an error workflow that automatically retries the failed work a bad idea?"
+  accept={["two", "duplicate", "worse", "hide", "report"]}
+  hint="What is the error workflow for?"
+  solution="Because it can turn one failure into two — re-running work whose idempotency it does not control, with no record of the decision — and because it hides the failure from the humans who should be deciding. An error workflow reports; retries belong on the node, where they are configured deliberately and bounded."
+/>
+
+<Terms items={[
+  { term: "Error workflow", meaning: "Runs when another fails. Attach one to everything." },
+  { term: "The impact line", meaning: "What it means, not only what happened." },
+  { term: "Two channels", meaning: "Chat, plus something that reaches a person." },
+  { term: "Alert fatigue", meaning: "Worse than no alerting, because people feel covered." },
+  { term: "Retry then alert", meaning: "Alert on exhaustion, not on attempt one." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "When should an alert fire on a retrying call?",
+    options: [
+      "On the first failure",
+      "When the retries are exhausted",
+      "Never",
+      "On every attempt"
+    ],
+    answer: 1,
+    why: "Alerting on attempt one trains everyone that alerts mean nothing, because most resolve themselves."
+  },
+  {
+    q: "Why is alert fatigue worse than having no alerting?",
+    options: [
+      "It costs more",
+      "People believe they are covered while nobody reads the channel",
+      "It is slower",
+      "It is not worse"
+    ],
+    answer: 1,
+    why: "No alerting at least leaves people cautious. Ignored alerting creates false confidence."
+  },
+  {
+    q: "What must never appear in an automated error alert?",
+    options: [
+      "The execution id",
+      "The failing node name",
+      "Secrets from the failed request, such as an Authorization header",
+      "The timestamp"
+    ],
+    answer: 2,
+    why: "Error payloads often carry the whole request, and the alert goes to a channel many people can read, permanently."
+  }
+]} />
+
+## Tomorrow
+
+Run logs: what every execution must write down.

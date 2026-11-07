@@ -1,0 +1,183 @@
+Everything this week is a claim: retries work, alerts arrive, heartbeats catch silence. Today you find out whether any of it is true.
+
+**A reliability system you have never seen fire is a reliability system you have no reason to trust.** Week 15 day 6 said the same thing about a test suite, and it is more true here, because the failure of monitoring is itself silent.
+
+## The method
+
+For each failure: cause it deliberately, observe what happens, compare against what you expected, and fix the gap.
+
+Use the week 21 workflow — trigger, call, record — or any workflow you have. Do this on a copy, not the live one.
+
+---
+
+## Drill 1 — the dependency is down
+
+**Cause:** point the HTTP node at a URL that will not resolve, or at `https://httpstat.us/503`.
+
+**Expect:** three attempts with backoff, then a failure, then an alert on both channels naming the workflow, the node and the impact.
+
+**Check:**
+
+- Did it actually retry three times, or fail on the first? Read the execution.
+- How long did the whole thing take? Compare it with your schedule interval.
+- Did the alert arrive on **both** channels?
+- Does the alert say what it means, or only `HTTP 503`?
+
+---
+
+## Drill 2 — the credential is wrong
+
+**Cause:** change one character of an API key.
+
+**Expect:** a `401`, **no retries** — a wrong credential does not fix itself — and an alert distinguishable from drill 1.
+
+**Check:** did it retry anyway? Many default configurations retry everything. That wastes attempts and, on an endpoint with lockout, can lock the account.
+
+---
+
+## Drill 3 — the slow response
+
+**Cause:** point at `https://httpstat.us/200?sleep=60000`, or any endpoint slower than your timeout.
+
+**Expect:** a timeout, then retries, then a failure.
+
+**Check:** the worst case. With a 30s timeout and three attempts plus backoff, you are over two minutes. Is that inside your schedule interval? If not, you have just proved the overlap problem from day 1 — and you proved it in a drill rather than at month end.
+
+---
+
+## Drill 4 — the duplicate run
+
+**Cause:** run the workflow twice with the same input. Then run it, kill it halfway, and run it again.
+
+**Expect:** the second run changes nothing. The restarted run completes the work exactly once.
+
+**Check:** count the rows before and after. Most workflows pass the first half and fail the second — day 2 said so, and this is where you find out whether yours is one of them.
+
+---
+
+## Drill 5 — the silent stop
+
+**Cause:** deactivate the workflow. Wait past its expected window.
+
+**Expect:** the heartbeat watcher alerts that the job has not reported.
+
+**Check:** did anything happen at all? If not, you have no protection against the most common long-running failure there is — and you have just discovered it in a drill rather than in a quarter-end review.
+
+---
+
+## Drill 6 — the partial run
+
+**Cause:** feed it ten items where three will fail — a bad id, a missing field.
+
+**Expect:** seven processed, three recorded as failed, status `partial`, and the run log showing `items_in 10, items_processed 7, items_failed 3`.
+
+**Check:** did it report `success`? If the per-item error setting is "continue", a run that dropped three items looks entirely healthy — which is the quiet partial run from day 4.
+
+---
+
+## The results table
+
+Record what you found honestly. The gaps are the point.
+
+```
+DRILL              EXPECTED              ACTUAL                  GAP
+1 Dependency down  3 retries, alert ×2   3 retries, chat only    No email route
+2 Bad credential   401, no retry         401, retried 3×         Retrying 4xx
+3 Slow response    Timeout at 30s        OK — 95s worst case     Over 60s interval
+4 Duplicate run    No change             No change               —
+4b Killed halfway  Completes once        Sent the email twice    No key on the write
+5 Silent stop      Watcher alerts        Nothing                 No watcher at all
+6 Partial run      status=partial        status=success          Not counting items
+```
+
+Six drills, five gaps, and every one of them is something that would otherwise have been discovered by a customer.
+
+<Callout kind="key">
+**Expect to find gaps. That is a successful drill.**
+
+A drill where everything worked is either a mature system or a drill that was not hard enough. On a first pass, four or five gaps is normal and healthy — you have converted five future incidents into five afternoon fixes.
+
+The failure is not finding gaps. The failure is never running the drill.
+</Callout>
+
+## Write the runbook entry
+
+For each real failure mode, one entry. This is the deliverable, and it is what the person on call at 3am reads.
+
+```
+FAILURE   Daily reconciliation fails with 503 from the provider
+
+LOOKS     Alert in #ops: "Finance: daily reconciliation failed at
+LIKE      Fetch payouts — HTTP 503 after 3 attempts."
+          No reconciliation summary posted by 07:10.
+
+MEANS     Today's reconciliation has not run. Finance expects the
+          summary by 09:00. No data is lost; nothing has been
+          written, so a re-run is safe.
+
+CHECK     1 Provider status page
+          2 Execution log for the exact error and timing
+          3 Whether other workflows on that provider are failing
+
+DO        If the provider is down: wait. Tell Finance it will be
+          late and give a time. Re-run manually once it is back —
+          the workflow is idempotent, so a re-run is safe.
+          If the provider is up: the credential may have expired.
+          Check it, then re-run.
+
+DO NOT    Do not reconcile by hand in a spreadsheet to save time.
+          It will not match the automated run and the difference
+          will cost more than the delay.
+
+ESCALATE  Still failing after 2 hours, or month end: payments team.
+
+OWNER     Peter
+```
+
+Note **DO NOT**. Runbooks almost never include it, and the thing someone does under pressure at 3am is usually the thing that makes it worse.
+
+<Callout kind="job">
+Repeat the drill **quarterly**, and after any significant change.
+
+Alerting decays silently: a channel gets renamed, an email starts going to spam, someone's number changes, an SMS credit runs out. Every one of those produces exactly the same experience as everything being fine.
+
+A quarterly fifteen-minute drill is the only thing that catches it.
+</Callout>
+
+## Check yourself
+
+- Did I cause a real failure, or only imagine one?
+- Did the alert arrive on **both** channels, and did I check the second one myself?
+- Does my worst-case retry time fit inside my schedule interval?
+- Did the killed-halfway run do the work exactly once?
+- Did anything at all notice when the workflow was simply switched off?
+- Is there a runbook entry with a **DO NOT** section?
+
+<Exercise
+  prompt="Your drill finds five gaps. Is that a good or bad result, and what does a drill with zero gaps usually mean?"
+  accept={["good", "normal", "not hard enough", "healthy"]}
+  hint="What did you just convert?"
+  solution="Good — you converted five future incidents into five afternoon fixes, each found in a controlled moment rather than by a customer. A first drill with zero gaps usually means the drill was not hard enough: try killing a run halfway, and try simply switching the workflow off and waiting."
+/>
+
+<Exercise
+  prompt="Why does a runbook need a DO NOT section?"
+  accept={["pressure", "worse", "3am", "instinct", "shortcut"]}
+  hint="What does someone do under pressure?"
+  solution="Because the instinctive shortcut under pressure is often the thing that makes it worse — reconciling by hand so the numbers no longer match, re-running something that is not idempotent, or editing a record directly. Naming the wrong move explicitly is as valuable as naming the right one, and it is the part almost every runbook omits."
+/>
+
+<Terms items={[
+  { term: "Drill", meaning: "Cause a real failure and observe. Quarterly." },
+  { term: "The gap column", meaning: "The point of the exercise, not a mark against you." },
+  { term: "Alert decay", meaning: "Channels renamed, spam filters, expired credit. Silent." },
+  { term: "DO NOT", meaning: "The runbook section nobody writes and everybody needs." },
+]} />
+
+## Week 22 in one line
+
+Retries make failure survivable, idempotency makes retries safe, heartbeats catch what never ran — and none of it is real until you have broken it on purpose and watched.
+
+## Next week
+
+Models and prompting: putting a language model inside a workflow without letting it make things up.

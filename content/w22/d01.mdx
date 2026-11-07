@@ -1,0 +1,139 @@
+This is the week that separates a demo from something a business can depend on, and it is why automation people get hired rather than admired.
+
+Anyone can build a workflow that works on a good day. The job is the other days.
+
+## Everything external will fail
+
+Not might. Will. Networks drop, APIs go down, rate limits trigger, DNS misbehaves, certificates expire, a provider deploys at 2am.
+
+So every call out of your workflow needs three decisions: **how long to wait, how many times to try, and how long to wait between tries.**
+
+## Timeout
+
+How long you wait for an answer before giving up.
+
+**Too short** and you fail calls that would have succeeded, and worse — for a write, you may give up on a request that is still being processed, which is the dangerous case below.
+
+**Too long** and a dead dependency holds your run open for two minutes, and a scheduled job starts overlapping itself.
+
+A reasonable default is **10 to 30 seconds**. Most APIs that are going to answer answer in under ten; past thirty you are mostly buying a slower failure.
+
+Know the one exception: a genuinely slow operation — a report, a large export — may legitimately take minutes. For those, the better design is an API that returns immediately with a job id and a second call that polls for the result.
+
+## Attempts and backoff
+
+**Fixed wait** — 5s, 5s, 5s. Simple, and it synchronises every client onto the same rhythm.
+
+**Exponential** — 5s, 10s, 20s. Gives a struggling dependency room to recover.
+
+**Exponential with jitter** — a random wait up to the exponential amount. The best default.
+
+<Callout kind="key">
+**The thundering herd.**
+
+A shared API goes down. Two hundred clients fail at the same moment. With a fixed wait, all two hundred retry five seconds later — simultaneously. The API, just recovering, is knocked over again by the retry storm, and the cycle repeats.
+
+Jitter breaks the synchronisation. The retries spread across a window instead of arriving as a wall, and the dependency gets space to come back.
+
+This is why "exponential with jitter" is the answer in every engineering handbook, and it costs you a dropdown.
+</Callout>
+
+## Configure it and look at what you built
+
+<RetryPlanner />
+
+Leave the defaults and read the first warning. Then turn on **sends an idempotency key** and watch it clear.
+
+Then push the timeout to 60s with 4 attempts and see what happens to the worst case against the schedule interval — that combination is how a workflow starts overlapping itself months after it was written.
+
+## Retrying a POST is dangerous
+
+The thing to understand properly.
+
+Your request times out. **That does not mean it failed.** It means you did not hear an answer. Three possibilities:
+
+1. It never arrived — retrying is correct
+2. It arrived and failed — retrying is correct
+3. **It arrived and succeeded, and the response was lost** — retrying creates a second one
+
+You cannot tell these apart from your side. All three look like silence.
+
+For a `GET` it does not matter; reading twice is harmless. For a `POST` that creates an order or moves money, case 3 is a duplicate charge — created by your retry, on a day when the network was slow.
+
+<Callout kind="watch">
+**Never retry a write without an idempotency key.**
+
+With a key, case 3 is safe: the server recognises the key, replays the stored response, and creates nothing. Week 13, week 19 and week 21 all said this, and it is the single most important sentence in automation reliability.
+
+Without one, the correct behaviour is to **not retry** and raise an alert for a human to check — which is worse than having a key, and far better than a duplicate payment.
+</Callout>
+
+## What to retry
+
+| Retry | Do not retry |
+| --- | --- |
+| Timeouts | `400` — the request is malformed |
+| `429` too many requests | `401` / `403` — credentials or permission |
+| `500`, `502`, `503`, `504` | `404` — it does not exist |
+| Connection refused, DNS failure | `422` — the values are invalid |
+
+The rule: **retry what can change on its own.** A wrong request stays wrong however many times you send it.
+
+For `429` specifically, read the `Retry-After` header if there is one and honour it. Retrying faster than asked is how a temporary rate limit becomes a ban.
+
+<Exercise
+  prompt="Your POST times out. Name the three possibilities and say which one makes a retry dangerous."
+  accept={["succeeded", "third", "lost", "response"]}
+  hint="Silence has more than one cause."
+  solution="It never arrived; it arrived and failed; or it arrived and succeeded and the response was lost. The third makes a retry dangerous, because you create a second order or a second payment — and from your side all three look identical. An idempotency key makes the third case safe; without one, do not retry, alert instead."
+/>
+
+<Exercise
+  prompt="Why is exponential backoff with jitter better than plain exponential?"
+  accept={["same time", "synchron", "herd", "together", "random"]}
+  hint="What do many clients that failed together do next?"
+  solution="Because plain exponential still synchronises clients that failed at the same moment — they all back off by exactly the same amounts and arrive together, knocking over a dependency that was just recovering. Jitter randomises each wait, spreading the retries across a window so the recovering service gets room."
+/>
+
+<Terms items={[
+  { term: "Timeout", meaning: "How long to wait. 10-30s for most APIs." },
+  { term: "Exponential with jitter", meaning: "The default. Breaks the thundering herd." },
+  { term: "Thundering herd", meaning: "Synchronised retries re-killing a recovering service." },
+  { term: "Silence is ambiguous", meaning: "A timeout does not mean it failed." },
+  { term: "Retry-After", meaning: "On a 429, honour it. Ignoring it earns a ban." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which should you not retry?",
+    options: ["A timeout", "429", "422", "503"],
+    answer: 2,
+    why: "The values are invalid, so the identical request will be refused identically. Retry only what can change on its own."
+  },
+  {
+    q: "A POST times out. What is the risk of retrying without an idempotency key?",
+    options: [
+      "Wasted time",
+      "The first request may have succeeded, so the retry creates a duplicate",
+      "A rate limit",
+      "Nothing"
+    ],
+    answer: 1,
+    why: "A lost response and a failed request look identical from your side, and one of them means the work was already done."
+  },
+  {
+    q: "What problem does jitter solve?",
+    options: [
+      "Slow networks",
+      "Many clients retrying in sync and re-killing a recovering dependency",
+      "Rate limits",
+      "Timeouts"
+    ],
+    answer: 1,
+    why: "It spreads retries across a window instead of delivering them as a wall."
+  }
+]} />
+
+## Tomorrow
+
+Idempotency in full: making a whole workflow safe to run twice.
