@@ -1,0 +1,119 @@
+Almost every long support conversation was made long by a first reply that did not ask for enough.
+
+## The four things, every time
+
+1. **The exact error** — the wording, or a screenshot. "An error" is not an error.
+2. **The time** — with a timezone. "This morning" is not a time.
+3. **The account or reference** — an account id, a transaction reference, an order number.
+4. **What they were doing** — the exact step.
+
+With those four you can usually find the event in under a minute. Without them you are guessing, and guessing is how a ticket takes four days instead of four minutes.
+
+<Callout kind="key">
+**Ask for one specific instance.**
+
+"Can you give me the reference for one transaction that failed?" is the highest-value question in support. One real example beats any amount of description, because you can look it up rather than imagine it.
+</Callout>
+
+## Gather it in one message
+
+The amateur version is four replies over two days, one question each. Ask once, warmly, and make it easy:
+
+> Thanks for letting us know, and sorry for the trouble. So I can find exactly what happened rather than guess, could you send me:
+>
+> - the reference of one payment that failed (it starts with `PAY-`)
+> - roughly what time you tried, and
+> - the exact wording of the message you saw — a screenshot is perfect
+>
+> As soon as I have those I will look it up and come back to you today.
+
+Three asks, a reason for asking, and a commitment. Four or five asks start to read as an obstacle course; two is better still if you can get away with it.
+
+## The guessing trap
+
+The temptation is to answer immediately from the description, because you have seen something like it before.
+
+- "Your card was probably declined" — when it succeeded and the webhook failed
+- "That is a known issue" — when it is a different issue with the same symptom
+- "Try clearing your cache" — the reflex that means *I have not looked*
+
+<Callout kind="watch">
+Every guess has the same shape: it buys ten quiet minutes and costs a second conversation in which you are now the person who was wrong.
+
+The customer is also not neutral about this. They can tell the difference between "I checked and here is what I found" and "try turning it off and on again", and the second one spends trust you will need later.
+</Callout>
+
+## Pattern-matching, used properly
+
+Recognising a familiar shape is a genuine skill. The rule is that it tells you **where to look first**, never what to say.
+
+> This looks like the webhook-delay pattern we saw last week. *So I will check the delivery log for this reference* — not: *so I will tell them it is a webhook delay*.
+
+## When they cannot give you what you asked for
+
+Some customers will not have a reference, or will not know the time.
+
+- Narrow it: "Was it before or after lunch?"
+- Use what they do have: their email, phone number or account name is usually enough to find the account, then the recent activity.
+- Look it up yourself where you can. Asking for something you could find in your own admin tool is lazy and reads that way.
+
+**Never make the customer do your work.** Ask for what only they have — what they saw, what they did, when. Find the rest yourself.
+
+<Exercise
+  prompt="A customer writes: 'Payment not working, please help urgently.' Write the first reply."
+  solution="Acknowledge, ask for at most three specific things with a reason, and commit to a time. For example: 'Sorry about this — I will get it sorted. So I can look up exactly what happened rather than guess: the reference of one payment that failed, roughly what time, and the exact message you saw (a screenshot is ideal). I will check as soon as those arrive and come back to you today.'"
+/>
+
+<Exercise
+  prompt="Why is 'that is a known issue' a dangerous thing to say before you have looked it up?"
+  accept={["different", "same symptom", "wrong", "not checked"]}
+  hint="How many causes can produce one symptom?"
+  solution="Because many different causes produce the same symptom, so the familiar shape may be a different problem entirely. You have also told the customer it is already understood and being handled, which means they stop pushing — and if you are wrong, their real problem now sits untouched behind your reassurance."
+/>
+
+<Terms items={[
+  { term: "One specific instance", meaning: "A reference you can look up. Worth more than any description." },
+  { term: "Gather once", meaning: "Three asks in one message, not four messages." },
+  { term: "Guessing trap", meaning: "Answering from the description instead of the evidence." },
+  { term: "Pattern-matching", meaning: "Tells you where to look. Never what to say." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What are the four things to gather in a first reply?",
+    options: [
+      "Name, email, phone, address",
+      "Exact error, time with timezone, account or reference, and what they were doing",
+      "Browser, device, OS, network",
+      "Priority, category, owner, SLA"
+    ],
+    answer: 1,
+    why: "Those four let you find the actual event rather than imagine it."
+  },
+  {
+    q: "What should you never ask a customer for?",
+    options: [
+      "A screenshot",
+      "Something you could look up yourself in your own admin tool",
+      "The time it happened",
+      "A transaction reference"
+    ],
+    answer: 1,
+    why: "Ask for what only they have. Finding the rest is your job, and asking reads as laziness."
+  },
+  {
+    q: "You recognise the symptom from last week. What does that entitle you to do?",
+    options: [
+      "Tell the customer it is the same issue",
+      "Check that cause first",
+      "Close it as a duplicate",
+      "Skip the investigation"
+    ],
+    answer: 1,
+    why: "Pattern-matching directs your search. It is not evidence, and many causes share a symptom."
+  }
+]} />
+
+## Tomorrow
+
+Reproducing a customer's problem — safely.

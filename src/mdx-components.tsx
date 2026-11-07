@@ -21,7 +21,9 @@ import { FlakyRunner } from "@/components/interactive/FlakyRunner";
 import { FormLab } from "@/components/interactive/FormLab";
 import { HidingDemo } from "@/components/interactive/HidingDemo";
 import { LivePlayground } from "@/components/interactive/LivePlayground";
+import { NetworkVerdict } from "@/components/interactive/NetworkVerdict";
 import { PanelPicker } from "@/components/interactive/PanelPicker";
+import { PaymentTrace } from "@/components/interactive/PaymentTrace";
 import { QueueTriage } from "@/components/interactive/QueueTriage";
 import { RedactionDrill } from "@/components/interactive/RedactionDrill";
 import { RegressionPicker } from "@/components/interactive/RegressionPicker";
@@ -66,7 +68,9 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     JsonExplorer,
     KeyboardPass,
     LivePlayground,
+    NetworkVerdict,
     PanelPicker,
+    PaymentTrace,
     Quiz,
     QueueTriage,
     RedactionDrill,

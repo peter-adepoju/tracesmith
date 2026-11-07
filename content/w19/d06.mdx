@@ -1,0 +1,184 @@
+Ten tickets from one morning in payments support. For each: what is actually happening, what you do, and what you write.
+
+One of them is not a support matter at all. Find it before you reach the end.
+
+---
+
+**1.** *Customer:* "I was charged NGN 48,500 but got no confirmation and no order."
+
+<details>
+<summary>Answer</summary>
+
+**Verify first.** Look up the charge at the gateway. Almost always the succeeded-but-unknown shape: the payment worked and the webhook did not deliver.
+
+**Reply:** they are charged once, will not be charged again, the order is being created now, confirmation within the hour. Re-send the webhook or create the order manually, and tell the merchant if their endpoint is the cause.
+</details>
+
+---
+
+**2.** *Merchant:* "Dashboard shows NGN 1,240,000 for Friday. My bank account shows nothing."
+
+<details>
+<summary>Answer</summary>
+
+**Nothing wrong.** Dashboard reports authorisation; the bank reports settlement. Friday settles Monday.
+
+**Reply:** gross NGN 1,240,000, fee NGN 18,600, net NGN 1,221,400, payout reference `STL-9921`, sent Monday. All three numbers together, or they will ask about the difference.
+</details>
+
+---
+
+**3.** *Customer:* "Your system declined my card. There is money in my account."
+
+<details>
+<summary>Answer</summary>
+
+**Not our decision.** The issuer declined; we relayed it. Get the reason code.
+
+**Reply:** explain that their bank makes the decision and we only receive the answer, give the code in plain language, and suggest they contact their bank or try another card. Do not speculate about why — you genuinely cannot see it.
+</details>
+
+---
+
+**4.** *Customer:* "I was charged twice. Two debits, same amount, same minute."
+
+<details>
+<summary>Answer</summary>
+
+**Verify, then act fast.** Two charges a minute apart is a double-submit, and it is usually ours.
+
+**Reply:** confirm both, refund the duplicate immediately with the reference, give a realistic bank posting time, apologise once. Then raise the double-submit as a bug — if it happened once it will happen again.
+</details>
+
+---
+
+**5.** *Merchant:* "A customer says they paid but we have no record."
+
+<details>
+<summary>Answer</summary>
+
+**Verify at the gateway**, then check webhook delivery. Four possible findings, from day 3: it did not succeed; it succeeded and no webhook was sent; the webhook was sent and their endpoint errored; or it was delivered with a 200 and they did not process it.
+
+**Reply:** tell them which, with the delivery record. The last two are theirs, and the evidence is what makes that a fact rather than an opinion.
+</details>
+
+---
+
+**6.** *Customer:* "There has been a pending charge on my card for six days for an order I cancelled."
+
+<details>
+<summary>Answer</summary>
+
+**An uncaptured authorisation.** The money has not moved; it is held.
+
+**Reply:** explain the hold, and then do the better thing — ask the merchant to void it so it releases immediately rather than waiting out the expiry. Always offer the void.
+</details>
+
+---
+
+**7.** *Merchant:* "We have had a chargeback for NGN 120,000. What do we do?"
+
+<details>
+<summary>Answer</summary>
+
+**Time-bound, and the deadline is fatal.**
+
+**Reply:** explain the timeline, say exactly what evidence to gather — delivery proof, accepted terms with timestamps, correspondence, IP and device match — and give the submission deadline in bold. Tell them missing it means an automatic loss regardless of the merits.
+</details>
+
+---
+
+**8.** *Customer:* "Why do you need my ID? I have been using this for a year."
+
+<details>
+<summary>Answer</summary>
+
+**Periodic review, or something changed.**
+
+**Reply:** explain without apologising, say which trigger applies if you can see it, list exactly what is needed, and make it easy. "It is not about you specifically" is worth saying.
+</details>
+
+---
+
+**9.** *Merchant:* "Our refund has been pending for 5 days. The customer is threatening a chargeback."
+
+<details>
+<summary>Answer</summary>
+
+**Check whether it actually released.** Approved is not sent.
+
+**Reply:** if sent, give the reference and timestamp so the customer can trace it with their bank, and tell the merchant that evidence of a released refund is a strong defence if a chargeback does come. If it has not released, that is ours — escalate and say so plainly.
+</details>
+
+---
+
+**10.** *Internal, from an account manager:* "Merchant ACC-9912 has had their payouts frozen and is angry. Can you unfreeze it? They are a big account."
+
+<details>
+<summary>Answer</summary>
+
+**This is the one.** Not a support matter.
+
+A payout freeze is a compliance action. You do not reverse it, you do not investigate it, and you do not tell anyone — including your own account manager — why it happened or what the review involves.
+
+**What you do:** route to compliance, tell the account manager you have done so and that you are not able to discuss it or act on it, and say nothing further to the merchant beyond the approved wording.
+
+**What you must not do:** speculate, reassure, estimate a timeline, or describe the reason. Naming a suspicion is tipping off, and that is a criminal offence in many jurisdictions — for you personally, not just the company.
+
+Pressure from inside the company does not change this. "They are a big account" is exactly the sentence the rule exists to withstand.
+</details>
+
+---
+
+## The patterns
+
+Of the nine that are support matters:
+
+- **Three** are the gap between authorisation and settlement (2, 6, 9)
+- **Two** are succeeded-but-unknown (1, 5)
+- **Two** are not our systems at all (3, 7)
+- **One** is genuinely our bug (4)
+- **One** is compliance explained kindly (8)
+
+<Callout kind="key">
+**Verify at the gateway before answering any of them.**
+
+Nine of the ten begin the same way: look the reference up. The customer's belief, the merchant's belief and your own records can each be wrong and all three can be internally consistent.
+
+The gateway's record of the charge is the only thing that settles it.
+</Callout>
+
+<Exercise
+  prompt="Which ticket is not a support matter, and what is the single sentence that must not appear in any reply about it?"
+  accept={["10", "ten", "compliance", "freeze"]}
+  hint="Who is applying the pressure?"
+  solution="Ticket 10. No reply may name or hint at the reason for the review — not 'suspected fraud', not 'anti-money-laundering', not even 'a compliance concern about their activity'. That is tipping off, and it is a criminal offence for you personally. Route to compliance, say you cannot discuss or act on it, and hold that line regardless of who is asking or how large the account is."
+/>
+
+<Exercise
+  prompt="What is the first action in nine of the ten, and why is it not 'ask the customer for more detail'?"
+  accept={["verify", "gateway", "look it up", "reference"]}
+  hint="Who holds the truth?"
+  solution="Verify the charge at the gateway. The customer, the merchant and your own records can each hold a different and internally consistent belief about the same payment, so asking anyone what they think happened cannot settle it. One lookup can."
+/>
+
+<Terms items={[
+  { term: "Verify first", meaning: "The gateway's record, before any reply." },
+  { term: "Succeeded-but-unknown", meaning: "Paid, and something downstream never heard." },
+  { term: "Approved is not sent", meaning: "Check a refund actually released." },
+  { term: "Compliance action", meaning: "Not yours to reverse, explain or discuss." },
+]} />
+
+## Week 19 in one line
+
+Authorisation is not settlement, the webhook is not the browser, and the gateway's record is the only thing that settles an argument.
+
+## Phase 4 is done
+
+Four weeks. You can triage a queue, diagnose from evidence, write for a customer and for an engineer, escalate so the work starts immediately, and hold a real conversation about payments without guessing.
+
+That, with Phase 3, is two hireable roles.
+
+## Next week
+
+Phase 5 begins: AI automation, starting with the judgement — what is worth automating at all.

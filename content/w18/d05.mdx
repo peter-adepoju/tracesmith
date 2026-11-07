@@ -1,0 +1,162 @@
+A ticket closed too early reopens, and a reopened ticket costs far more than the five minutes of verification would have — in time, and in the customer's confidence that you check things.
+
+## Closure criteria, written at the start
+
+Decide what done means before you begin, in the ticket:
+
+> **Closed when:** the refund shows `settled` in our system **and** the customer confirms it has reached their bank.
+
+Both halves. Our system saying `settled` is not the customer having their money, and the gap between those two is exactly where the next ticket comes from.
+
+Good criteria are testable:
+
+| Vague | Testable |
+| --- | --- |
+| Payment issue resolved | Payment `PAY-8841` shows `successful` and the order exists in the merchant's system |
+| Webhook fixed | Three consecutive deliveries return 200 and the partner confirms receipt |
+| Customer happy | Customer has confirmed they can complete a payment |
+| Bug fixed | Fix deployed, retested on production by me, merchant confirms |
+
+## Verify yourself
+
+Week 11's rule, in support clothing: **only you close it, and only after you have checked.**
+
+Not because the deploy went out. Not because an engineer said it was fixed. Not because the status changed. Because you looked.
+
+<Callout kind="watch">
+**"It should be working now" is not verification.** It is a hope with a timestamp.
+
+Check the actual record, the actual response, the actual behaviour. For a payment: look the transaction up. For a webhook: look at the delivery log. For a UI bug: open it yourself.
+
+Thirty seconds, and it is the difference between a closure that holds and one that reopens with an unhappy customer attached.
+</Callout>
+
+## Confirm with the customer before closing
+
+Two reasons, and the second is the one people underestimate.
+
+1. They may still be experiencing it. Your record can look correct while their reality has not changed.
+2. **Closing without telling them reads as being dropped.** A silently closed ticket is indistinguishable from a forgotten one.
+
+> I have checked and the refund of NGN 48,500 released this morning — reference `REF-2291`. It should reach your account by Thursday.
+>
+> I will close this now, but it is not a door shutting: reply here any time and it reopens with all the history, so you will not have to explain it again.
+
+That last sentence removes the anxiety that makes customers resist closure.
+
+## The closing message
+
+Four parts:
+
+1. **What was wrong**, in one sentence, in plain language
+2. **What was done**
+3. **Anything they need to do**, or explicitly nothing
+4. **How to come back**
+
+> **What happened:** your payment went through but our system did not manage to tell the shop, so the order was never created.
+>
+> **What we did:** created the order manually (number 8841, dispatching today) and fixed the delivery problem so it will not recur for your next order.
+>
+> **Anything you need to do:** nothing. You were charged once and only once; I have checked.
+>
+> If anything about this order does not look right, reply here and it comes straight back to me.
+
+Note the third part. "You were charged once and only once; I have checked" answers the question they were going to ask tomorrow.
+
+## Record it for the next person
+
+Before you close:
+
+- **Knowledge base**, if it will recur
+- **Bug tracker**, if it was a defect — the ticket being closed does not fix the product
+- **Category**, corrected if the diagnosis changed it
+- **Link** to the incident or issue, so the count is right
+
+<Callout kind="key">
+**Closing a ticket is not the same as fixing a problem.**
+
+The customer's instance is resolved. If the cause is still in the product, the next customer meets it next week — and if nobody filed it, support will solve it again from scratch, repeatedly, forever.
+
+A quiet measure of a good support person: the number of problems that stopped arriving because of something they wrote up.
+</Callout>
+
+## Follow-up
+
+For anything serious, a short message a few days later:
+
+> Following up on the duplicate charge from last week — can you confirm the refund reached your account? I wanted to check rather than assume.
+
+Thirty seconds. It catches the refunds that did not arrive, and it is the kind of thing customers remember about a company.
+
+## When a customer goes quiet
+
+You asked for a reference and heard nothing.
+
+- Follow up **once**, after a couple of days
+- Then say you are closing it, and that replying reopens it
+- Then close
+
+> I have not heard back, so I will close this for now. If it happens again, reply here with the reference and this ticket reopens with all the history — nothing is lost.
+
+Not "closing due to no response", which reads as a telling-off. Leave the door open, and say that it is open.
+
+<Exercise
+  prompt="An engineer says a fix is deployed and asks you to close the ticket. What do you do?"
+  accept={["verify", "check", "test", "confirm"]}
+  hint="Two checks, in order."
+  solution="Verify it yourself against the closure criteria — look at the actual record or reproduce the original case — then confirm with the customer that it is resolved for them. Only then close. A deploy going out is not evidence the customer's instance is fixed, and closing on someone else's word makes your closures worthless."
+/>
+
+<Exercise
+  prompt="Why does closing a ticket without telling the customer cost you, even when the problem really is fixed?"
+  accept={["dropped", "forgotten", "ignored", "silent"]}
+  hint="What does silence look like from outside?"
+  solution="Because a silently closed ticket is indistinguishable from a forgotten one. From their side nothing happened and nobody wrote — so a resolved problem still produces the feeling of being ignored, and often a chasing message you then have to answer anyway."
+/>
+
+<Terms items={[
+  { term: "Closure criteria", meaning: "Testable, written at the start, both halves." },
+  { term: "Verify yourself", meaning: "The record, not the deploy and not someone's word." },
+  { term: "The open door", meaning: "Say that replying reopens it with the history." },
+  { term: "Closed is not fixed", meaning: "File the bug, or support solves it forever." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which is a testable closure criterion?",
+    options: [
+      "The payment issue is resolved",
+      "PAY-8841 shows successful and the order exists in the merchant's system",
+      "The customer is happy",
+      "The fix is deployed"
+    ],
+    answer: 1,
+    why: "It names exactly what to look at and what it must say, so anyone can check it."
+  },
+  {
+    q: "What must happen before closing, besides verifying?",
+    options: [
+      "Manager approval",
+      "Telling the customer, and saying that replying reopens it",
+      "Archiving the evidence",
+      "Nothing"
+    ],
+    answer: 1,
+    why: "A silent close reads as being dropped, even when the fix is real."
+  },
+  {
+    q: "The customer's instance is resolved but the bug is still in the product. What else must happen?",
+    options: [
+      "Nothing, the ticket is done",
+      "File it in the tracker, and write it up if it will recur",
+      "Reopen the ticket",
+      "Tell the customer"
+    ],
+    answer: 1,
+    why: "Otherwise support solves the same problem from scratch every week, forever."
+  }
+]} />
+
+## Tomorrow
+
+Ten bad replies, rewritten.

@@ -1,0 +1,142 @@
+The hardest messages in support are the ones with no good news in them. Handled well, they build more trust than an easy fix does — because anyone can deliver good news.
+
+## Say no early
+
+A soft no is a slow yes, and a slow yes is worse than a fast no. If the answer is no, say it in the first paragraph.
+
+> We will not be able to add this to the export. I know that is not what you were hoping for, so let me explain where that leaves us.
+
+Then the explanation. Then what you *can* do.
+
+The shape is: **no, why, what instead.** Never bury the no in paragraph four — the customer is scanning for it and feels manipulated when they find it there.
+
+## Say what you can do
+
+Almost never nothing:
+
+> We cannot add a custom field to the export, which is a limitation of how the report is generated rather than a decision about your request.
+>
+> What I can do: the API returns the field you need, so if your team can call `GET /transactions` the data is available today — I can send an example. I have also logged the request with the product team; I cannot promise a date, and I will tell you if it is picked up.
+
+Three things: the no, an alternative that works now, and an honest statement about the future with no fake date.
+
+<Callout kind="key">
+**Never say "I will chase it up" unless you have a specific action and a time.**
+
+It is the most common empty promise in support. The customer hears *something is happening*; nothing is.
+
+Either: *"I will ask the payments team today and come back to you by 16:00"* — or be honest that there is nothing to chase: *"This is in the product backlog and I have no visibility of when it will be picked up. I will tell you if that changes."*
+</Callout>
+
+## Promise a time and keep it
+
+Two rules:
+
+**Promise long, deliver early.** If you think two hours, say four. Being early is free; being late costs the trust you were buying.
+
+**Keep it even when you have nothing.** This is the one people get wrong.
+
+## The no-news update
+
+A customer waiting without news assumes they have been forgotten, and they are usually right.
+
+Send the update anyway:
+
+> Quick update as promised: I do not have an answer yet. The payments team has confirmed the payout left us on 6 November with the bank reference I sent you, and they are tracing it with the bank now. The bank's response time on a trace is typically two working days.
+>
+> Nothing more for me to tell you today. My next update will be Thursday by midday, sooner if the bank comes back before then.
+
+That message contains no progress and does several things: it proves you remembered, it shows what is happening, it keeps the commitment, and it resets the next one.
+
+<Callout kind="job">
+A customer who gets a "no news yet" message on time almost never complains about the delay. A customer who gets silence complains about the delay *and* about being ignored, and the second complaint is the one that escalates to your manager.
+
+The no-news update is five minutes and it is the single cheapest piece of goodwill in support.
+</Callout>
+
+## Delivering a real failure
+
+When something has genuinely gone wrong on your side:
+
+1. **Say what happened**, plainly, without hiding behind the passive voice. Not "an error occurred" — "we double-charged you".
+2. **Say what it means for them**, specifically and in money where money is involved.
+3. **Say what you have done**, already, before telling them.
+4. **Say what happens next**, with a time.
+5. **Apologise once**, properly, and move on.
+
+> You were charged twice for order 8841 — NGN 48,500 on each. That was our error, not your bank's.
+>
+> I have refunded the duplicate charge this morning; the reference is `REF-2291`. Your bank will typically post it within two working days, so by Thursday. If it has not appeared by then, reply here and I will chase it with them directly.
+>
+> I am sorry. You should not have to check your statement because of something we did.
+
+No "unfortunately", no "any inconvenience", no explanation of the technical cause the customer did not ask for. The fix came before the apology, which is what makes the apology credible.
+
+## When you were wrong
+
+You will tell a customer something that turns out to be untrue. Correct it fast, yourself, before they find out:
+
+> I need to correct something I told you yesterday. I said the refund had been issued; it had been approved but not actually released, and it went out this morning. That is my mistake and I am sorry — here is the reference.
+
+Say what you said, say what is true, say it was yours. No explanation of how the mistake happened; it is not interesting to them, and it reads as excuse-making.
+
+<Exercise
+  prompt="You promised an update by 14:00 and at 13:45 you still know nothing. What do you do?"
+  accept={["send", "update anyway", "no news", "keep"]}
+  hint="The commitment was to the update, not to the answer."
+  solution="Send the update anyway, on time, saying there is no news yet, what is currently happening, and when the next update will be. The commitment was to communicate at 14:00, not to have solved it by 14:00. A no-news message on time almost never draws a complaint; silence draws two."
+/>
+
+<Exercise
+  prompt="Why say no in the first paragraph rather than after the explanation?"
+  accept={["scanning", "buried", "manipul", "slow"]}
+  hint="What is the reader doing while they read?"
+  solution="Because the customer is scanning for the answer, and finding it buried in paragraph four reads as an attempt to soften them up first — which turns a disappointing answer into a disappointing answer plus a loss of trust. No, why, what instead: in that order."
+/>
+
+<Terms items={[
+  { term: "No, why, what instead", meaning: "The order. Never bury the no." },
+  { term: "Promise long, deliver early", meaning: "Being early is free. Being late is not." },
+  { term: "No-news update", meaning: "Five minutes, and the cheapest goodwill in support." },
+  { term: "Correcting yourself", meaning: "Fast, first-person, no explanation of how." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Where does a 'no' belong in a reply?",
+    options: [
+      "At the end, after the context",
+      "In the first paragraph, followed by why and what you can do instead",
+      "In a separate message",
+      "Implied rather than stated"
+    ],
+    answer: 1,
+    why: "A buried no reads as manipulation, because the reader was scanning for exactly that."
+  },
+  {
+    q: "You have no progress at the time you promised an update. What do you send?",
+    options: [
+      "Nothing until you have news",
+      "The update on time, saying there is no news, what is happening and when you will next write",
+      "An apology",
+      "A request for more time"
+    ],
+    answer: 1,
+    why: "The commitment was to communicate, not to have finished. Silence is what turns a delay into a complaint."
+  },
+  {
+    q: "In what order do you deliver a real failure?",
+    options: [
+      "Apologise, explain the cause, then say what you will do",
+      "Say what happened, what it means, what you have already done, what is next, then apologise once",
+      "Explain the technical cause first",
+      "Ask what they would like"
+    ],
+    answer: 1,
+    why: "An apology after the fix is credible. An apology before it is a request for patience."
+  }
+]} />
+
+## Tomorrow
+
+The escalation matrix: who owns what, and keeping the customer informed while it is out of your hands.

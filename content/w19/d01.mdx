@@ -1,0 +1,122 @@
+Most technical support jobs in Nigeria sit near payments, and the questions customers ask are nearly all variations on four or five things. This week makes you fluent in them.
+
+## The four parties
+
+**The customer** — holds a card issued by their bank.
+
+**The merchant** — the business taking the payment. Your customer, usually.
+
+**The acquirer** — the merchant's bank, which receives the money.
+
+**The issuer** — the customer's bank, which holds the money and decides whether to release it.
+
+Plus the **card network** (Visa, Mastercard, Verve) routing between the two banks, and the **gateway** or payment service provider sitting in front of all of it.
+
+## What a gateway does, and does not
+
+**Does:** collects the card details securely so the merchant never touches them, routes the request to the right acquirer, returns a result, notifies the merchant by webhook, and manages settlement, refunds and reporting.
+
+**Does not:** decide whether the payment succeeds.
+
+<Callout kind="key">
+**The gateway never approves or declines a payment. The issuing bank does.**
+
+This single fact answers a surprising share of angry tickets. When a customer says "your system declined my card", it did not — their own bank did, and the gateway passed the message along.
+
+The gateway usually cannot even see *why*. It receives a reason code, and the issuer is under no obligation to be specific.
+</Callout>
+
+## One payment, all the way through
+
+<PaymentTrace />
+
+Leave it on *Nothing fails* first and read the eight stages in order. That is the shape everything else departs from.
+
+Then work through the five failures. For each, read the three beliefs side by side — the customer's, the merchant's, and the truth. Each is internally consistent, and that is precisely why you cannot resolve a payment ticket by asking people what they think happened.
+
+## Two separations that explain almost everything
+
+**Authorisation is not settlement.** The money is held at step 4 and moves at step 8, usually the next working day. Tomorrow's lesson.
+
+**The browser return is not the notification.** The customer's redirect back to the shop is a convenience. The webhook is the record. Day 3.
+
+Nearly every confusing payment ticket is one of those two being conflated by somebody.
+
+## Vocabulary you will use daily
+
+| Term | Meaning |
+| --- | --- |
+| **Authorisation** | The issuer agrees and holds the funds. No money has moved |
+| **Capture** | The merchant claims the held funds. Often automatic |
+| **Settlement** | Money actually reaches the merchant's bank. Batched |
+| **Reference** | The id for one payment. Always get this |
+| **Reason code** | The issuer's terse explanation for a decline |
+| **Chargeback** | The customer disputes it with their bank and the money is pulled back |
+| **Minor units** | Money as integers. NGN 48,500.00 is `4850000` |
+
+## Why money is never a float
+
+You met this in week 13 and it matters more here than anywhere.
+
+`0.1 + 0.2` is `0.30000000000000004` in essentially every language. Across a day of transactions those fractions accumulate, and a settlement that is off by a few kobo is a reconciliation nobody can close.
+
+So amounts are integers of the smallest unit: kobo for naira, cents for dollars. `4850000` is NGN 48,500.00.
+
+**When a response shows an amount with a decimal point, that is worth a second look.** It is either a display value or a defect, and the difference matters.
+
+<Exercise
+  prompt="A customer says 'your system declined my card, but there is money in my account'. What is actually happening, and how do you explain it?"
+  accept={["issuer", "their bank", "bank decided"]}
+  hint="Who makes the decision?"
+  solution="Their own bank declined it — the gateway only passed the message on. Explain plainly: 'The decision comes from your bank rather than from us; we only receive their answer. They have given the code 51, which usually means insufficient available funds, though it can also be a daily limit or a security hold. Your bank can tell you which; we cannot see it.' Accurate, and it points them somewhere useful."
+/>
+
+<Exercise
+  prompt={'An API response shows "amount": 48500.00 where other endpoints use minor units. Why look twice?'}
+  accept={["float", "integer", "minor", "rounding"]}
+  hint="What does a decimal point imply about the type?"
+  solution="A decimal point suggests the amount is being held as a float somewhere, and floats accumulate rounding error — which in money becomes a reconciliation that cannot be closed. It may be a display value, which is fine, or it may be the stored type, which is a real defect. Check which, and if it is stored, report it."
+/>
+
+<Terms items={[
+  { term: "Issuer", meaning: "The customer's bank. Decides approve or decline." },
+  { term: "Acquirer", meaning: "The merchant's bank. Receives the money." },
+  { term: "Gateway", meaning: "Routes and reports. Never decides." },
+  { term: "Reason code", meaning: "The issuer's terse decline explanation." },
+  { term: "Minor units", meaning: "Money as integers. 4850000 is NGN 48,500.00." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Who decides whether a card payment is approved?",
+    options: ["The gateway", "The acquirer", "The issuing bank", "The card network"],
+    answer: 2,
+    why: "The gateway only routes the request and relays the answer, and usually cannot see the real reason."
+  },
+  {
+    q: "Why is money stored as integers in minor units?",
+    options: [
+      "It is smaller",
+      "Floats accumulate rounding error, which becomes a reconciliation nobody can close",
+      "It is a legal requirement",
+      "It is faster"
+    ],
+    answer: 1,
+    why: "0.1 + 0.2 is not 0.3, and across a day of transactions those fractions add up to real money."
+  },
+  {
+    q: "What does an authorisation mean?",
+    options: [
+      "The merchant has the money",
+      "The issuer has agreed and is holding the funds; nothing has moved yet",
+      "The payment settled",
+      "The order shipped"
+    ],
+    answer: 1,
+    why: "Money moves at settlement, usually the next working day — which is tomorrow's lesson."
+  }
+]} />
+
+## Tomorrow
+
+"It says success but I have no money."

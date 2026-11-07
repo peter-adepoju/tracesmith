@@ -1,0 +1,128 @@
+Two categories that need no investigation, and a third that hides inside the second.
+
+## Check the knowledge base first
+
+Before you diagnose anything: has this already been answered?
+
+Search by symptom, by error message, by endpoint. Thirty seconds, and it frequently returns a documented cause and a tested fix.
+
+Skipping this is the commonest waste of time in support — half an hour rediscovering something a colleague wrote up in March.
+
+<Callout kind="job">
+**If it was not there and you solved it, write it up.** Three or four lines is enough:
+
+> **Symptom:** merchant sees "settlement pending" more than 48 hours after a payout date.
+> **Cause:** payouts to one bank are batched and post on the next working day; weekends and public holidays extend this.
+> **Check:** payout record shows `status=sent` with a `sent_at` timestamp.
+> **Reply:** confirm the sent date, explain the bank's posting schedule, give a date.
+
+Ten minutes once, saved every time afterwards. It is also the most visible contribution a new support agent can make, because everyone notices the articles that were not there last month.
+</Callout>
+
+## Known issues
+
+An issue that is already raised and being worked on. For these:
+
+- **Link the ticket to the existing issue.** The count matters — twelve linked tickets moves a priority in a way one does not.
+- **Tell the customer honestly.** "This is a known problem, it is being worked on, here is what I can tell you about timing."
+- **Give the workaround** if there is one.
+- **Add them to the list to notify** when it is fixed, and then actually notify them.
+
+Never use "known issue" as a way to end a conversation. It is an explanation, not a dismissal, and customers can tell the difference instantly.
+
+## User error
+
+A large share of tickets are the customer doing something that will not work: the wrong field, an expired card, an unverified account, a test key in production, a typo in a reference.
+
+How you handle these is a bigger part of your reputation than any hard diagnosis, because there are so many of them.
+
+<Callout kind="key">
+**Never make someone feel stupid.** Three rules:
+
+**Do not name the mistake as theirs.** "The field needs the account number without spaces" — not "you entered it wrong".
+
+**Fix it, then explain.** Resolve first; the explanation lands much better after the problem is gone.
+
+**Treat the confusion as real.** If they got it wrong, the interface let them. Often several people have made the same mistake, which makes it a design problem wearing a user-error costume.
+</Callout>
+
+Worked example:
+
+> Found it — the payment was sent with the test key rather than the live one, so it went to the sandbox and never reached your account. Nothing is lost; the sandbox transaction has no effect at all.
+>
+> Your live key is in Settings → API Keys and starts with `pk_live_`. The test one starts `pk_test_`, and they look very similar in a config file — this catches people regularly.
+>
+> Would you like me to stay on while you retry it?
+
+That tells them exactly what happened, removes the blame without pretending the mistake did not happen, and ends by offering help rather than closing.
+
+## The third category hiding in the second
+
+**Repeated user error is a product finding.**
+
+If five people this month entered the account number with spaces, the field should strip spaces. If three people used a test key in production, the keys should be more clearly distinguished or the error message should say *"this is a test key"* instead of *"payment failed"*.
+
+Write it up:
+
+> **Nine tickets this month** from merchants using a test key in production. The error returned is a generic "payment failed", so nobody can self-diagnose. Suggested: the error should name the cause — "this request used a test key; live payments need a key starting pk_live_". Estimated saving: about two hours of support time a month, and nine merchants who were confused for a day.
+
+That is support doing its most valuable work. You are the only person in the company who can count how often a confusion happens, and a count turns an anecdote into a roadmap item.
+
+<Exercise
+  prompt="Three merchants this month have used a test key in production. What do you do beyond answering them?"
+  accept={["product", "raise", "finding", "error message", "count"]}
+  hint="What does the number mean?"
+  solution="Raise it as a product finding with the count: the error message says 'payment failed' rather than naming the cause, so nobody can self-diagnose. Suggest a specific improvement and estimate the saving. You are the only person who can count how often a confusion happens, and the count is what turns it from an anecdote into something that gets fixed."
+/>
+
+<Exercise
+  prompt="Rewrite this: 'You entered the account number wrong. It should not have spaces.'"
+  solution="Something like: 'Found it — the account number came through with spaces, which the bank's validation rejects. I have removed them and the transfer has gone through. The field does not strip them automatically, which catches people fairly often; I am raising that so it stops happening.' Fix first, describe the system rather than the person, and name it as a known trap."
+/>
+
+<Terms items={[
+  { term: "Knowledge base", meaning: "Check before diagnosing. Write up after solving." },
+  { term: "Known issue", meaning: "Link it, count it, and notify them when it is fixed." },
+  { term: "User error", meaning: "Fix first, explain second, blame never." },
+  { term: "Repeated user error", meaning: "A design problem in a user-error costume." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What is the first thing to do with an unfamiliar ticket?",
+    options: [
+      "Reproduce it",
+      "Search the knowledge base",
+      "Escalate it",
+      "Check the logs"
+    ],
+    answer: 1,
+    why: "Thirty seconds, and it often returns a documented cause and a tested fix someone already wrote."
+  },
+  {
+    q: "Five customers make the same mistake in a month. What is that?",
+    options: [
+      "Five user errors",
+      "A product finding — raise it with the count and a suggested fix",
+      "A training issue",
+      "Bad luck"
+    ],
+    answer: 1,
+    why: "Repeated confusion is a design problem, and you are the only person positioned to count it."
+  },
+  {
+    q: "What is the right order when a customer has made a mistake?",
+    options: [
+      "Explain the mistake, then fix it",
+      "Fix it, then explain what happened without assigning blame",
+      "Ask them to try again",
+      "Send the documentation"
+    ],
+    answer: 1,
+    why: "The explanation lands far better once the problem is already gone."
+  }
+]} />
+
+## Tomorrow
+
+Six tickets, six diagnoses, two escalations.

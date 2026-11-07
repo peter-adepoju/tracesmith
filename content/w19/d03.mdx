@@ -1,0 +1,138 @@
+"I paid but my order says unpaid" is the commonest hard ticket in payments, and it almost always comes down to three mechanisms that people treat as interchangeable.
+
+They are not interchangeable, and only one of them is the truth.
+
+## The three
+
+**The browser return.** After paying, the customer is redirected back to the shop with something in the URL. Fast, visible, and **worthless as evidence** — it comes from the customer's browser, so it can be lost, duplicated, bookmarked, or edited by hand.
+
+**The webhook.** The gateway makes a server-to-server call to the merchant with the result. Reliable, signed, retried, and invisible to the customer. **This is the notification.**
+
+**Verification.** The merchant asks the gateway directly: *what is the status of reference `PAY-8841`?* Always available, always current. **This is the truth.**
+
+<Callout kind="key">
+**Verification is the source of truth. The webhook is the notification. The browser return is a convenience.**
+
+A merchant who creates orders from the browser return has built a shop where closing the tab loses the order — and where anyone who reads the URL can create a paid order without paying.
+
+A merchant who creates orders from the webhook alone is nearly right, and should still verify before shipping anything expensive.
+</Callout>
+
+<WebhookSimulator />
+
+## Why a browser return proves nothing
+
+It arrives from the customer's machine. Which means it can:
+
+- **Not arrive at all** — tab closed, signal lost, battery died
+- **Arrive twice** — refresh, back button
+- **Be replayed** — a bookmarked success URL, used again tomorrow
+- **Be forged** — `?status=success&ref=PAY-9999` typed by hand
+
+The correct pattern is: the return tells the page what to *display*; the webhook tells the server what *happened*; verification confirms it before anything irreversible.
+
+## Diagnosing "paid but not marked paid"
+
+In order:
+
+1. **Verify at the gateway.** Look the reference up. Did it succeed? This is the only question that settles it.
+2. **Check webhook delivery.** Was it attempted? What did the merchant's endpoint return?
+3. **Check the merchant's end.** Did they receive it and fail to process it?
+4. **Check what they built on.** If their order creation depends on the redirect, that is the bug.
+
+Four outcomes:
+
+| Finding | Meaning | Action |
+| --- | --- | --- |
+| Not successful at the gateway | It genuinely failed | Explain; customer is not charged |
+| Successful, webhook never sent | Our side | Escalate to the gateway team |
+| Successful, webhook sent, merchant returned 5xx | Their endpoint | Tell them, re-send |
+| Successful, webhook delivered 200, no order | Their processing | Their bug; give them the payload |
+
+That table is most of payment support.
+
+## Signature verification
+
+Webhooks carry a signature computed from the payload and a shared secret. The merchant must verify it.
+
+A merchant who does not is accepting any POST to that URL as a real payment notification — so anyone who knows the URL can create paid orders for free. When a merchant asks why their webhook handler should bother, that is the answer.
+
+<Callout kind="watch">
+Two things merchants get wrong constantly:
+
+**Returning 200 before processing.** The gateway treats 200 as *received and handled* and stops retrying. If they then fail to process it, the event is gone and nothing will send it again. Acknowledge after processing, or queue it first.
+
+**Not handling duplicates.** Retries mean the same event can arrive more than once, and so can a legitimate re-send. Handlers must be idempotent — week 13's lesson, now with money attached.
+</Callout>
+
+## The reply
+
+> I have checked with the gateway and your payment of NGN 48,500 succeeded at 14:02 — reference `PAY-8841`. You have been charged once and you will not be charged again.
+>
+> What failed is the message that tells the shop about it: we attempted delivery three times and their system returned an error each time, so it never learned about your payment.
+>
+> I have let the merchant know and your order is being created now. I will confirm within the hour.
+
+Three things: they are charged, they will not be charged again, and someone is fixing it. No mention of webhooks, signatures or retries — none of that is theirs to carry.
+
+<Exercise
+  prompt="A merchant creates orders when the browser returns to their success page. Name two ways this fails and one way it is abused."
+  accept={["closed", "lost", "forged", "replay", "twice"]}
+  hint="It comes from the customer's machine."
+  solution="Fails: the customer closes the tab or loses signal, so a paid order is never created; or they refresh and the order is created twice. Abused: anyone can visit the success URL directly, or bookmark and replay it, creating a paid order without paying. The fix is to create orders from the verified webhook and use the redirect only to decide what the page displays."
+/>
+
+<Exercise
+  prompt="Why must a webhook handler return 200 only after processing, not before?"
+  accept={["retry", "stops", "lost", "gone"]}
+  hint="What does the sender do when it sees 200?"
+  solution="Because 200 means 'received and handled', so the gateway stops retrying. If the handler acknowledges first and then fails, the event is gone and nothing will ever send it again — a successful payment that the merchant's system will never learn about. Either process before acknowledging, or write it to a queue first and acknowledge that."
+/>
+
+<Terms items={[
+  { term: "Browser return", meaning: "A convenience. Proves nothing; can be forged." },
+  { term: "Webhook", meaning: "The notification. Signed, retried, server to server." },
+  { term: "Verification", meaning: "Asking the gateway directly. The source of truth." },
+  { term: "Signature", meaning: "What stops anyone POSTing a fake payment notification." },
+  { term: "Acknowledge after processing", meaning: "Or the event is lost on failure." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which of the three is the source of truth?",
+    options: [
+      "The browser return",
+      "The webhook",
+      "Verification against the gateway",
+      "The customer's receipt"
+    ],
+    answer: 2,
+    why: "It is always available and always current. The webhook is the notification; the redirect is a convenience."
+  },
+  {
+    q: "A merchant does not verify webhook signatures. What is the consequence?",
+    options: [
+      "Slower processing",
+      "Anyone who knows the URL can POST a fake notification and create paid orders for free",
+      "Duplicate events",
+      "Nothing"
+    ],
+    answer: 1,
+    why: "The signature is the only thing distinguishing a real notification from any other POST."
+  },
+  {
+    q: "Gateway says successful, webhook delivered with a 200, and there is still no order. Whose bug?",
+    options: [
+      "The gateway's",
+      "The merchant's processing — they acknowledged it and did not act on it",
+      "The customer's",
+      "The card network's"
+    ],
+    answer: 1,
+    why: "A 200 is a claim that it was handled. Give them the payload and the delivery record."
+  }
+]} />
+
+## Tomorrow
+
+Refunds, chargebacks and disputes — three words customers use interchangeably.

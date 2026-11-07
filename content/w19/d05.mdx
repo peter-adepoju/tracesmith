@@ -1,0 +1,145 @@
+Asking a frustrated customer for a photograph of their ID is one of the least comfortable conversations in support. It gets much easier once you can explain *why* without apologising for it.
+
+## What KYC is
+
+**Know Your Customer**: verifying that a customer is who they claim to be, before handling their money.
+
+It is a legal requirement, not a company preference. In Nigeria the obligations sit with the CBN and the NDPC, and comparable rules exist everywhere — the EU, the UK, the US. A business that moves money and does not verify its customers loses its licence.
+
+The purpose: money laundering, terrorist financing, fraud and sanctions evasion all depend on moving money through accounts that cannot be traced to a real person.
+
+<Callout kind="key">
+**Explain KYC. Do not apologise for it.**
+
+"Sorry, we have to ask for this" invites an argument, because it frames the request as an imposition you also find unreasonable.
+
+"We verify every business before processing payments — it is a regulatory requirement for anyone handling money, and it is part of why your funds are protected" is the same request as a normal fact about the industry. The second version gets the documents sent.
+</Callout>
+
+## What a business typically provides
+
+- **Certificate of incorporation** — CAC registration in Nigeria
+- **Tax identification number**
+- **Proof of address** for the business
+- **Directors' identification** — passport, driver's licence, national ID, voter's card
+- **Proof of address** for directors
+- **Bank account details** in the business's name
+- **Ownership structure**, for anyone holding more than a set percentage
+- **Description of the business** — what is sold, to whom, typical transaction size
+
+That last one surprises people. It is not bureaucracy: it establishes what *normal* looks like for the account, which is how unusual activity gets noticed later.
+
+For an individual: a government ID, proof of address, and sometimes a selfie or liveness check.
+
+## Why it is asked for again
+
+Customers get particularly annoyed by re-verification. The honest reasons:
+
+- **Periodic review.** Rules require it at intervals.
+- **Something changed** — a new director, a new address, a new bank account.
+- **Activity changed.** Volume well outside the established pattern triggers a review.
+- **A document expired.**
+- **The first submission was not usable** — blurry, cropped, out of date.
+
+The last one is the most common and the easiest to prevent: say exactly what is wrong with the document rather than rejecting it generically.
+
+> The ID you sent is cut off on the right, so the expiry date is not visible. A photo of the whole card flat on a table, with all four corners in frame, is all we need — no other change.
+
+## When a customer refuses
+
+Some will. Stay calm, and be clear about consequences without threatening.
+
+> I understand, and I would rather be straight with you about what that means.
+>
+> We are not able to process payments for an unverified business — not as a policy we have chosen, but because we are regulated and verification is a condition of handling money at all. So without the documents the account cannot be activated, and any funds currently held cannot be released to you.
+>
+> If there is something specific you are uncomfortable with, tell me what it is and I will check what alternatives exist. Several of these can be satisfied in more than one way, and I would rather find one than leave you stuck.
+
+Three parts: the consequence stated plainly, the reason given honestly, and a genuine offer to find another route.
+
+<Callout kind="watch">
+**Never handle KYC documents outside the system built for them.**
+
+No email attachments, no WhatsApp, no screenshots in a chat channel, no copies on your laptop.
+
+These are government identity documents. A copy in your inbox is a copy in your inbox forever, it is outside every access control the company has, and it is exactly the material identity theft is built from.
+
+If a customer sends one by email, do not forward it. Direct them to the upload, and tell your security or compliance team that it happened.
+</Callout>
+
+## What you must not say
+
+**Never say an account is under investigation for suspected fraud or money laundering.** In many jurisdictions this is **tipping off**, and it is a criminal offence — for you personally, not only for the company.
+
+If an account is frozen for a compliance reason, you say what you are told to say and nothing more:
+
+> This account is under review. I am not able to share details of the review or expected timelines, and I am not being evasive with you — I am genuinely not permitted to. The compliance team will contact you directly.
+
+Then escalate to compliance and stop. Do not speculate, do not reassure, do not predict. If you are unsure whether something is a compliance matter, treat it as if it is.
+
+## Why the documents are kept
+
+Customers ask. The answer: regulation requires records to be retained for a set period — commonly five years after the relationship ends — so they can be produced to a regulator or in an investigation.
+
+That is also why they must live in the right system. A document that cannot be produced on request is a compliance failure, and one that sits in a personal inbox is a breach.
+
+<Exercise
+  prompt="A merchant says 'I have been a customer for two years, why do you suddenly need my ID again?' Answer them."
+  accept={["review", "periodic", "changed", "regulation"]}
+  hint="Several legitimate reasons."
+  solution="Explain without apologising: verification is reviewed periodically for all accounts under the regulations, and a review is also triggered by changes — a new director, address or bank account, or activity outside the established pattern. Say which applies to them if you can see it, confirm exactly what is needed, and make it as easy as possible. 'It is not about you specifically' is worth saying."
+/>
+
+<Exercise
+  prompt="A customer emails you a photo of their passport. What do you do?"
+  accept={["do not forward", "upload", "delete", "security", "system"]}
+  hint="It is now somewhere it should not be."
+  solution="Do not forward it, do not save it, and do not use it. Direct them to the secure upload in the product, and tell your security or compliance team that an identity document arrived by email so it can be handled according to policy. A government ID in an inbox is outside every access control the company has, and it is the raw material of identity theft."
+/>
+
+<Terms items={[
+  { term: "KYC", meaning: "Verifying who a customer is. A legal requirement." },
+  { term: "Periodic review", meaning: "Re-verification at intervals, required by regulation." },
+  { term: "Tipping off", meaning: "Telling someone they are under investigation. A criminal offence." },
+  { term: "Retention", meaning: "Documents kept for years, in the right system only." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "How should you frame a KYC request?",
+    options: [
+      "Apologetically",
+      "As a normal regulatory requirement for anyone handling money",
+      "As a company policy",
+      "As optional"
+    ],
+    answer: 1,
+    why: "Apologising frames it as an imposition you also find unreasonable, which invites the argument."
+  },
+  {
+    q: "An account is frozen pending a suspected money-laundering review. What do you tell the customer?",
+    options: [
+      "That it is a money-laundering review",
+      "That it is under review, that you cannot share details, and that compliance will contact them",
+      "That it is a technical problem",
+      "Nothing at all"
+    ],
+    answer: 1,
+    why: "Naming the suspicion is tipping off, which is a criminal offence in many jurisdictions — for you personally."
+  },
+  {
+    q: "A customer emails a photo of their national ID. What is the correct action?",
+    options: [
+      "Forward it to compliance",
+      "Do not forward or save it; direct them to the secure upload and tell security it happened",
+      "Save it to the ticket",
+      "Use it and delete the email"
+    ],
+    answer: 1,
+    why: "Forwarding spreads it further. The document must live only in the system built to hold it."
+  }
+]} />
+
+## Tomorrow
+
+Ten payment tickets, and one of them is not a support matter at all.

@@ -97,6 +97,24 @@ import w16d03 from "./w16/d03.mdx";
 import w16d04 from "./w16/d04.mdx";
 import w16d05 from "./w16/d05.mdx";
 import w16d06 from "./w16/d06.mdx";
+import w17d01 from "./w17/d01.mdx";
+import w17d02 from "./w17/d02.mdx";
+import w17d03 from "./w17/d03.mdx";
+import w17d04 from "./w17/d04.mdx";
+import w17d05 from "./w17/d05.mdx";
+import w17d06 from "./w17/d06.mdx";
+import w18d01 from "./w18/d01.mdx";
+import w18d02 from "./w18/d02.mdx";
+import w18d03 from "./w18/d03.mdx";
+import w18d04 from "./w18/d04.mdx";
+import w18d05 from "./w18/d05.mdx";
+import w18d06 from "./w18/d06.mdx";
+import w19d01 from "./w19/d01.mdx";
+import w19d02 from "./w19/d02.mdx";
+import w19d03 from "./w19/d03.mdx";
+import w19d04 from "./w19/d04.mdx";
+import w19d05 from "./w19/d05.mdx";
+import w19d06 from "./w19/d06.mdx";
 
 export const LESSONS: Record<string, ComponentType> = {
   w01d01,
@@ -195,6 +213,24 @@ export const LESSONS: Record<string, ComponentType> = {
   w16d04,
   w16d05,
   w16d06,
+  w17d01,
+  w17d02,
+  w17d03,
+  w17d04,
+  w17d05,
+  w17d06,
+  w18d01,
+  w18d02,
+  w18d03,
+  w18d04,
+  w18d05,
+  w18d06,
+  w19d01,
+  w19d02,
+  w19d03,
+  w19d04,
+  w19d05,
+  w19d06,
 };
 
 export function hasLesson(key: string): boolean {

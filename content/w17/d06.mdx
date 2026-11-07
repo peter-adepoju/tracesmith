@@ -1,0 +1,167 @@
+Six tickets. For each: the diagnosis, the owning team, and whether it is yours to resolve. Two need escalations, and you will write them.
+
+Work each one before reading the answer.
+
+---
+
+## Ticket 1
+
+> **Merchant:** "Customers click Pay and nothing happens at all. No error, no spinner, nothing."
+
+**Evidence:** Network panel empty on click. Console shows `Uncaught TypeError: Cannot read properties of null (reading 'value')` at `checkout.js:142`.
+
+<details>
+<summary>Diagnosis</summary>
+
+**Front end.** No request left the browser, so nothing reached the API — do not search the server logs. A script error at line 142 killed the click handler before it could call anything. Probably an element the code expects is missing in this state.
+
+**Owner:** front-end team. **Priority:** P1 if it affects all customers of this merchant; confirm the scope first.
+</details>
+
+---
+
+## Ticket 2
+
+> **Customer:** "I was charged but my order was never created."
+
+**Evidence:** `POST /payments` returned `201`, reference `PAY-8841`, amount correct. Payment record shows `status=successful`. No order exists. Webhook log: three delivery attempts to the merchant's endpoint, all `502`.
+
+<details>
+<summary>Diagnosis</summary>
+
+**Not a product bug.** The payment succeeded and we attempted delivery three times; the merchant's own endpoint returned `502` each time, so their system never learned about it.
+
+**Owner:** the merchant's engineering team, with support holding the customer. **Action:** tell the merchant their endpoint is down and offer to re-send once it is back. The end customer needs the order created or the payment refunded today — that is the thing that cannot wait.
+
+This is the succeeded-but-unknown shape from week 16, and it is most of the hard tickets in payments.
+</details>
+
+---
+
+## Ticket 3
+
+> **Customer:** "Your site says my card is invalid but it works everywhere else."
+
+**Evidence:** `POST /payments` returned `422`, body `{"error":"validation_failed","fields":["card.number"],"message":"Card number failed checksum"}`. Screen shows "Something went wrong."
+
+<details>
+<summary>Diagnosis</summary>
+
+**Two findings.** The server's rejection may well be correct — a checksum failure usually means a mistyped digit. But the page discarded a perfectly clear explanation and showed a generic message, so the customer cannot fix it.
+
+**Owner:** front-end team for the message. **Your action now:** ask them to re-enter the number carefully, since a checksum failure is nearly always a typo. Then raise the message as a finding with a count if you have seen it before.
+</details>
+
+---
+
+## Ticket 4
+
+> **Merchant:** "Settlement for 6 November has not arrived. NGN 4,100,000."
+
+**Evidence:** Payout record exists, `status=sent`, `sent_at=2026-11-06T16:40Z`, bank reference present. No failure anywhere.
+
+<details>
+<summary>Diagnosis</summary>
+
+**Nothing broken on our side**, and that is not the same as nothing to do. We sent it with a bank reference; it is with their bank.
+
+**Action:** give them the bank reference and the sent timestamp so their finance team can trace it, explain the posting schedule, and give a date by which it should appear. If it is past that date, escalate to the payments operations team to trace with the bank — **do not** leave the merchant to chase their bank alone with four million naira outstanding.
+
+"Not our bug" is a diagnosis. It is not a resolution.
+</details>
+
+---
+
+## Ticket 5
+
+> **Partner developer:** "We stopped receiving webhooks at 02:00. No retries either."
+
+**Evidence:** Delivery log shows attempts ceasing at 01:58. Endpoint registered and unchanged. Their endpoint responds `200` to a manual test now. Three other partners on the same delivery worker also stopped at 01:58.
+
+<details>
+<summary>Diagnosis</summary>
+
+**Back end, and an incident.** Four partners on the same worker stopped within the same minute — that is not four coincidences, it is one stuck or dead delivery worker.
+
+**Owner:** back-end or platform team. **Priority:** P1. Multiple partners have been silently missing events for hours, and every hour adds data they will have to reconcile.
+
+**This one needs an escalation**, written below.
+</details>
+
+---
+
+## Ticket 6
+
+> **Customer:** "The transaction list only shows 50 rows. I have hundreds."
+
+**Evidence:** `GET /transactions` returns `200` with 50 items and `"hasMore": true`. The page has no pagination controls.
+
+<details>
+<summary>Diagnosis</summary>
+
+**Front end.** The API is paginating correctly and telling the client there is more; the page ignores `hasMore` and renders only the first page.
+
+**Owner:** front-end team. **Priority:** P2 — the data is inaccessible, with a partial workaround through export if that works.
+
+**Workaround to give today:** the API returns everything if they can call it, and the export may too. Check before offering it.
+</details>
+
+---
+
+## Write the two escalations
+
+### Ticket 5 — to the platform team
+
+> **Webhook delivery stopped at 01:58 for at least four partners (P1).**
+>
+> Delivery attempts cease at 01:58 UTC for `lumen-pay`, `arcadia`, `flux-ng` and `beacon`, all on the same delivery worker. No retries have been attempted since. Partner endpoints are healthy — `lumen-pay` returns 200 to a manual test now.
+>
+> Scope: at least four partners, approximately 6 hours of undelivered events so far, growing. Each partner's system is now out of sync with ours and none of them knows it.
+>
+> Checked and ruled out: endpoint configuration unchanged, partner endpoints responding, no change on their side. Other workers appear unaffected.
+>
+> Partners have been told we are investigating, with an update due at 11:00.
+>
+> Needed: whether the worker is stuck or dead, and whether queued events will replay automatically or need manual re-delivery.
+
+### Ticket 1 — to the front-end team
+
+> **Pay button does nothing for merchant ACC-4421 (P1 pending scope).**
+>
+> `TypeError: Cannot read properties of null (reading 'value')` at `checkout.js:142` fires on click. No network request is made, so nothing reaches the API and there is nothing in the server logs.
+>
+> Reproduced on a test account with the same configuration; see the attached console capture (redacted).
+>
+> Scope: confirming now whether this affects all of this merchant's customers or a subset. Treating as P1 until known.
+>
+> Merchant acknowledged, update due 11:00.
+
+Both carry: the evidence, what was ruled out, the scope, what the customer has been told, and what is actually needed. Neither contains a guess.
+
+<Callout kind="key">
+**"Not our bug" is a diagnosis, not a resolution.**
+
+Tickets 2 and 4 are both somebody else's fault, and both still need you. A customer with four million naira missing does not care whose system is at fault, and handing them an explanation and nothing else is a technically correct way of being useless.
+</Callout>
+
+<Exercise
+  prompt="Which two tickets are not product bugs, and what does support still owe each?"
+  accept={["2", "4", "two and four", "webhook", "settlement"]}
+  hint="Someone else's system, your customer."
+  solution="Ticket 2 (the merchant's own endpoint returning 502) and ticket 4 (the payout is with the bank). Ticket 2 owes the merchant a clear report that their endpoint is down, an offer to re-send, and urgency about the end customer who is charged with no order. Ticket 4 owes the bank reference, the sent timestamp, an expected date, and an escalation to payments operations if it passes."
+/>
+
+<Terms items={[
+  { term: "Scope first", meaning: "One merchant or all? It decides the priority." },
+  { term: "Succeeded-but-unknown", meaning: "The payment worked; something downstream never heard." },
+  { term: "Not our bug", meaning: "A diagnosis. Never a resolution." },
+  { term: "Ruled out", meaning: "The part of an escalation that saves the engineer an hour." },
+]} />
+
+## Week 17 in one line
+
+Ask for one specific instance, verify before you answer, and let the evidence say which team owns it.
+
+## Next week
+
+The same facts, written for two completely different readers.

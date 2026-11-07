@@ -1,0 +1,140 @@
+Yesterday's reader wanted reassurance and plain language. Today's reader wants facts, in order, with nothing extra — and is already mid-task when they open your message.
+
+The standard is week 11's, unchanged: **they can act without asking you anything.**
+
+## The shape
+
+```
+WHAT          Webhook delivery stopped for at least 4 partners
+WHEN          01:58 UTC, 10 Nov. Ongoing, ~6 hours.
+SCOPE         lumen-pay, arcadia, flux-ng, beacon — all on
+              delivery worker 3. Other workers unaffected.
+EVIDENCE      Delivery log: attempts cease 01:58, no retries since.
+              lumen-pay endpoint returns 200 to a manual test now.
+RULED OUT     Endpoint config unchanged; partner endpoints healthy;
+              no deploy in that window.
+IMPACT        4 partners silently out of sync, growing hourly. Each
+              will need to reconcile missed events.
+CUSTOMER      All four told we are investigating. Update due 11:00.
+NEEDED        Is the worker stuck or dead, and will queued events
+              replay automatically?
+```
+
+Eight lines. An engineer reads it in forty seconds and knows exactly where to start.
+
+## Cut everything they do not need
+
+| Leave out | Why |
+| --- | --- |
+| The customer's emotional state | It does not change the fix |
+| Your investigation narrative | They need the conclusion, not the journey |
+| "This is really urgent!!" | Put the impact in; let them judge |
+| Apologies for bothering them | This is the job |
+| Speculation about the cause | Unless flagged as speculation |
+| Full log dumps | Three relevant lines, redacted |
+
+The last one matters more than it looks. A wall of log invites the reader to skim, and skimming is how the one important line gets missed.
+
+<Callout kind="key">
+**"Ruled out" is the most valuable line in an escalation.**
+
+It is the difference between an engineer starting work and an engineer repeating the twenty minutes you already spent. It also proves you did the work, which is how support earns the right to be taken seriously.
+
+Write it even when short: *"Ruled out: config unchanged, partner endpoints healthy, no deploy in that window."*
+</Callout>
+
+## Impact, in numbers
+
+Not "this is urgent". Engineers prioritise all day and cannot do it on adjectives.
+
+- "Four partners, roughly six hours of undelivered events, growing"
+- "One merchant, no card payments at all since 07:50, approximately NGN 2.4m of attempted volume"
+- "Nine customers this month, two hours of support time"
+
+Numbers let someone else make the judgement you want them to make — which is far more persuasive than asking them to make it.
+
+## Speculation, labelled
+
+You will often have a theory. Include it, clearly marked, at the end:
+
+> **Speculation, not verified:** all four are on worker 3 and the stop is within the same minute, which looks more like a stuck worker than four endpoint problems. I have not been able to check worker health from my access level.
+
+Two things that does: gives the engineer a head start, and makes clear which parts are evidence. Unlabelled speculation that turns out to be wrong is how support loses credibility — once someone has chased your theory for an hour and found nothing, your next escalation is read sceptically.
+
+## Where to send it
+
+- **The ticket or tracker**, always — so it exists outside a chat
+- **The channel the team actually uses**, with a link rather than a copy
+- **Tag the on-call person for a P1**, not the whole team: a message addressed to everyone is addressed to nobody
+- **Never a direct message only.** It vanishes, and nobody else can pick it up
+
+## The no-follow-up test
+
+Before you send, read it as the engineer:
+
+- Do I know **what** is broken?
+- Do I know **how many** and **since when**?
+- Do I know **what has been checked**?
+- Do I know **what is wanted from me**?
+- Can I **start** without replying to this?
+
+Any no, fix it before sending. One round trip costs a day in practice, because it will not be answered for an hour and by then they are on something else.
+
+<Exercise
+  prompt="Rewrite for an engineer: 'Hi! Sorry to bother you. A merchant is really upset — they have been complaining all morning and say payments are totally broken. Can someone look? It is very urgent!!'"
+  solution="Something like: 'Card payments failing for ACC-4421 since 07:50 (P1). All attempts return provider code 05; 14 attempts, 0 successes. Two other merchants on the same provider route show the same from 07:48, so it is not account-specific — raised as INC-204. Ruled out: no config change, no deploy in the window. Impact: three merchants unable to take card payments, roughly NGN 2.4m attempted. Merchants told, update due 11:00. Needed: confirmation of whether the provider route is degraded.' Facts, scope, what was ruled out, impact in numbers, what is wanted."
+/>
+
+<Exercise
+  prompt="Why label speculation explicitly rather than leaving it out or stating it plainly?"
+  accept={["credibility", "head start", "wrong", "trust"]}
+  hint="Two different risks."
+  solution="Leaving it out wastes a real head start — your theory is often right and you have seen the evidence. Stating it plainly risks an engineer chasing it for an hour and finding nothing, after which your next escalation is read sceptically. Labelling it gives the benefit while keeping the boundary between what you know and what you suspect."
+/>
+
+<Terms items={[
+  { term: "Ruled out", meaning: "The line that stops an engineer repeating your work." },
+  { term: "Impact in numbers", meaning: "How many, since when, how much. Never adjectives." },
+  { term: "Labelled speculation", meaning: "A head start without spending your credibility." },
+  { term: "No-follow-up test", meaning: "Can they start without replying to you?" },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What is the most valuable line in an escalation?",
+    options: [
+      "The apology",
+      "What you ruled out",
+      "The priority",
+      "The customer's name"
+    ],
+    answer: 1,
+    why: "It stops the engineer repeating the twenty minutes you already spent, and it proves the work was done."
+  },
+  {
+    q: "How should urgency be expressed to an engineer?",
+    options: [
+      "In capitals",
+      "As numbers: how many affected, since when, how much is at stake",
+      "By tagging everyone",
+      "With a deadline"
+    ],
+    answer: 1,
+    why: "They prioritise all day and cannot do it on adjectives. Numbers let them reach your conclusion themselves."
+  },
+  {
+    q: "Why not escalate by direct message alone?",
+    options: [
+      "It is rude",
+      "It vanishes and nobody else can pick it up",
+      "It is slower",
+      "It is against policy"
+    ],
+    answer: 1,
+    why: "The record must exist outside one person's chat, or the ticket's real state is invisible."
+  }
+]} />
+
+## Tomorrow
+
+Saying no, and updating when there is nothing to report.

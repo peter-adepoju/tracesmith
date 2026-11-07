@@ -1,0 +1,130 @@
+The one-sentence version: **authorisation is the bank agreeing; settlement is the money arriving.** Days apart, and both called "the payment".
+
+## Authorisation
+
+The issuer checks the card, the funds, the limits and its fraud rules, and says yes. The amount is then **held** — reserved on the customer's account, reducing their available balance.
+
+No money has moved. The customer sees a pending transaction; the merchant sees a successful payment; the merchant's bank account is unchanged.
+
+An authorisation **expires** if not captured — typically within about a week, varying by network and issuer.
+
+## Capture
+
+The merchant claims the held funds. For most online shops this is automatic and immediate, so you will rarely see the two as separate events.
+
+Where it is separate: hotels, car hire, fuel stations, anything estimating a cost up front and charging the real amount later — which is why a hotel's hold can sit on a card for days after checkout.
+
+## Settlement
+
+Captured payments are **batched** — typically daily — and sent to the acquirer, which moves the money to the merchant's bank, minus fees.
+
+Typical timing in Nigeria is T+1: a payment on Monday settles on Tuesday. Weekends and public holidays push it out, so Friday's payments usually land on Monday.
+
+<Callout kind="key">
+**"Payment successful" means authorised. It does not mean the merchant has the money.**
+
+This single confusion generates more merchant tickets than anything else in payments. The dashboard says successful, the bank account says nothing arrived, and the merchant concludes something is broken.
+
+Nothing is. The dashboard is reporting authorisation and the bank account is reporting settlement, and they are days apart by design.
+</Callout>
+
+## Answering "it says success but I have no money"
+
+Two completely different questions depending on who is asking.
+
+**From a merchant** — they mean *where is my settlement?*
+
+> Your payments on 6 November totalling NGN 1,240,000 all authorised successfully, which is what "successful" means in the dashboard — the customers' banks approved them and the funds are on their way to us.
+>
+> That batch settled to your account on 9 November, payout reference `STL-9921`, NGN 1,221,400 after fees. Settlement runs the next working day, so Friday's payments arrive on Monday.
+>
+> If `STL-9921` is not showing in your bank account, send me a shout and I will trace it with the bank.
+
+**From a customer** — they mean *why is money missing from my account?*
+
+> The NGN 48,500 you are seeing is a hold rather than a completed payment — your bank has reserved it while the merchant finalises the order. It will either complete as a normal charge or be released back, and a release typically takes three to five working days to show. Either way you will be charged only once.
+
+Same words from two people, two entirely different answers.
+
+## Pending that never completes
+
+A hold that is never captured expires and falls off, but the customer sees their available balance reduced in the meantime — and they are not wrong to be annoyed about it.
+
+Common causes: a checkout abandoned after authorisation, a merchant who authorises before confirming stock, a failed capture.
+
+What you can do: confirm whether it was captured, tell them when the hold will expire, and if the merchant is at fault ask them to void the authorisation, which releases it immediately rather than in a week.
+
+## Fees
+
+Settlement is net. A merchant expecting exactly what the dashboard shows will query the difference every month until someone explains it.
+
+```
+Gross authorised        NGN 1,240,000
+Less processing fee            18,600   (1.5%)
+Less fixed per-transaction        ...
+Settled                 NGN 1,221,400
+```
+
+Always give **gross, fee and net** in the same message. Giving only the net invites the exact question you were trying to answer.
+
+<Exercise
+  prompt="A merchant says payments from Friday have not arrived and it is now Monday morning. Is anything wrong?"
+  accept={["no", "nothing", "monday", "normal", "t+1"]}
+  hint="Count working days."
+  solution="Probably not. Settlement is typically T+1 in working days, so Friday's payments settle on Monday — often later in the day once the batch posts. Confirm the payout record exists with a sent timestamp and a bank reference, give those to the merchant with the expected posting time, and only escalate if it passes that."
+/>
+
+<Exercise
+  prompt="A customer has an authorisation on their card for an order that was cancelled. What do you tell them, and what can you ask the merchant to do?"
+  accept={["hold", "expire", "void", "release"]}
+  hint="There is a faster option than waiting."
+  solution="Explain it is a hold rather than a charge — the money has not left, it is reserved, and it will fall off when the authorisation expires, typically within about a week. Better: ask the merchant to void the authorisation, which releases it immediately. Always offer the void rather than letting them wait out the expiry."
+/>
+
+<Terms items={[
+  { term: "Authorisation", meaning: "The issuer agrees and holds funds. Nothing has moved." },
+  { term: "Capture", meaning: "Claiming the held funds. Often automatic." },
+  { term: "Settlement", meaning: "Money reaching the merchant's bank. Batched, T+1." },
+  { term: "Void", meaning: "Releasing a hold immediately, instead of waiting for expiry." },
+  { term: "Net settlement", meaning: "Gross minus fees. Always state all three." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "A merchant's dashboard says 'successful' but their bank account shows nothing. What is happening?",
+    options: [
+      "The payment failed",
+      "The payments authorised; settlement is batched and lands the next working day",
+      "The gateway is broken",
+      "The customer was not charged"
+    ],
+    answer: 1,
+    why: "The dashboard reports authorisation and the bank account reports settlement. Days apart, by design."
+  },
+  {
+    q: "A customer has a pending amount for a cancelled order. What is the best action?",
+    options: [
+      "Tell them to wait for expiry",
+      "Ask the merchant to void the authorisation, releasing it immediately",
+      "Issue a refund",
+      "Nothing can be done"
+    ],
+    answer: 1,
+    why: "A void releases the hold at once; a refund would be wrong, since no money ever moved."
+  },
+  {
+    q: "What should a settlement explanation always include?",
+    options: [
+      "The net amount",
+      "Gross, fee and net together",
+      "The fee percentage",
+      "The bank's name"
+    ],
+    answer: 1,
+    why: "Giving only the net invites the exact question about the difference that you were trying to prevent."
+  }
+]} />
+
+## Tomorrow
+
+Webhooks, callbacks and verification — and which of the three is the truth.

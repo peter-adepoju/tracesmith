@@ -1,0 +1,150 @@
+Customers use all three words for the same thing. They are different mechanisms with different costs, different timelines and different people in charge — and the difference matters a great deal to the merchant.
+
+## Refund
+
+The merchant chooses to give the money back. Voluntary, controlled, cheap.
+
+- Initiated by the merchant
+- Full or partial
+- Typically three to five working days to reach the customer's account
+- Costs the processing fee, which is usually not returned
+- No penalty beyond that
+
+A refund is the good outcome. Everything below is worse for everyone.
+
+## Chargeback
+
+The customer goes to **their own bank** and disputes the charge. The bank pulls the money back from the merchant, often before anyone has asked the merchant what happened.
+
+- Initiated by the customer, through their bank
+- The merchant finds out after the money is gone
+- Carries a **fee** — frequently in the thousands of naira — whether or not the merchant eventually wins
+- Counts against the merchant's chargeback ratio, and too high a ratio puts their ability to accept cards at risk
+- Timeline runs for weeks
+
+## Dispute
+
+The process of contesting a chargeback. The merchant submits evidence — delivery proof, logs, correspondence, terms accepted — and the issuer decides.
+
+So: **a refund is a decision, a chargeback is a demand, and a dispute is the argument about a chargeback.**
+
+<Callout kind="key">
+**A refund now is almost always cheaper than a chargeback later.**
+
+A merchant arguing over a NGN 10,000 refund can lose the money anyway through a chargeback, plus a fee of similar size, plus a mark on a ratio that eventually threatens their card acceptance entirely.
+
+When a merchant hesitates over a small refund, this is the argument — and it is a commercial one, not a moral one.
+</Callout>
+
+## The chargeback timeline
+
+| Stage | What happens |
+| --- | --- |
+| **Day 0** | Customer disputes with their bank |
+| **Days 1–3** | Issuer raises it; funds are debited from the merchant |
+| **Day 3** | Merchant is notified, after the money has gone |
+| **Days 3–X** | Merchant submits evidence, usually within 7 to 14 days |
+| **Weeks 2–8** | Issuer decides |
+| **If won** | Funds returned. The fee usually is not |
+| **If lost** | Funds stay with the customer |
+| **Rarely** | A second round, or arbitration |
+
+Two things to tell merchants early: **the deadline is short and it is fatal.** Miss the evidence window and they lose automatically, however good their case was.
+
+## What makes good chargeback evidence
+
+- Proof of delivery, signed where possible
+- The customer's acceptance of terms, with a timestamp
+- Correspondence showing the issue was raised and handled
+- IP address and device matching previous legitimate orders
+- The authorisation record with the AVS and CVV results
+- For digital goods: access logs showing the product was used
+
+Support's job is usually to **gather** this rather than to argue it, and the gathering is time-bound.
+
+## Common reasons, and what they really mean
+
+| Reason given | Often actually |
+| --- | --- |
+| Fraudulent transaction | A family member used the card, or they did not recognise the name on the statement |
+| Product not received | A delivery problem, or a slow one |
+| Product not as described | A real dispute about quality |
+| Duplicate charge | Frequently genuine, and frequently our fault |
+| Subscription not cancelled | A cancellation flow nobody can find |
+
+The first row is worth knowing. A large share of "fraud" chargebacks are **friendly fraud** — the customer genuinely does not recognise `SPLTPAY*LAGOS` on a statement. A clear, recognisable descriptor prevents more chargebacks than any dispute process wins.
+
+## Handling a dispute between two parties
+
+Sometimes the merchant and the customer disagree and you are in the middle.
+
+- **Stay factual.** You hold the records: what was charged, when, what was delivered, what was said.
+- **Do not take a side**, and do not pretend not to have the evidence.
+- **Share what each party is entitled to see**, and no more. The customer does not get the merchant's internal notes.
+- **Know your limits.** A genuine commercial dispute between two businesses is not support's to settle.
+
+> I can confirm what our records show: a payment of NGN 48,500 authorised on 6 November at 14:02, reference `PAY-8841`, and a refund of NGN 20,000 released on 9 November, reference `REF-2291`. The remaining NGN 28,500 has not been refunded.
+>
+> Whether the rest is owed is a matter between you and the merchant, and I cannot decide it. What I can do is make sure both of you have the same facts, which is what I have sent to them as well.
+
+<Exercise
+  prompt="A merchant refuses a NGN 10,000 refund because they believe the customer is wrong. What is the commercial argument for paying it?"
+  accept={["chargeback", "fee", "ratio", "lose anyway"]}
+  hint="What does the customer do next?"
+  solution="The customer can go to their bank instead. The merchant then loses the NGN 10,000 anyway, pays a chargeback fee often of similar size, spends time on evidence, and takes a mark on their chargeback ratio — and too high a ratio eventually threatens their ability to accept cards at all. Refunding is the cheaper outcome even when they are right."
+/>
+
+<Exercise
+  prompt="Why does a clear statement descriptor prevent more chargebacks than a good dispute process wins?"
+  accept={["recognise", "friendly fraud", "do not recognise", "prevent"]}
+  hint="What causes a large share of 'fraud' claims?"
+  solution="Because a large share of 'fraudulent transaction' chargebacks are friendly fraud — the customer genuinely does not recognise an obscure descriptor on their statement and reports it as fraud. A recognisable descriptor stops the dispute ever starting, and prevention costs nothing while every dispute costs a fee whether won or lost."
+/>
+
+<Terms items={[
+  { term: "Refund", meaning: "The merchant chooses to return the money. Cheapest outcome." },
+  { term: "Chargeback", meaning: "The customer's bank pulls it back. Carries a fee either way." },
+  { term: "Dispute", meaning: "Contesting a chargeback with evidence, on a short deadline." },
+  { term: "Chargeback ratio", meaning: "Too high, and the merchant loses card acceptance." },
+  { term: "Friendly fraud", meaning: "An unrecognised descriptor reported as fraud." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What is the key difference between a refund and a chargeback?",
+    options: [
+      "The amount",
+      "A refund is the merchant's decision; a chargeback is the customer's bank taking it back, with a fee",
+      "The speed",
+      "Nothing, they are the same"
+    ],
+    answer: 1,
+    why: "And the merchant usually learns about a chargeback only after the money has already gone."
+  },
+  {
+    q: "What happens if a merchant misses the evidence deadline on a chargeback?",
+    options: [
+      "They get an extension",
+      "They lose automatically, however good the case was",
+      "It goes to arbitration",
+      "The fee is waived"
+    ],
+    answer: 1,
+    why: "The window is short and fatal, which is why telling the merchant early is part of the job."
+  },
+  {
+    q: "You are between a merchant and a customer who disagree. What is your role?",
+    options: [
+      "Decide who is right",
+      "Give both the same factual record and stay out of the commercial dispute",
+      "Support the paying customer",
+      "Refuse to engage"
+    ],
+    answer: 1,
+    why: "You hold the records, which is genuinely useful. The commercial argument is not yours to settle."
+  }
+]} />
+
+## Tomorrow
+
+KYC, and why you are asking a frustrated customer for documents.

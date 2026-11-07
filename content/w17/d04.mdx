@@ -1,0 +1,140 @@
+One question routes a ticket correctly on the first attempt: **did a request leave the browser, and what came back?**
+
+Ten seconds in the Network panel answers it.
+
+## The four outcomes
+
+<NetworkVerdict />
+
+Work through all four. The customer's description is identical in every case — *it didn't work* — and the correct team is different each time.
+
+## The decision
+
+```
+Open Network, reproduce, look.
+
+No request at all
+  → Front end. Check the console; something threw first.
+     Nothing will be in the server logs. Do not look there.
+
+Request, status 4xx
+  → The server refused it, correctly or not.
+     Read the response body — it usually says exactly why.
+     If the refusal is right, the bug is the message the page showed.
+     If the refusal is wrong, it is back end.
+
+Request, status 5xx
+  → Back end. Get the request id from the response headers.
+
+Request, status 2xx, screen says it failed
+  → Front end, and urgent.
+```
+
+## No request is the expensive one
+
+Nothing arrived, so there is nothing in the server logs — and a support agent who assumes the server must know can spend half an hour searching for an event that never existed.
+
+Causes: a JavaScript error before the call, a disabled button, a form that never submitted, a network failure, an extension or ad-blocker eating the request, a CORS failure.
+
+The console almost always has it.
+
+## The 2xx that says it failed
+
+The worst of the four, because it is the only one that **gets worse while you think about it**.
+
+The payment succeeded. The customer was told it failed. They will try again — and now there is a duplicate charge on top of a display bug, and the second problem is one you could have prevented by replying faster.
+
+So when you see this pattern, the first message is not to the engineer. It is to the customer: *"Your payment of NGN 48,500 did go through — reference PAY-8841. Please do not try again. The screen showed an error incorrectly and we are fixing that."*
+
+<Callout kind="key">
+**Status plus screen, together.**
+
+Neither alone is enough. A `200` does not mean the customer was served; a failure message does not mean anything failed. The contradiction between them *is* the diagnosis, and it is the one a customer can never report because they cannot see the status.
+</Callout>
+
+## Other things the panel tells you
+
+**Timing.** A 30-second request that then failed is a timeout — a different problem from an instant rejection, and a different team.
+
+**The response body.** A 4xx almost always explains itself. The page threw the explanation away; you do not have to.
+
+**Request headers.** Was the `Authorization` header sent at all? A missing one explains a 401 immediately.
+
+**Repeats.** The same request four times in two seconds is a double-submit or a retry loop, and that is its own bug.
+
+<WaterfallExplorer />
+
+## Routing
+
+| Evidence | Owner |
+| --- | --- |
+| No request, console error | Front end |
+| 4xx with a clear body, generic message on screen | Front end (the message) |
+| 4xx that should have succeeded | Back end |
+| 5xx | Back end, with the request id |
+| 2xx, screen says failure | Front end, urgent |
+| Timeout after 30s | Back end or infrastructure |
+| Request not sent due to CORS | Front end or infrastructure |
+
+Put the evidence in the escalation, not the conclusion alone. *"Front-end issue"* invites an argument; *"POST returned 201 with reference PAY-8841 at 14:02 and the page displayed 'Payment failed'"* does not.
+
+<Exercise
+  prompt="A customer clicks Pay and nothing happens. The Network panel stays empty. Where do you look, and where must you not waste time?"
+  accept={["console", "front end", "not logs", "browser"]}
+  hint="If nothing was sent, who never heard about it?"
+  solution="The browser console — something almost certainly threw before the call was made. Do not search the server logs: no request arrived, so there is nothing there, and this is where support most often loses half an hour. Route to the front-end team with the console error."
+/>
+
+<Exercise
+  prompt="The request returned 201 with a payment reference and the screen says 'Payment failed'. What is your first action?"
+  accept={["tell the customer", "customer", "do not retry", "stop"]}
+  hint="Not the engineer."
+  solution="Tell the customer immediately that the payment went through, give them the reference, and ask them not to try again. This is the only one of the four that gets worse while you investigate — a retry turns one display bug into a duplicate charge. Escalate to the front-end team straight after."
+/>
+
+<Terms items={[
+  { term: "No request", meaning: "Front end. Nothing in the server logs — do not look." },
+  { term: "4xx", meaning: "Refused, usually with a readable reason the page discarded." },
+  { term: "5xx", meaning: "Back end. Get the request id." },
+  { term: "2xx with a failure message", meaning: "Front end, urgent, and worsening." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "The Network panel shows no request at all. Where is the bug?",
+    options: [
+      "Back end",
+      "Front end — the page never sent anything",
+      "The network",
+      "Cannot tell"
+    ],
+    answer: 1,
+    why: "Something threw before the call. The server has no record because nothing reached it."
+  },
+  {
+    q: "Which of the four gets worse while you investigate?",
+    options: [
+      "No request",
+      "4xx",
+      "5xx",
+      "2xx with a failure message on screen"
+    ],
+    answer: 3,
+    why: "The customer retries a payment that already succeeded, adding a duplicate charge to a display bug."
+  },
+  {
+    q: "A 4xx comes back with a clear reason in the body, but the page shows 'Something went wrong'. Where is the defect?",
+    options: [
+      "Back end",
+      "Front end — it discarded the explanation the server gave",
+      "Both",
+      "Neither"
+    ],
+    answer: 1,
+    why: "The server did its job correctly. The page threw away the one thing that would let the customer fix it."
+  }
+]} />
+
+## Tomorrow
+
+Known issues, user error, and telling someone they made a mistake without making them feel stupid.

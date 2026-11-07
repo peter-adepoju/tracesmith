@@ -1,0 +1,126 @@
+Seeing it yourself turns a report into a fact. The difficulty is that a customer's problem lives in their conditions, not yours.
+
+## Rebuild the conditions
+
+A failure is a function of more than the steps:
+
+- **Account** — their role, their plan, their permissions, their configuration
+- **Data** — their specific records. An account with 40,000 transactions behaves differently from a fresh one
+- **Device and browser** — including the engine, from week 12
+- **Network** — mobile data in a poor-signal area is not your office wifi
+- **Timing** — month end, a settlement window, a promotion
+- **History** — what they did before the thing that failed
+
+Most "works for me" is one of these differing and nobody noticing which.
+
+<Callout kind="watch">
+**Never reproduce on a live customer account.**
+
+No test payments, no changing a setting "just to see", no placing an order. It is their money, their data, and an action you take on their account is indistinguishable in the record from an action they took.
+
+Read their record freely. Act on a test account.
+
+If the only way to verify is an action with consequences, that is an escalation, not an experiment — and if a customer *asks* you to try something on their account, get it in writing in the ticket.
+</Callout>
+
+## The ladder
+
+In order of preference:
+
+1. **Test account on staging.** Free, safe, no consequences. Start here.
+2. **Test account on production.** Real conditions, real integrations, and a real audit trail — so behave accordingly. Many payment problems only exist here.
+3. **Reading the customer's record.** Not reproduction, but often better: their transactions, their logs, their timeline.
+4. **A screen-share, with their permission.** For a problem that will not reproduce any other way.
+5. **Asking them to try once more while you watch the logs.** Only with their agreement, and only when nothing else works.
+
+Steps 3 and 4 are underrated. For most payment tickets, reading the record answers the question faster than any reproduction would.
+
+## "Works for me"
+
+This is a result, not a dead end. It tells you the failure depends on something that differs between you and them — so the job is now to find the difference.
+
+Work through it in order:
+
+- Their **account** versus your test account — permissions, plan, settings
+- Their **data** — volume, an unusual character in a name, an old record in a state yours has never been in
+- Their **browser** — Safari, iOS, an old version, an extension
+- Their **network** — a corporate proxy, mobile data, a blocked domain
+- **Timing** — did it work before a specific date? What changed then?
+- Their **sequence** — did they do something before this that you did not?
+
+<Callout kind="key">
+**"Works for me" is never an answer to the customer.**
+
+To them it means *I do not believe you*, and they are not entirely wrong — it is a statement about you rather than about their problem.
+
+Say instead: *"I have not been able to reproduce it on my test account yet, which usually means something is specific to your setup. Can I check a couple of things with you?"* Same fact, and it keeps you both pointed at the problem.
+</Callout>
+
+## Reproducing from a log
+
+Sometimes you cannot reproduce anything and the record still tells you everything: the request arrived at 14:02, the provider answered `insufficient_funds` at 14:03, our record says `successful`. That is a complete diagnosis without a single reproduction.
+
+Reproduction is a means. The end is knowing what happened.
+
+<RequestInspector />
+
+<Exercise
+  prompt="A customer's checkout fails. It works on your test account. Name four things that might differ, in the order you would check them."
+  accept={["account", "data", "browser", "network", "timing"]}
+  hint="Start with the cheapest to check."
+  solution="Their account configuration (plan, permissions, settings), their data (volume, an unusual value, a record in a state yours is not), their browser and device (Safari or iOS especially), and their network (proxy, mobile data). Then timing and the sequence they followed. Check in roughly that order — account and data are quick to inspect from your side and account for most of it."
+/>
+
+<Exercise
+  prompt="A customer asks you to just try a payment on their account to see if it works. What do you do?"
+  accept={["no", "test account", "writing", "refuse", "permission"]}
+  hint="Whose money is it?"
+  solution="Do not, by default: it is their money and the action is indistinguishable from one they took. Offer to read their record instead, or to reproduce on a test account with the same configuration. If it genuinely cannot be answered any other way and they have asked, get their agreement recorded in the ticket, keep the amount minimal, and say exactly what you did and when."
+/>
+
+<Terms items={[
+  { term: "Conditions", meaning: "Account, data, device, network, timing, history." },
+  { term: "Works for me", meaning: "A finding about a difference, never an answer." },
+  { term: "Reading the record", meaning: "Often faster than reproducing, and always safe." },
+  { term: "Live account", meaning: "Read freely. Never act." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Why never reproduce on a live customer account?",
+    options: [
+      "It is slower",
+      "It is their money and data, and your action is indistinguishable from theirs in the record",
+      "You lack permission",
+      "It might not work"
+    ],
+    answer: 1,
+    why: "The audit trail cannot tell your test from their transaction, which is a problem for both of you later."
+  },
+  {
+    q: "You cannot reproduce it. What does that tell you?",
+    options: [
+      "The customer is mistaken",
+      "Something differs between your conditions and theirs — find what",
+      "It is intermittent",
+      "It is fixed"
+    ],
+    answer: 1,
+    why: "It is a finding about a difference, and the difference is usually account, data, browser or network."
+  },
+  {
+    q: "Which is often faster than reproducing a payment problem?",
+    options: [
+      "A screen-share",
+      "Reading the customer's own record and the provider's response",
+      "Asking them to try again",
+      "Checking the status page"
+    ],
+    answer: 1,
+    why: "The record frequently contains the complete answer, with no reproduction needed at all."
+  }
+]} />
+
+## Tomorrow
+
+Logs: finding the five lines that matter in forty thousand.

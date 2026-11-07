@@ -1,0 +1,165 @@
+Ten real replies, each wrong in a specific way. Diagnose the fault, rewrite it, then compare.
+
+Write yours before opening each answer. Reading a good version is worth very little; producing one is the exercise.
+
+---
+
+**1.** *"Unfortunately this is a known issue."*
+
+<details>
+<summary>Fault and rewrite</summary>
+
+**Fault:** uses "known issue" to end the conversation. No ownership, no timing, no workaround, nothing the customer can do.
+
+> This is a problem we already have open — you are not the first to hit it, and nothing is wrong with your account. The team is working on it; I do not have a fix date yet and I will not invent one. In the meantime you can export from the Transactions page instead, which does include the field you need. I have added you to the list to notify, and I will update you on Friday either way.
+</details>
+
+---
+
+**2.** *"Please clear your cache and cookies and try again."*
+
+<details>
+<summary>Fault and rewrite</summary>
+
+**Fault:** the reflex that means *I have not looked*. Sometimes correct, never a first reply.
+
+> I have looked at your account and can see three failed attempts at 14:02, 14:05 and 14:11, each returning the same validation error on the card number. Before we try anything else — could you confirm the card's expiry date? The error is the one we see when the expiry month and year are transposed.
+</details>
+
+---
+
+**3.** *"As I mentioned in my previous email, you need to use the live API key."*
+
+<details>
+<summary>Fault and rewrite</summary>
+
+**Fault:** "as I mentioned" scolds. If they did not take it in, the first explanation was not clear enough.
+
+> Let me be more specific than I was before, since this one is easy to miss. In your config, the key starting `pk_test_` needs to be the one starting `pk_live_` — they differ by four characters and sit next to each other on the dashboard, which catches people regularly. You will find the live key in Settings → API Keys. Send me a shout when you have swapped it and I will watch for the next payment coming through.
+</details>
+
+---
+
+**4.** *"That's not a bug, that's how it works."*
+
+<details>
+<summary>Fault and rewrite</summary>
+
+**Fault:** true and useless. It answers a question about the system and ignores the person's actual problem.
+
+> That is working as designed — settlements are batched and land the next working day, so a Friday payment arrives on Monday. I can see why that was not obvious; nothing in the dashboard says so, and I am raising that separately because you are the third person to ask this month. For your 6 November payment specifically: it landed on 9 November, reference `STL-9921`.
+</details>
+
+---
+
+**5.** *"I've escalated this to the engineering team."*
+
+<details>
+<summary>Fault and rewrite</summary>
+
+**Fault:** sounds like action and commits to nothing. No owner, no time, no next contact — the customer has no idea whether to wait an hour or a week.
+
+> I have raised this with our platform team as a priority issue, with the four failed deliveries and the timings attached. They are looking at it this morning. I am staying on it and will update you by 13:00 today whether or not there is a fix by then — you will not need to chase me.
+</details>
+
+---
+
+**6.** *"The system is down."*
+
+<details>
+<summary>Fault and rewrite</summary>
+
+**Fault:** imprecise, and frightening. It tells a merchant to stop trading when most of the product is fine.
+
+> Card payments are currently failing — we have confirmed it affects several merchants and raised it as an incident. Bank transfers are unaffected and going through normally, so you can still take payments that way while we fix this. Next update from me at 11:00.
+</details>
+
+---
+
+**7.** *"Sorry for the inconvenience. We apologise for any trouble caused."*
+
+<details>
+<summary>Fault and rewrite</summary>
+
+**Fault:** a formula. It apologises for nothing in particular, which tells the reader nobody actually read their message.
+
+> I am sorry — you were charged twice and then had to chase us about it, and neither of those should have happened. The duplicate charge of NGN 48,500 has been refunded this morning, reference `REF-2291`.
+</details>
+
+---
+
+**8.** *"Can you send me a screenshot, your browser version, your OS, the exact time, your account ID, the transaction reference, and what you were doing?"*
+
+<details>
+<summary>Fault and rewrite</summary>
+
+**Fault:** seven asks is an obstacle course, and most of it you can find yourself.
+
+> Sorry about this. Two things from you and I can take it from there: the reference of one payment that failed (it starts `PAY-`), and roughly what time you tried. I will pull the rest from our side.
+</details>
+
+---
+
+**9.** *"This should be fixed now, please confirm."*
+
+<details>
+<summary>Fault and rewrite</summary>
+
+**Fault:** "should be" means you have not checked, and it puts the verification on the customer.
+
+> I have tested this on my side and the export now includes all 1,240 of your transactions rather than the first 50. The fix went out at 10:20 this morning. Could you confirm it looks right on yours? If anything is still missing, reply here and I will pick it straight back up.
+</details>
+
+---
+
+**10.** *"Your request has been received and assigned ticket #44821. A member of our team will be in touch."*
+
+<details>
+<summary>Fault and rewrite</summary>
+
+**Fault:** an autoresponder pretending to be a reply. No human has read it, "a member of our team" is nobody, and "will be in touch" is not a time.
+
+> Thanks — I have your report about the missing settlement and I can see the payout of NGN 4,100,000 due on 6 November. I am tracing it with our payments team now. This is ticket 44821 and I am handling it personally; I will come back to you by 12:00 today with either the payment or a clear explanation of where it is.
+</details>
+
+---
+
+## The patterns underneath
+
+Nine of the ten fail in one of four ways:
+
+**No ownership** — "the team", "a member of our team", the passive voice. Nobody is holding it.
+
+**No time** — "soon", "shortly", "will be in touch". The customer cannot tell whether to wait or chase.
+
+**No evidence that anyone looked** — "should be", "try clearing your cache", "known issue". The customer can always tell.
+
+**Blame, however mild** — "as I mentioned", "you entered it wrong", "that's how it works". It moves the conversation from the problem to the person.
+
+The tenth, number 6, fails differently and is worth noticing: it is **imprecise in a way that costs the customer money**. "The system is down" tells a merchant to stop trading when transfers are working fine.
+
+<Callout kind="key">
+A reply that names a person, names a time, shows you looked, and blames nobody is hard to be angry at — even when the news in it is bad.
+
+Those four are the whole of this week.
+</Callout>
+
+<Exercise
+  prompt="Take your own last five support or work replies. Which of the four patterns appears most often in yours?"
+  solution="There is no right answer; the point is that everyone has a default failure. Most people's is the missing time commitment, because it feels like a promise you might not keep — which is exactly why it is worth the most when you make it and keep it."
+/>
+
+<Terms items={[
+  { term: "No ownership", meaning: "'The team' is nobody. Name yourself." },
+  { term: "No time", meaning: "'Soon' tells them nothing about whether to chase." },
+  { term: "No evidence you looked", meaning: "'Should be' and 'try clearing your cache'." },
+  { term: "Mild blame", meaning: "'As I mentioned'. Moves the subject to the person." },
+]} />
+
+## Week 18 in one line
+
+Name a person, name a time, show that you looked, and blame nobody.
+
+## Next week
+
+The payments domain: where most technical support jobs actually are.

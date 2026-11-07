@@ -1,0 +1,149 @@
+A log is what the system remembers. Most of it is noise, five lines matter, and the skill is getting to those five.
+
+## What a line looks like
+
+```
+2026-11-10T14:02:17.442Z  ERROR  payments-api  req=7f2a1c40
+  Provider declined charge chg_8841 for account cus_01:
+  code=51 message="insufficient funds" latency=812ms
+```
+
+Six parts worth naming:
+
+- **Timestamp**, almost always UTC — note the `Z`. A customer in Lagos saw this at 15:02
+- **Level** — `DEBUG`, `INFO`, `WARN`, `ERROR`, `FATAL`
+- **Service** — which component
+- **Request id** — `req=7f2a1c40`, the thread that ties everything together
+- **The message**
+- **Structured fields** — the parts you can search on
+
+## Narrowing
+
+Never read a log; search it. In order:
+
+1. **By request id**, if you have one. Every line for this one request, instantly. This is why request ids exist.
+2. **By customer or reference** — `cus_01`, `chg_8841`.
+3. **By time window** — two minutes either side of the event, not the whole day.
+4. **By level** — `ERROR` and above first.
+5. **By service** — once you know which part of the chain.
+
+<Callout kind="key">
+**Get the request id into the customer's hands.**
+
+Many products return one in an error message or a response header (`x-request-id`). If yours does, ask for it — it collapses an hour of searching into one query.
+
+If yours does not, that is a product finding worth raising. "Our error messages carry no reference, so every investigation starts with a timestamp search" is a concrete, cheap improvement.
+</Callout>
+
+## Reading a sequence
+
+Lines in isolation mislead. Read the whole request:
+
+```
+14:02:17.102  INFO   api  req=7f2a  Payment initiate cus_01 amount=4850000
+14:02:17.140  INFO   api  req=7f2a  Validation passed
+14:02:17.201  INFO   api  req=7f2a  Calling provider acme-pay
+14:02:18.013  ERROR  api  req=7f2a  Provider declined: code=51 insufficient funds
+14:02:18.019  INFO   api  req=7f2a  Marking payment failed
+14:02:18.044  WARN   api  req=7f2a  Webhook delivery failed: 502 from merchant endpoint
+14:02:18.044  INFO   api  req=7f2a  Scheduling retry 1 of 5
+```
+
+Seven lines and the whole story: the card was declined by the bank, our system handled it correctly, and the merchant's own endpoint was down so they were never told.
+
+Two findings, and they belong to different owners. The decline is the customer's bank — nothing is broken on our side. The merchant not knowing is their endpoint returning 502. **Neither of those is a bug in the product**, and saying so with the evidence is a complete, useful answer.
+
+## Levels, and what they mean to you
+
+| Level | What to do |
+| --- | --- |
+| `DEBUG` | Ignore unless deep in an investigation |
+| `INFO` | The normal story. Read it for sequence |
+| `WARN` | Something unexpected, handled. Worth noticing in a pattern |
+| `ERROR` | Something failed. Start here |
+| `FATAL` | Something died. Escalate now |
+
+A `WARN` repeating two thousand times an hour is more interesting than a single `ERROR`.
+
+## Absence is evidence
+
+The most useful log result is often **nothing**.
+
+No lines for that request id means the request never reached the service. That eliminates the entire back end and points at the network, the client, or a request that was never sent — yesterday's and tomorrow's lesson joining up.
+
+Say it explicitly in the ticket: *"No log entries for this reference between 13:55 and 14:10, so the request did not reach our API."* That is a finding, not a failure to find one.
+
+## Quoting a log safely
+
+<Callout kind="watch">
+Logs contain everything, which is why they are useful and why they are dangerous.
+
+Before a log line goes in a ticket, remove: tokens and keys, full card numbers, passwords, personal data (names, emails, phone numbers, addresses), internal hostnames and file paths.
+
+Keep: the timestamp, level, service, request id, error code, amounts, and the ids of things rather than the people.
+</Callout>
+
+<RedactionDrill />
+
+Week 11's rule, now applied to logs — where the temptation is worse, because pasting the whole block is so much faster than choosing the three lines that matter.
+
+<Exercise
+  prompt="You search the logs for a customer's reference across a twenty-minute window and find nothing. What have you learned?"
+  accept={["never arrived", "did not reach", "front end", "not sent"]}
+  hint="Absence is a result."
+  solution="That the request never reached the service — which eliminates the entire back end and points at the client, the network, or a request that was never sent at all. Write it in the ticket as a positive finding: 'No entries for this reference between 13:55 and 14:15, so it did not reach our API.'"
+/>
+
+<Exercise
+  prompt="Which is more worth investigating: one ERROR, or a WARN appearing 2,000 times an hour?"
+  accept={["warn", "2000", "repeat", "pattern"]}
+  hint="Scale."
+  solution="Usually the repeated WARN. A single ERROR is one customer's bad moment; something being survived two thousand times an hour is a systemic condition — a retry storm, a degraded dependency, a misconfiguration — and it is often the cause of the errors you are seeing elsewhere."
+/>
+
+<Terms items={[
+  { term: "Request id", meaning: "The thread tying every line of one request together." },
+  { term: "Log level", meaning: "DEBUG, INFO, WARN, ERROR, FATAL. Start at ERROR." },
+  { term: "Structured fields", meaning: "The parts you can search on." },
+  { term: "Absence as evidence", meaning: "No entries means it never arrived. Say so." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "What is the fastest way to narrow a log search?",
+    options: [
+      "By time",
+      "By request id",
+      "By level",
+      "By service"
+    ],
+    answer: 1,
+    why: "It returns exactly the lines for that one request, which is what request ids exist for."
+  },
+  {
+    q: "Logs show the payment was declined by the provider and a webhook to the merchant failed with 502. Who owns each?",
+    options: [
+      "Both are product bugs",
+      "The decline is the customer's bank; the 502 is the merchant's own endpoint — neither is a product bug",
+      "Both belong to the payments team",
+      "Neither matters"
+    ],
+    answer: 1,
+    why: "Saying so with the evidence is a complete answer, and it is often the most valuable thing support produces."
+  },
+  {
+    q: "What must be removed before a log line goes in a ticket?",
+    options: [
+      "Timestamps",
+      "Tokens, card numbers, passwords, personal data and internal paths",
+      "Request ids",
+      "Error codes"
+    ],
+    answer: 1,
+    why: "Everything in the second list is a credential, personal data, or reconnaissance. The rest is what makes the line useful."
+  }
+]} />
+
+## Tomorrow
+
+Front end or back end, decided in ten seconds from the Network panel.

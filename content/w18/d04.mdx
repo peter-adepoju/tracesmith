@@ -1,0 +1,135 @@
+Knowing who to send something to is a skill people learn slowly and painfully, by sending things to the wrong place. A matrix shortens that to an afternoon.
+
+## Build the matrix
+
+For your own product, fill in a table like this:
+
+| Problem type | Owner | Channel | How fast |
+| --- | --- | --- | --- |
+| Payment declines at scale | Payments / platform | `#inc-payments`, tag on-call | Immediately, P1 |
+| One declined payment | Support resolves | — | — |
+| Settlement or payout missing | Payments operations | Ticket, tag the duty lead | Same day |
+| Webhook delivery failing | Platform | `#inc-platform` | Immediately if more than one partner |
+| UI broken, no request sent | Front end | Tracker, link the ticket | Next working day unless blocking |
+| 5xx from an endpoint | Back end, with request id | Tracker, P2 | Same day |
+| Data wrong in a record | Back end + payments ops | Ticket, both | Same day, never edit it yourself |
+| Suspected fraud | Risk / compliance | Their channel only | Immediately, and tell nobody else |
+| Suspected security issue | Security | Security channel only | Immediately, never a public ticket |
+| Feature request | Product | Backlog | No commitment |
+| Documentation wrong | Whoever owns the docs | Small PR or ticket | When you can |
+
+<Callout kind="job">
+If your team has no matrix, build one in your first month by asking. Three questions per row, to whoever knows: *who owns this, where do I send it, how fast do you want to hear?*
+
+Then share it. Support agents will use it, new joiners will use it, and it is one of the clearest early contributions you can make — because the cost of mis-routing is paid by everybody.
+</Callout>
+
+## Two rows that are different from the others
+
+**Suspected fraud** and **suspected security issues** do not follow the normal path.
+
+Both go to one named team, through their channel, and **nowhere else** — not the general engineering channel, not a public ticket, not a group chat. For fraud there may be a legal requirement not to tip off the account holder; for security, the report is exploit instructions, as week 14 said.
+
+If you are unsure whether something is one of these, treat it as if it is. The cost of over-caution is one extra conversation.
+
+## Every escalation carries impact
+
+Four numbers, always:
+
+- **How many** customers
+- **Since when**, and whether it is growing
+- **How much money**, where money is involved
+- **Whether there is a workaround**
+
+> Three merchants, since 07:50 this morning, approximately NGN 2.4m of attempted volume, no workaround for card — transfer still works.
+
+One line, and the receiving team can prioritise without a conversation.
+
+## While it is escalated
+
+The ticket is still yours. Escalating is not handing over the customer.
+
+**Own the relationship.** The customer talks to you, not to the engineer. Shielding engineering from direct customer contact is part of the job.
+
+**Keep updating** on the schedule you promised, even with nothing new.
+
+**Chase, on a cadence.** For a P1, every 30 minutes is reasonable. For a P3, daily. Not every ten minutes — that slows the fix and spends goodwill you will need.
+
+**Translate in both directions.** The customer's words into technical facts; the engineer's answer into plain language.
+
+<Callout kind="key">
+**An escalated ticket with no owner on the support side is how things disappear.**
+
+The engineer thinks support is handling the customer. Support thinks engineering is handling the ticket. Nobody is, and three days later the customer asks what happened.
+
+One named person on each side, always.
+</Callout>
+
+## Escalating a priority
+
+Sometimes the ticket is being worked but not fast enough. That is also an escalation, and it has a shape:
+
+> **Raising the priority on INC-204.** It has been four hours and three merchants still cannot take card payments. Estimated NGN 2.4m of attempted volume so far, growing. One merchant has asked about compensation, which makes this a commercial issue as well as a technical one.
+>
+> I am not asking anyone to work faster — I am asking whether this needs more people on it, or whether we should be telling merchants to expect this to run into tomorrow so they can plan.
+
+That is not a complaint. It names a decision that needs making and gives the information to make it, which is what escalating a priority actually means.
+
+<Exercise
+  prompt="A customer's record shows a wrong balance. You have write access to the database. What do you do?"
+  accept={["do not", "never", "escalate", "not edit"]}
+  hint="Who owns the data?"
+  solution="Do not edit it. Escalate to the back-end team and payments operations together, with the evidence of what is wrong and what it should be. A manual edit has no audit trail tied to a cause, it may be reversed by the system that produced the wrong value, and if the underlying bug is still there it will produce the wrong value again — now on top of your correction."
+/>
+
+<Exercise
+  prompt="Write the one-line impact statement for: four partners have not received webhooks since 01:58, six hours ago."
+  solution="Something like: 'Four partners, no webhook deliveries since 01:58 UTC — six hours and growing; each is silently out of sync with us and will need to reconcile. No workaround; events are queued but not delivering.' How many, since when, growing or not, and whether there is a workaround."
+/>
+
+<Terms items={[
+  { term: "Escalation matrix", meaning: "Problem type, owner, channel, speed." },
+  { term: "Impact line", meaning: "How many, since when, how much, workaround." },
+  { term: "Own the relationship", meaning: "Escalating moves the work, not the customer." },
+  { term: "Special paths", meaning: "Fraud and security go to one team and nowhere else." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "A suspected security issue. Where does it go?",
+    options: [
+      "The engineering channel",
+      "The security team's channel only, and nowhere else",
+      "A public ticket",
+      "Your manager"
+    ],
+    answer: 1,
+    why: "The report is exploit instructions, so distribution is itself a risk."
+  },
+  {
+    q: "What happens when a ticket is escalated with no named support owner?",
+    options: [
+      "Engineering takes over",
+      "Each side assumes the other has it, and the customer hears nothing for days",
+      "It resolves faster",
+      "Nothing"
+    ],
+    answer: 1,
+    why: "One named person on each side, or it falls into the gap between them."
+  },
+  {
+    q: "You can see a wrong balance and you have write access. What is the risk of fixing it?",
+    options: [
+      "None",
+      "No audit trail, the system may overwrite it, and the underlying bug will reproduce it",
+      "It is slow",
+      "You need approval"
+    ],
+    answer: 1,
+    why: "A manual correction over a live bug produces a second wrong number nobody can explain."
+  }
+]} />
+
+## Tomorrow
+
+Closing properly, and the follow-up that stops it reopening.

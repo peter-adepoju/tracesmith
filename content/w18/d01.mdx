@@ -1,0 +1,139 @@
+Most of your influence travels through your writing. The same facts, written two ways, produce a calm customer and a fast fix — or a complaint and three follow-up questions.
+
+This week is the writing.
+
+## The four-part reply
+
+Every customer message, however short:
+
+1. **Acknowledge** — you have read it and you understand what is at stake
+2. **Own** — someone specific is handling it, and that someone is you
+3. **Next step** — what is actually happening now
+4. **Time** — when they will hear from you
+
+Three sentences can carry all four:
+
+> Thanks for flagging this — I can see the payment of NGN 48,500 has not reached your account and I understand that is blocking your reconciliation. I am tracing it with our payments team now. I will come back to you by 12:00 today with either the payment or a clear explanation of where it is.
+
+Acknowledge, own, next step, time. Nothing guessed, nothing promised that is not within your control.
+
+<Callout kind="key">
+**The time commitment is the part that calms people, and the part most often left out.**
+
+Most anger in support is not about the problem. It is about not knowing — whether anyone is looking, whether it will be today or next week, whether they need to chase.
+
+A time removes all three questions at once. It costs nothing, and it is the single highest-value sentence in support writing.
+</Callout>
+
+## No jargon
+
+The customer does not know what a webhook is, and does not need to.
+
+| Jargon | Plain |
+| --- | --- |
+| The webhook callback failed to deliver | Our system did not manage to tell the shop that your payment went through |
+| The transaction is in a pending settlement state | The money has left your card and is on its way to the merchant; it usually lands the next working day |
+| It returned a 502 from upstream | The other system was not responding when we tried |
+| We will need to escalate to engineering | I am passing this to the team who can fix it, and staying on it myself |
+
+The test: **would someone outside tech understand this on one reading?**
+
+This is not dumbing down. Writing plainly is harder than writing technically, and it is what the job is.
+
+## Calming a situation in three sentences
+
+When someone is angry, the instinct is to explain. Explanation reads as defence, and defence escalates.
+
+1. **Agree with what is true.** "You are right, two days without a reply is not acceptable."
+2. **State what is happening now.** "I have your case and I am looking at it myself."
+3. **Give a time.** "You will hear from me by 14:00 today whether or not I have the full answer."
+
+No excuses, no "unfortunately", no explaining the queue. Nobody has ever been calmed by hearing how busy you are.
+
+## Words that cost you
+
+**"Unfortunately"** — a signal to brace. Say the thing instead.
+
+**"As I mentioned"** / "as per my last email" — reads as *you did not read it*, even when true.
+
+**"Simply"** / "just" — "just click Settings" implies it was obvious and they are slow. Delete both words, always.
+
+**"We apologise for any inconvenience caused"** — a formula that says nobody read this. "I am sorry — this should not have happened to you" is a sentence a person wrote.
+
+**"The system is down"** when you mean one feature is degraded. Precision is kinder, because it tells them what still works.
+
+<Callout kind="watch">
+**Never promise what you do not control.**
+
+"The refund will be in your account within 24 hours" depends on their bank. "We are releasing a fix tomorrow" depends on engineering.
+
+Promise your own actions: *"I will release the refund today and send you the reference. Their bank usually posts within two working days — if it has not arrived by Thursday, reply here and I will chase it."*
+
+That commits to what you can do, gives a realistic expectation for what you cannot, and gives them a specific next move rather than an open-ended wait.
+</Callout>
+
+## Apologising properly
+
+Apologise for what happened, not with a formula, and only once.
+
+- **Weak:** "We apologise for any inconvenience this may have caused."
+- **Strong:** "I am sorry — you should not have had to chase this twice."
+
+Then stop. Repeated apology shifts the conversation to managing your discomfort, and the customer wants their problem solved, not your feelings tended.
+
+<Exercise
+  prompt="Rewrite for a non-technical customer: 'The webhook callback failed with a 502 from your endpoint, so the order was not created despite successful authorization.'"
+  solution="Something like: 'Your payment went through successfully — the money has left your card. What failed is the message our system sends to the shop to tell them, because their system was not responding at the time. I am getting the order created now and I will confirm when it is done. You will not be charged twice.' Plain, and it answers the question they actually have: am I charged, and will I get my order?"
+/>
+
+<Exercise
+  prompt="A customer has waited two days with no reply and is furious. Write three sentences."
+  solution="Something like: 'You are right, and I am sorry — two days without a reply is not acceptable and I am not going to explain it away. I have your case now and I am looking at it myself. You will hear from me by 14:00 today, whether or not I have the full answer by then.' Agree, own, commit to a time. No excuses and no account of how busy the queue is."
+/>
+
+<Terms items={[
+  { term: "Acknowledge, own, next step, time", meaning: "Every customer reply, however short." },
+  { term: "The time commitment", meaning: "The highest-value sentence in support writing." },
+  { term: "Promise what you control", meaning: "Your actions, not their bank's." },
+  { term: "Just / simply", meaning: "Two words to delete permanently." },
+]} />
+
+<Quiz questions={[
+  {
+    q: "Which part of a reply calms people most, and is most often missing?",
+    options: [
+      "The apology",
+      "The time commitment",
+      "The technical explanation",
+      "The acknowledgement"
+    ],
+    answer: 1,
+    why: "Most anger is about not knowing whether anyone is looking and when they will hear. A time answers both."
+  },
+  {
+    q: "Why delete 'just' and 'simply'?",
+    options: [
+      "They are informal",
+      "They imply the answer was obvious, so the customer feels slow for not seeing it",
+      "They are too long",
+      "They are ambiguous"
+    ],
+    answer: 1,
+    why: "Nothing is 'just' anything to someone who has been stuck on it for an hour."
+  },
+  {
+    q: "What should you promise about a refund?",
+    options: [
+      "It will arrive within 24 hours",
+      "Your own action and a realistic expectation for the bank, plus what to do if it is late",
+      "Nothing",
+      "That it is already done"
+    ],
+    answer: 1,
+    why: "Their bank's posting schedule is not yours to promise, and a broken promise costs more than the delay."
+  }
+]} />
+
+## Tomorrow
+
+The same facts, for an engineer who has four minutes.
