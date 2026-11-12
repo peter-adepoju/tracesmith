@@ -4,6 +4,7 @@ import { LESSONS } from "@content/registry";
 import { CourseRail } from "@/components/CourseRail";
 import { LessonFooter } from "@/components/LessonFooter";
 import { LessonProvider } from "@/components/LessonContext";
+import { ClipToNotebook } from "@/components/notebook/ClipToNotebook";
 import { WEEKS, dayKey, getDay, getWeek, neighbours, phaseOf } from "@/lib/curriculum";
 
 export function generateStaticParams() {
@@ -94,9 +95,19 @@ export default async function DayPage({
 
       {Lesson ? (
         <LessonProvider dayKey={key}>
-          <article className="prose mt-10">
+          {/* data-lesson-body marks what counts as the lesson: selecting the
+              navigation or the footer is not something to clip. */}
+          <article className="prose mt-10" data-lesson-body>
             <Lesson />
           </article>
+          <ClipToNotebook
+            source={{
+              dayKey: key,
+              week: weekNumber,
+              day: dayNumber,
+              title: day.title,
+            }}
+          />
         </LessonProvider>
       ) : (
         <div className="mt-10 rounded-xl border border-border bg-surface-2 p-6">

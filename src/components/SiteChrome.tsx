@@ -22,6 +22,7 @@ const LINKS = [
   { href: "/course", label: "Course" },
   { href: "/lab", label: "Labs" },
   { href: "/build", label: "Build" },
+  { href: "/notebook", label: "Notebook" },
   { href: "/review", label: "Review" },
   { href: "/sandbox", label: "Sandbox" },
 ];

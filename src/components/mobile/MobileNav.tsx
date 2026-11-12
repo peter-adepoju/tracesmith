@@ -64,6 +64,16 @@ const TABS: Tab[] = [
     ),
   },
   {
+    href: "/notebook",
+    label: "Notes",
+    match: ["/notebook"],
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" {...stroke}>
+        <path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zM5 16h14M9 8h6" />
+      </svg>
+    ),
+  },
+  {
     href: "/review",
     label: "Review",
     match: ["/review"],
