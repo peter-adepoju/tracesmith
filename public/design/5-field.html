@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+<title>Tracesmith Field</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+/* Layout: an engineer's field notebook. A faint drafting grid behind
+   everything, metadata set in mono, prose in Jost, and one serif
+   headline per page. Structure comes from rules and tick marks. */
+:root {
+  --bg: #fcfcfa;
+  --grid: #e9e9e2;
+  --panel: #f4f4ef;
+  --ink: #141619;
+  --ink-2: #4c5057;
+  --ink-3: #8d9199;
+  --rule: #d9d9d1;
+  --accent: #14519b;        /* blueprint blue */
+  --accent-soft: #e5edf7;
+  --defect: #b23a2e;
+  --pass: #2d7a4f;
+
+  --f-display: "Cormorant Garamond", Georgia, serif;
+  --f-sans: "Jost", "Helvetica Neue", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color: var(--ink);
+  font-family: var(--f-sans);
+  font-weight: 300;
+  font-size: 16.5px;
+  line-height: 1.74;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px); z-index: 20; background: var(--bg);
+}
+
+.wrap {
+  width: 100%; max-width: 1060px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+.mono { font-family: var(--f-mono); font-size: 0.7rem; letter-spacing: 0.02em; color: var(--ink-3); }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 500; margin: 0; text-wrap: balance; }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* ---------- bar ---------- */
+.bar { background: var(--bg); border-bottom: 1.5px solid var(--ink); position: sticky; top: env(safe-area-inset-top, 0px); z-index: 19; }
+.bar-in { display: flex; align-items: center; gap: 20px; padding-block: 13px; flex-wrap: wrap; }
+.brand { font-family: var(--f-display); font-size: 1.4rem; font-weight: 600; background: none; border: 0; padding: 0; cursor: pointer; color: var(--ink); }
+.brand sup { font-family: var(--f-mono); font-size: 0.55rem; color: var(--accent); letter-spacing: 0.1em; margin-left: 5px; }
+.bar nav { margin-left: auto; display: flex; gap: 4px; flex-wrap: wrap; }
+.bar nav button {
+  font-family: var(--f-mono); font-size: 0.68rem; letter-spacing: 0.04em;
+  background: none; border: 1px solid transparent; padding: 5px 11px; cursor: pointer; color: var(--ink-2);
+}
+.bar nav button:hover { border-color: var(--rule); }
+.bar nav button[aria-current="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+/* ---------- home ---------- */
+.hero { padding-block: clamp(46px, 9vw, 92px) clamp(32px, 5vw, 56px); }
+.tick { display: flex; align-items: center; gap: 10px; }
+.tick::before { content: ""; width: 26px; height: 1.5px; background: var(--accent); }
+.hero h1 { font-size: clamp(2.5rem, 6.6vw, 4.1rem); line-height: 1.03; margin-top: 18px; max-width: 16ch; letter-spacing: -0.01em; }
+.hero p { color: var(--ink-2); font-size: 1.08rem; max-width: 52ch; margin: 22px 0 34px; }
+.cta { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn {
+  font-family: var(--f-mono); font-size: 0.7rem; letter-spacing: 0.06em;
+  padding: 13px 24px; cursor: pointer; border: 1.5px solid var(--ink);
+  background: var(--ink); color: var(--bg);
+}
+.btn:hover { background: var(--accent); border-color: var(--accent); }
+.btn.ghost { background: var(--bg); color: var(--ink); }
+.btn.ghost:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+
+.specs { border: 1.5px solid var(--ink); background: var(--bg); display: grid; grid-template-columns: repeat(4, 1fr); }
+.specs div { padding: 16px 18px; border-right: 1px solid var(--rule); }
+.specs div:last-child { border-right: 0; }
+.specs b { display: block; font-family: var(--f-display); font-size: 2rem; font-weight: 500; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.specs span { font-family: var(--f-mono); font-size: 0.62rem; letter-spacing: 0.08em; color: var(--ink-3); text-transform: uppercase; }
+
+.index { padding-block: clamp(40px, 7vw, 72px); }
+.index > .mono { display: block; margin-bottom: 18px; }
+.entry {
+  display: grid; grid-template-columns: 76px 1fr auto; gap: 16px; align-items: baseline;
+  width: 100%; background: none; border: 0; border-bottom: 1px solid var(--rule);
+  padding: 15px 0; text-align: left; font: inherit; color: inherit; cursor: pointer;
+}
+.entry:hover { background: var(--accent-soft); }
+.entry .ref { font-family: var(--f-mono); font-size: 0.68rem; color: var(--accent); }
+.entry .ti { font-family: var(--f-display); font-size: 1.32rem; }
+.entry .sub { display: block; font-size: 0.88rem; color: var(--ink-3); margin-top: 2px; max-width: 58ch; }
+.entry .st { font-family: var(--f-mono); font-size: 0.66rem; color: var(--ink-3); white-space: nowrap; }
+.entry .st.ok { color: var(--pass); }
+
+/* ---------- lesson ---------- */
+.sheet { background: var(--bg); border: 1.5px solid var(--ink); margin-block: 26px 70px; }
+.sheethead {
+  display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+  padding: 11px 22px; border-bottom: 1px solid var(--ink); background: var(--panel);
+}
+.sheetbody { padding: 30px 22px 40px; max-width: 70ch; }
+.sheetbody h1 { font-size: clamp(1.9rem, 4.6vw, 2.7rem); line-height: 1.08; }
+
+.objs { margin-top: 22px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding-block: 12px; }
+.objs ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 5px; }
+.objs li { font-size: 0.93rem; color: var(--ink-2); display: grid; grid-template-columns: 20px 1fr; }
+.objs li::before { content: "☐"; font-family: var(--f-mono); color: var(--accent); }
+
+.prose { margin-top: 28px; }
+.prose > * + * { margin-top: 1.4em; }
+.prose p { margin: 0; }
+.prose strong { font-weight: 500; color: var(--ink); }
+.prose h2 {
+  font-size: 1.5rem; margin-top: 2.2em;
+  display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center;
+}
+.prose h2::after { content: ""; height: 1px; background: var(--rule); }
+.prose h2 + * { margin-top: 0.85em; }
+
+.note {
+  margin-top: 2em; border-left: 3px solid var(--accent); background: var(--accent-soft);
+  padding: 15px 18px;
+}
+.note .mono { display: block; color: var(--accent); margin-bottom: 5px; }
+.note p { font-size: 0.96rem; color: var(--ink-2); }
+
+pre {
+  font-family: var(--f-mono); font-size: 0.73rem; line-height: 1.8; margin: 0;
+  background: var(--panel); color: var(--ink-2); padding: 18px;
+  border: 1px solid var(--rule); overflow-x: auto;
+}
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+th, td { text-align: left; padding: 9px 14px 9px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-family: var(--f-mono); font-size: 0.64rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
+td.x { color: var(--defect); font-family: var(--f-mono); font-size: 0.8rem; }
+td.v { color: var(--pass); font-family: var(--f-mono); font-size: 0.8rem; }
+
+.sign {
+  margin-top: 40px; padding-top: 16px; border-top: 1.5px solid var(--ink);
+  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+.sign button { background: none; border: 0; padding: 0; cursor: pointer; font-family: var(--f-mono); font-size: 0.72rem; color: var(--accent); }
+.sign button:hover { text-decoration: underline; }
+
+footer { border-top: 1px solid var(--rule); padding-block: 24px 44px; color: var(--ink-3); font-size: 0.84rem; }
+
+@media (max-width: 680px) {
+  .specs { grid-template-columns: repeat(2, 1fr); }
+  .specs div:nth-child(2) { border-right: 0; }
+  .specs div:nth-child(-n+2) { border-bottom: 1px solid var(--rule); }
+  .entry { grid-template-columns: 1fr auto; }
+  .entry .ref { grid-column: 1 / -1; }
+  .sheetbody { padding: 24px 16px 34px; }
+}
+</style>
+
+<header class="bar">
+  <div class="wrap bar-in">
+    <button class="brand" data-go="home">Tracesmith<sup>QA·SUP·AUTO</sup></button>
+    <nav>
+      <button data-go="home">index</button>
+      <button data-go="course">course</button>
+      <button data-go="lesson">lesson</button>
+      <button data-go="course">labs</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ============ HOME ============ -->
+  <section id="v-home">
+    <div class="hero">
+      <span class="tick mono">FREE · 26 WEEKS · 156 LESSONS</span>
+      <h1>Find out what is actually true.</h1>
+      <p>Quality assurance, technical support and AI automation are the same job wearing three job titles. This is the fieldwork for all three.</p>
+      <div class="cta">
+        <button class="btn" data-go="lesson">Open day 1</button>
+        <button class="btn ghost" data-go="course">Course index</button>
+      </div>
+    </div>
+
+    <div class="specs">
+      <div><b>5</b><span>Phases</span></div>
+      <div><b>26</b><span>Weeks</span></div>
+      <div><b>156</b><span>Lessons</span></div>
+      <div><b>41</b><span>Figures</span></div>
+    </div>
+
+    <div class="index">
+      <span class="mono">§ CONTENTS</span>
+      <button class="entry" data-go="course"><span class="ref">P1 · W01–04</span><span><span class="ti">How the web actually works</span><span class="sub">What a browser sends, what a server answers with, how a page is built.</span></span><span class="st ok">COMPLETE</span></button>
+      <button class="entry" data-go="course"><span class="ref">P2 · W05–08</span><span><span class="ti">Data, APIs and evidence</span><span class="sub">Endpoints, payloads, keys, webhooks — and calling an API yourself.</span></span><span class="st ok">COMPLETE</span></button>
+      <button class="entry" data-go="course"><span class="ref">P3 · W09–15</span><span><span class="ti">Quality assurance</span><span class="sub">Test cases, bug reports, regression, API testing, security, automation.</span></span><span class="st">W11 · D5</span></button>
+      <button class="entry" data-go="course"><span class="ref">P4 · W16–19</span><span><span class="ti">Technical support</span><span class="sub">Triage, diagnosis, writing to customers and engineers, payments.</span></span><span class="st">PENDING</span></button>
+      <button class="entry" data-go="course"><span class="ref">P5 · W20–26</span><span><span class="ti">AI automation</span><span class="sub">Workflows that run themselves, keep receipts, and stop for a human.</span></span><span class="st">PENDING</span></button>
+    </div>
+  </section>
+
+  <!-- ============ COURSE ============ -->
+  <section id="v-course" hidden>
+    <div class="index">
+      <span class="mono">§ PHASE 3 · QUALITY ASSURANCE</span>
+      <button class="entry" data-go="lesson"><span class="ref">W09</span><span><span class="ti">Thinking like a tester</span></span><span class="st ok">6/6</span></button>
+      <button class="entry" data-go="lesson"><span class="ref">W10</span><span><span class="ti">Test cases and coverage</span></span><span class="st ok">6/6</span></button>
+      <button class="entry" data-go="lesson"><span class="ref">W11</span><span><span class="ti">Bugs</span><span class="sub">Lifecycle · severity · reproducing · evidence · reports · practice</span></span><span class="st">4/6</span></button>
+      <button class="entry" data-go="lesson"><span class="ref">W12</span><span><span class="ti">Testing the web</span></span><span class="st">0/6</span></button>
+      <button class="entry" data-go="lesson"><span class="ref">W13</span><span><span class="ti">API and data testing</span></span><span class="st">0/6</span></button>
+      <button class="entry" data-go="lesson"><span class="ref">W14</span><span><span class="ti">Security testing basics</span></span><span class="st">0/6</span></button>
+      <button class="entry" data-go="lesson"><span class="ref">W15</span><span><span class="ti">Automated testing</span></span><span class="st">0/6</span></button>
+    </div>
+  </section>
+
+  <!-- ============ LESSON ============ -->
+  <section id="v-lesson" hidden>
+    <article class="sheet">
+      <div class="sheethead">
+        <span class="mono">W11 · D5 · BUGS</span>
+        <span class="mono">065 / 156</span>
+      </div>
+      <div class="sheetbody">
+        <h1>Writing a report that needs no follow-up</h1>
+
+        <div class="objs">
+          <ul>
+            <li><span>Write all seven sections well</span></li>
+            <li><span>Title a bug so it is findable</span></li>
+            <li><span>Judge your own report against the no-questions test</span></li>
+          </ul>
+        </div>
+
+        <div class="prose">
+          <p>This is the most valuable thing a tester produces. Not the bug — the report.</p>
+          <p>The standard is one sentence long: <strong>an engineer should be able to act on it without asking you anything.</strong></p>
+
+          <h2><span>The shape</span></h2>
+          <pre>Title       Applying the same discount code twice stacks
+            the reduction (cart)
+
+Environment Meridian sandbox, stage 3 · Chrome 131 · 7 Nov
+
+Steps       1. Add Harmattan Field Jacket to the cart
+            2. Enter SAVE10 and click Apply
+            3. Enter SAVE10 again and click Apply
+
+Expected    Refused; the total stays at NGN 43,650.00
+Actual      Accepted; the total drops to NGN 38,800.00
+            Ten applications reach NGN 0.00
+
+Severity    Critical          Priority  Highest</pre>
+          <p>Read it as an engineer: you know what to do, where to go, what you will see, and what it should have been.</p>
+
+          <h2><span>The title does most of the work</span></h2>
+          <div class="tablewrap">
+            <table>
+              <thead><tr><th></th><th>Title</th></tr></thead>
+              <tbody>
+                <tr><td class="x">✕</td><td>Discount bug</td></tr>
+                <tr><td class="v">✓</td><td>Same discount code applied twice stacks the reduction</td></tr>
+                <tr><td class="x">✕</td><td>Payment issue</td></tr>
+                <tr><td class="v">✓</td><td>Double-clicking Place order creates two orders and charges twice</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="note">
+            <span class="mono">NOTE — THE SENTENCE PEOPLE LEAVE OUT</span>
+            <p>When severity and priority differ, say why. One line, and it prevents the argument: “Critical severity, low priority — only two internal users reach it and exporting in two halves works.”</p>
+          </div>
+
+          <h2><span>Tone</span></h2>
+          <p>You are describing a system, never a person. A report that reads as an accusation invites a defence, and a defence is a delay.</p>
+          <div class="tablewrap">
+            <table>
+              <thead><tr><th></th><th>Wording</th></tr></thead>
+              <tbody>
+                <tr><td class="x">✕</td><td>You broke the discount logic</td></tr>
+                <tr><td class="v">✓</td><td>Applying the same code twice stacks the reduction</td></tr>
+                <tr><td class="x">✕</td><td>Obviously nobody tested this</td></tr>
+                <tr><td class="v">✓</td><td>Not covered by the existing cases; I have added DISC-003</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="sign">
+          <button data-go="course">← W11·D4 Evidence</button>
+          <button data-go="course">W11·D6 Practice →</button>
+        </div>
+      </div>
+    </article>
+  </section>
+</main>
+
+<footer class="wrap">Tracesmith — design sample 5 of 5 · “Field”. An engineer’s notebook: drafting grid, mono metadata, one serif headline per sheet.</footer>
+
+<script>
+(function () {
+  var views = { home: document.getElementById('v-home'), course: document.getElementById('v-course'), lesson: document.getElementById('v-lesson') };
+  var navs = document.querySelectorAll('.bar nav button');
+  function show(name) {
+    if (!views[name]) name = 'home';
+    for (var k in views) views[k].hidden = (k !== name);
+    navs.forEach(function (b) { b.setAttribute('aria-current', String(b.dataset.go === name)); });
+    window.scrollTo(0, 0);
+    try { history.replaceState(null, '', '#' + name); } catch (e) {}
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-go]');
+    if (!t) return;
+    e.preventDefault();
+    show(t.dataset.go);
+  });
+  var start = (location.hash || '').replace('#', '');
+  show(views[start] ? start : 'home');
+})();
+</script>
+

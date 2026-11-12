@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+<title>Tracesmith Atlas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+/* Layout: deep-navy reading column, hairline rules instead of boxes,
+   uppercase letterspaced eyebrows. The Engram / Python Atlas house style. */
+:root {
+  --bg: #0f1627;
+  --surface: #162036;
+  --surface-2: #1c2841;
+  --line: #2b3854;
+  --ink: #e6ecf5;
+  --ink-2: #b0bbcf;
+  --ink-3: #8c98ae;
+  --accent: #86b4e3;
+  --accent-soft: #1f3150;
+  --good: #4cc48a;
+  --warn: #e3a54a;
+  --bad: #f08fb0;
+
+  --f-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --f-sans: "Jost", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-sans);
+  font-size: 17px;
+  font-weight: 300;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 10;
+  background: var(--bg);
+}
+
+.wrap {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* ---------- top bar ---------- */
+.bar {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 9;
+  background: rgba(15, 22, 39, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.bar-in {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding-block: 14px;
+}
+.brand {
+  font-family: var(--f-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+nav { display: flex; gap: 22px; margin-left: auto; flex-wrap: wrap; }
+nav button {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--f-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  transition: color 0.15s;
+}
+nav button:hover, nav button[aria-current="true"] { color: var(--accent); }
+nav button:focus-visible, .lnk:focus-visible, .btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ---------- shared bits ---------- */
+.eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+h1, h2, h3 { font-family: var(--f-display); font-weight: 500; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.6rem, 7vw, 4rem); line-height: 1.04; letter-spacing: -0.01em; }
+h2 { font-size: clamp(1.7rem, 4vw, 2.2rem); line-height: 1.15; }
+h3 { font-size: 1.3rem; line-height: 1.25; }
+
+.btn {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 13px 24px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #0d1424;
+  text-decoration: none;
+  cursor: pointer;
+  font-family: var(--f-sans);
+  transition: opacity 0.15s;
+}
+.btn:hover { opacity: 0.86; }
+.btn.ghost { background: none; color: var(--accent); }
+.btn.ghost:hover { background: var(--accent-soft); opacity: 1; }
+
+/* ---------- home ---------- */
+.hero { padding-block: clamp(56px, 11vw, 112px) clamp(40px, 7vw, 72px); }
+.hero p.lede {
+  font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+  color: var(--ink-2);
+  max-width: 54ch;
+  margin: 22px 0 36px;
+}
+.cta { display: flex; gap: 14px; flex-wrap: wrap; }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border-block: 1px solid var(--line);
+  margin-top: clamp(48px, 8vw, 84px);
+}
+.stat { background: var(--bg); padding: 22px 18px; }
+.stat b {
+  display: block;
+  font-family: var(--f-display);
+  font-size: 2.4rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.stat span { font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+
+.phases { padding-block: clamp(48px, 8vw, 88px); display: grid; gap: 2px; }
+.phase {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  gap: 20px;
+  align-items: baseline;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  background: none;
+  border-left: 0; border-right: 0; border-top: 0;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  transition: padding-left 0.2s;
+}
+.phase:hover { padding-left: 10px; }
+.phase:hover h3 { color: var(--accent); }
+.phase .num { font-family: var(--f-mono); font-size: 0.8rem; color: var(--ink-3); }
+.phase p { margin: 6px 0 0; color: var(--ink-3); font-size: 0.95rem; max-width: 62ch; }
+.phase .wk { font-family: var(--f-mono); font-size: 0.75rem; color: var(--ink-3); white-space: nowrap; }
+
+/* ---------- course index ---------- */
+.weeks { display: grid; gap: 2px; padding-block: 36px 80px; }
+.wkrow {
+  display: grid;
+  grid-template-columns: 74px 1fr auto;
+  gap: 18px;
+  align-items: center;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+  background: none; border-left: 0; border-right: 0; border-top: 0;
+  text-align: left; color: inherit; font: inherit; cursor: pointer;
+  transition: padding-left 0.2s;
+}
+.wkrow:hover { padding-left: 10px; }
+.wkrow:hover .wt { color: var(--accent); }
+.wkrow .wn { font-family: var(--f-mono); font-size: 0.75rem; color: var(--ink-3); letter-spacing: 0.04em; }
+.wt { font-family: var(--f-display); font-size: 1.25rem; }
+.wkrow .meter { width: 90px; height: 2px; background: var(--surface-2); position: relative; }
+.wkrow .meter i { position: absolute; inset: 0 auto 0 0; background: var(--accent); }
+
+/* ---------- lesson ---------- */
+.lesson { max-width: 68ch; padding-block: 40px 96px; }
+.crumb {
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  font-size: 0.6875rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3);
+  padding-block: 20px 0;
+}
+.crumb i { color: var(--line); font-style: normal; }
+.lesson h1 { font-size: clamp(2.1rem, 5.4vw, 3rem); margin-top: 10px; }
+
+/* objectives: a quiet aside, not a box */
+.obj { margin: 30px 0 0; padding-left: 20px; border-left: 2px solid var(--accent-soft); }
+.obj .eyebrow { display: block; margin-bottom: 8px; }
+.obj ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.obj li { color: var(--ink-2); font-size: 0.95rem; }
+
+.prose > * + * { margin-top: 1.5em; }
+.prose p { margin: 0; }
+.prose strong { font-weight: 500; color: #fff; }
+.prose h2 { margin-top: 2.4em; }
+.prose h2 + * { margin-top: 0.8em; }
+.prose a, .lnk { color: var(--accent); }
+
+/* the one structural device: a flush-left rule for an idea worth pausing on */
+.key {
+  margin-top: 2.2em;
+  padding: 2px 0 2px 22px;
+  border-left: 2px solid var(--accent);
+}
+.key .eyebrow { display: block; color: var(--accent); margin-bottom: 6px; }
+.key p { color: var(--ink-2); }
+.key p:first-of-type { color: var(--ink); }
+
+pre {
+  font-family: var(--f-mono);
+  font-size: 0.78rem;
+  line-height: 1.7;
+  background: var(--surface);
+  color: var(--ink-2);
+  padding: 20px;
+  overflow-x: auto;
+  margin: 0;
+  border-left: 2px solid var(--line);
+}
+
+table { width: 100%; border-collapse: collapse; font-size: 0.93rem; }
+.tablewrap { overflow-x: auto; }
+th, td { text-align: left; padding: 11px 14px 11px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 0.6875rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
+td:first-child { color: var(--ink-3); }
+td:last-child { color: var(--ink); }
+
+.nextprev {
+  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  margin-top: 60px; padding-top: 26px; border-top: 1px solid var(--line);
+}
+.nextprev button {
+  background: none; border: 0; padding: 0; cursor: pointer; text-align: left;
+  font-family: var(--f-sans); color: var(--ink-3);
+}
+.nextprev button:hover .t { color: var(--accent); }
+.nextprev .e { display: block; font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; }
+.nextprev .t { font-family: var(--f-display); font-size: 1.1rem; color: var(--ink-2); }
+
+/* progress hairline */
+.prog { position: fixed; top: env(safe-area-inset-top, 0px); left: 0; height: 2px; background: var(--accent); z-index: 11; width: 0; }
+
+footer { border-top: 1px solid var(--line); padding-block: 30px 46px; color: var(--ink-3); font-size: 0.85rem; }
+
+@media (max-width: 620px) {
+  body { font-size: 16px; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .phase { grid-template-columns: 1fr; gap: 4px; }
+  .phase .wk { grid-row: 1; justify-self: start; }
+  .wkrow { grid-template-columns: 1fr auto; }
+  .wkrow .wn { grid-column: 1 / -1; }
+  nav { gap: 16px; }
+  .bar-in { gap: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="prog" id="prog"></div>
+
+<header class="bar">
+  <div class="wrap bar-in">
+    <a class="brand" href="#home" data-go="home">Tracesmith</a>
+    <nav>
+      <button data-go="home">Home</button>
+      <button data-go="course">Course</button>
+      <button data-go="lesson">Lesson</button>
+      <button data-go="course">Labs</button>
+      <button data-go="course">Review</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ============ HOME ============ -->
+  <section id="v-home">
+    <div class="hero">
+      <p class="eyebrow">A free course · 26 weeks · 156 lessons</p>
+      <h1>Three jobs that share a spine.</h1>
+      <p class="lede">Quality assurance, technical support and AI automation all live or die on the same skill: finding out what is actually true, and writing it down so someone else can act on it.</p>
+      <div class="cta">
+        <button class="btn" data-go="lesson">Start day 1</button>
+        <button class="btn ghost" data-go="course">See the whole course</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b>5</b><span>Phases</span></div>
+      <div class="stat"><b>26</b><span>Weeks</span></div>
+      <div class="stat"><b>156</b><span>Lessons</span></div>
+      <div class="stat"><b>0</b><span>Cost</span></div>
+    </div>
+
+    <div class="phases">
+      <button class="phase" data-go="course">
+        <span class="num">01</span>
+        <span><h3>How the web actually works</h3><p>What a browser sends, what a server answers with, and how a page is built.</p></span>
+        <span class="wk">Weeks 1–4</span>
+      </button>
+      <button class="phase" data-go="course">
+        <span class="num">02</span>
+        <span><h3>Data, APIs and evidence</h3><p>Endpoints, payloads, keys and webhooks — and calling an API yourself instead of guessing.</p></span>
+        <span class="wk">Weeks 5–8</span>
+      </button>
+      <button class="phase" data-go="course">
+        <span class="num">03</span>
+        <span><h3>Quality assurance</h3><p>Test cases, bug reports, regression, API testing, five security checks, automation.</p></span>
+        <span class="wk">Weeks 9–15</span>
+      </button>
+      <button class="phase" data-go="course">
+        <span class="num">04</span>
+        <span><h3>Technical support</h3><p>Triage, diagnosis from evidence, writing to customers and engineers, payments.</p></span>
+        <span class="wk">Weeks 16–19</span>
+      </button>
+      <button class="phase" data-go="course">
+        <span class="num">05</span>
+        <span><h3>AI automation</h3><p>Workflows that run themselves, keep receipts, and stop for a human before anything leaves.</p></span>
+        <span class="wk">Weeks 20–26</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ COURSE ============ -->
+  <section id="v-course" hidden>
+    <div class="crumb"><span>Course</span><i>/</i><span>Phase 3</span></div>
+    <h2 style="margin-top:14px">Quality assurance</h2>
+    <p style="color:var(--ink-2); max-width:58ch; margin-top:14px">Finding problems before customers do, and proving them.</p>
+    <div class="weeks">
+      <button class="wkrow" data-go="lesson"><span class="wn">WEEK 09</span><span class="wt">Thinking like a tester</span><span class="meter"><i style="width:100%"></i></span></button>
+      <button class="wkrow" data-go="lesson"><span class="wn">WEEK 10</span><span class="wt">Test cases and coverage</span><span class="meter"><i style="width:100%"></i></span></button>
+      <button class="wkrow" data-go="lesson"><span class="wn">WEEK 11</span><span class="wt">Bugs</span><span class="meter"><i style="width:66%"></i></span></button>
+      <button class="wkrow" data-go="lesson"><span class="wn">WEEK 12</span><span class="wt">Testing the web</span><span class="meter"><i style="width:0"></i></span></button>
+      <button class="wkrow" data-go="lesson"><span class="wn">WEEK 13</span><span class="wt">API and data testing</span><span class="meter"><i style="width:0"></i></span></button>
+      <button class="wkrow" data-go="lesson"><span class="wn">WEEK 14</span><span class="wt">Security testing basics</span><span class="meter"><i style="width:0"></i></span></button>
+      <button class="wkrow" data-go="lesson"><span class="wn">WEEK 15</span><span class="wt">Automated testing</span><span class="meter"><i style="width:0"></i></span></button>
+    </div>
+  </section>
+
+  <!-- ============ LESSON ============ -->
+  <section id="v-lesson" hidden>
+    <article class="lesson">
+      <div class="crumb"><span>Week 11 · Bugs</span><i>/</i><span>Day 5</span><i>/</i><span>65 of 156</span></div>
+      <h1>Writing a report that needs no follow-up</h1>
+
+      <div class="obj">
+        <span class="eyebrow">By the end you can</span>
+        <ul>
+          <li>Write all seven sections well</li>
+          <li>Title a bug so it is findable</li>
+          <li>Judge your own report against the no-questions test</li>
+        </ul>
+      </div>
+
+      <div class="prose" style="margin-top:38px">
+        <p>This is the most valuable thing a tester produces. Not the bug — the report.</p>
+        <p>The standard is one sentence long: <strong>an engineer should be able to act on it without asking you anything.</strong></p>
+
+        <h2>The shape</h2>
+        <pre>Title       Applying the same discount code twice stacks
+            the reduction (cart)
+
+Environment Meridian sandbox, stage 3 · Chrome 131 · 7 Nov
+
+Steps       1. Add Harmattan Field Jacket to the cart
+            2. Open the cart
+            3. Enter SAVE10 and click Apply
+            4. Enter SAVE10 again and click Apply
+
+Expected    The second application is refused; the total
+            stays at NGN 43,650.00
+
+Actual      The discount becomes 20%. The total drops to
+            NGN 38,800.00. Ten applications reach NGN 0.00
+
+Severity    Critical          Priority  Highest</pre>
+        <p>Read it as an engineer: you know what to do, where to go, what you will see, and what it should have been. Nothing is missing, and you did not have to ask.</p>
+
+        <h2>The title does most of the work</h2>
+        <p>It is read in a list of a hundred, in a notification, in a stand-up. It should carry the bug on its own.</p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Weak</th><th>Strong</th></tr></thead>
+            <tbody>
+              <tr><td>Discount bug</td><td>Same code applied twice stacks the reduction</td></tr>
+              <tr><td>Cart broken</td><td>Cart total ignores quantity for items added twice</td></tr>
+              <tr><td>Payment issue</td><td>Double-clicking Place order charges twice</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="key">
+          <span class="eyebrow">The sentence people leave out</span>
+          <p>When severity and priority differ, say why. One line, and it prevents the argument.</p>
+          <p>Without it, someone reads “Critical” and “Low” together and comes to ask. With it, the trade-off is visible and agreed.</p>
+        </div>
+
+        <h2>Tone</h2>
+        <p>You are describing a system, never a person. The right-hand column gets fixed faster — not because engineers are fragile, but because a report that reads as an accusation invites a defence, and a defence is a delay.</p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Avoid</th><th>Prefer</th></tr></thead>
+            <tbody>
+              <tr><td>You broke the discount logic</td><td>Applying the same code twice stacks the reduction</td></tr>
+              <tr><td>Obviously nobody tested this</td><td>Not covered by the existing cases; I have added DISC-003</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="nextprev">
+        <button data-go="course"><span class="e">Previous</span><span class="t">Reproducing reliably</span></button>
+        <button data-go="course" style="text-align:right"><span class="e">Next</span><span class="t">Three reports, graded</span></button>
+      </div>
+    </article>
+  </section>
+</main>
+
+<footer class="wrap">Tracesmith — design sample 1 of 5 · “Atlas”. The Engram and Python Atlas house style: Cormorant Garamond over Jost, on deep navy.</footer>
+
+<script>
+(function () {
+  var views = { home: document.getElementById('v-home'), course: document.getElementById('v-course'), lesson: document.getElementById('v-lesson') };
+  var navs = document.querySelectorAll('nav button');
+  function show(name) {
+    if (!views[name]) name = 'home';
+    for (var k in views) views[k].hidden = (k !== name);
+    navs.forEach(function (b) { b.setAttribute('aria-current', String(b.dataset.go === name)); });
+    window.scrollTo(0, 0);
+    try { history.replaceState(null, '', '#' + name); } catch (e) {}
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-go]');
+    if (!t) return;
+    e.preventDefault();
+    show(t.dataset.go);
+  });
+  var start = (location.hash || '').replace('#', '');
+  show(views[start] ? start : 'home');
+
+  var prog = document.getElementById('prog');
+  function onScroll() {
+    var h = document.documentElement;
+    var max = h.scrollHeight - h.clientHeight;
+    prog.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + '%';
+  }
+  document.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+</script>
+

@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+<title>Tracesmith Paper</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500&family=JetBrains+Mono:wght@400&display=swap">
+
+<style>
+/* Layout: a set book page. Warm paper, one narrow column, notes in the
+   margin instead of boxes, hairline rules for every division. */
+:root {
+  --paper: #f7f4ee;
+  --paper-2: #efeae1;
+  --ink: #16161a;
+  --ink-2: #4a4a52;
+  --ink-3: #8a8780;
+  --rule: #ddd6c9;
+  --accent: #2f4858;      /* slate blue, not terracotta */
+  --accent-2: #7a6a53;
+  --mark: #e8dfcc;
+
+  --f-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --f-sans: "Jost", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-display);
+  font-size: 1.28rem;
+  line-height: 1.72;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 10;
+  background: var(--paper);
+}
+
+.wrap {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+.label {
+  font-family: var(--f-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* ---------- masthead ---------- */
+.mast { border-bottom: 1px solid var(--rule); }
+.mast-in { display: flex; align-items: flex-end; gap: 24px; padding-block: 20px 16px; flex-wrap: wrap; }
+.brand {
+  font-family: var(--f-display);
+  font-size: 2rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.005em;
+  cursor: pointer;
+  background: none; border: 0; padding: 0; color: var(--ink);
+}
+.brand small {
+  display: block;
+  font-family: var(--f-sans);
+  font-size: 0.625rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-top: 5px;
+}
+nav { display: flex; gap: 26px; margin-left: auto; flex-wrap: wrap; padding-bottom: 4px; }
+nav button {
+  background: none; border: 0; padding: 0 0 3px; cursor: pointer;
+  font-family: var(--f-sans); font-size: 0.72rem; font-weight: 400;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-2);
+  border-bottom: 1px solid transparent;
+}
+nav button:hover, nav button[aria-current="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+nav button:focus-visible, .btn:focus-visible, .row:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 3px;
+}
+
+h1, h2, h3 { font-family: var(--f-display); font-weight: 500; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(2.8rem, 7.4vw, 4.6rem); line-height: 1.02; letter-spacing: -0.012em; }
+h2 { font-size: clamp(1.8rem, 4vw, 2.4rem); line-height: 1.14; }
+h3 { font-size: 1.5rem; line-height: 1.2; }
+
+.btn {
+  display: inline-block; cursor: pointer;
+  font-family: var(--f-sans); font-size: 0.7rem; font-weight: 500;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  padding: 14px 28px; border: 1px solid var(--ink); background: var(--ink); color: var(--paper);
+  text-decoration: none;
+}
+.btn:hover { background: var(--accent); border-color: var(--accent); }
+.btn.ghost { background: none; color: var(--ink); }
+.btn.ghost:hover { background: var(--mark); color: var(--ink); border-color: var(--ink); }
+
+/* ---------- home ---------- */
+.hero { padding-block: clamp(50px, 10vw, 104px) clamp(36px, 6vw, 64px); max-width: 20ch; }
+.hero .label { display: block; margin-bottom: 20px; }
+.hero-lede {
+  font-size: clamp(1.15rem, 2.3vw, 1.45rem);
+  color: var(--ink-2);
+  max-width: 48ch;
+  margin: 26px 0 36px;
+  font-style: italic;
+}
+.cta { display: flex; gap: 14px; flex-wrap: wrap; }
+
+.rule-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--ink); border-bottom: 1px solid var(--rule);
+  margin-top: clamp(44px, 7vw, 76px);
+}
+.rule-stats div { padding: 20px 16px 20px 0; }
+.rule-stats b {
+  display: block; font-size: 2.6rem; font-weight: 400; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.rule-stats span { font-family: var(--f-sans); font-size: 0.66rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); }
+
+.contents { padding-block: clamp(44px, 7vw, 80px); }
+.contents > .label { display: block; margin-bottom: 26px; }
+.row {
+  display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: baseline;
+  padding: 16px 0; border-bottom: 1px solid var(--rule);
+  background: none; border-left: 0; border-right: 0; border-top: 0;
+  width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer;
+}
+.row:hover .rt { text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1px; }
+.rt { font-size: 1.45rem; }
+.rd { font-family: var(--f-sans); font-size: 0.78rem; color: var(--ink-3); letter-spacing: 0.08em; white-space: nowrap; }
+.rsub { display: block; font-family: var(--f-sans); font-size: 0.9rem; font-weight: 300; color: var(--ink-3); margin-top: 3px; max-width: 60ch; }
+
+/* ---------- lesson: text column + margin notes ---------- */
+.sheet {
+  display: grid;
+  grid-template-columns: minmax(0, 60ch) minmax(0, 20ch);
+  gap: 0 48px;
+  padding-block: 34px 90px;
+}
+.folio {
+  grid-column: 1 / -1;
+  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding-bottom: 14px; border-bottom: 1px solid var(--ink);
+}
+.sheet h1 { grid-column: 1; font-size: clamp(2.2rem, 5.2vw, 3.2rem); margin-top: 32px; }
+.sheet .standfirst {
+  grid-column: 1; font-style: italic; color: var(--ink-2);
+  font-size: 1.32rem; margin-top: 16px;
+}
+
+.body { grid-column: 1; margin-top: 34px; }
+.body > * + * { margin-top: 1.35em; }
+.body p { margin: 0; }
+.body h2 { margin-top: 2em; }
+.body h2 + * { margin-top: 0.7em; }
+.body strong { font-weight: 600; }
+
+/* drop cap, once, on the opening paragraph */
+.body > p:first-child::first-letter {
+  float: left; font-size: 3.9rem; line-height: 0.82; font-weight: 500;
+  padding: 6px 10px 0 0; color: var(--accent);
+}
+
+/* a margin note: the replacement for a callout box */
+.note {
+  grid-column: 2;
+  font-family: var(--f-sans);
+  font-size: 0.86rem;
+  font-weight: 300;
+  line-height: 1.6;
+  color: var(--ink-2);
+  padding-top: 6px;
+  border-top: 1px solid var(--ink);
+  align-self: start;
+}
+.note b { display: block; font-weight: 500; color: var(--ink); margin-bottom: 5px; }
+.note.n1 { margin-top: 2.6em; }
+.note.n2 { margin-top: 3em; }
+
+pre {
+  font-family: var(--f-mono); font-size: 0.74rem; line-height: 1.75;
+  background: var(--paper-2); color: var(--ink-2);
+  padding: 20px; margin: 0; overflow-x: auto;
+}
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-family: var(--f-sans); font-size: 0.95rem; font-weight: 300; }
+th, td { text-align: left; padding: 10px 16px 10px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-size: 0.66rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
+td:first-child { color: var(--ink-3); }
+
+mark { background: var(--mark); color: inherit; padding: 0 3px; }
+
+.sheet .end {
+  grid-column: 1; margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--ink);
+  display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+}
+.sheet .end button {
+  background: none; border: 0; padding: 0; cursor: pointer; text-align: left;
+  font-family: var(--f-display); font-size: 1.2rem; color: var(--ink-2);
+}
+.sheet .end button:hover { color: var(--ink); }
+.sheet .end .label { display: block; margin-bottom: 2px; }
+
+footer {
+  border-top: 1px solid var(--rule); padding-block: 26px 44px;
+  font-family: var(--f-sans); font-size: 0.85rem; font-weight: 300; color: var(--ink-3);
+}
+
+@media (max-width: 900px) {
+  .sheet { grid-template-columns: minmax(0, 1fr); }
+  .note { grid-column: 1; margin-top: 1.6em !important; max-width: 46ch; }
+  .rule-stats { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  body { font-size: 1.16rem; }
+  .hero { max-width: none; }
+  .row { grid-template-columns: 1fr; }
+  .rd { order: -1; }
+}
+</style>
+
+<header class="mast">
+  <div class="wrap mast-in">
+    <button class="brand" data-go="home">Tracesmith<small>QA · Support · Automation</small></button>
+    <nav>
+      <button data-go="home">Home</button>
+      <button data-go="contents">Contents</button>
+      <button data-go="lesson">Lesson</button>
+      <button data-go="contents">Labs</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ============ HOME ============ -->
+  <section id="v-home">
+    <div class="hero">
+      <span class="label">A free course in 26 weeks</span>
+      <h1>Three jobs that share a spine.</h1>
+    </div>
+    <p class="hero-lede">Quality assurance, technical support and AI automation all rest on the same skill: finding out what is actually true, and writing it down so someone else can act on it.</p>
+    <div class="cta">
+      <button class="btn" data-go="lesson">Begin day one</button>
+      <button class="btn ghost" data-go="contents">Table of contents</button>
+    </div>
+
+    <div class="rule-stats">
+      <div><b>5</b><span>Phases</span></div>
+      <div><b>26</b><span>Weeks</span></div>
+      <div><b>156</b><span>Lessons</span></div>
+      <div><b>0</b><span>Cost</span></div>
+    </div>
+
+    <div class="contents">
+      <span class="label">The five parts</span>
+      <button class="row" data-go="contents"><span><span class="rt">How the web actually works</span><span class="rsub">What a browser sends, what a server answers with, and how a page is built.</span></span><span class="rd">I · Weeks 1–4</span></button>
+      <button class="row" data-go="contents"><span><span class="rt">Data, APIs and evidence</span><span class="rsub">Endpoints, payloads, keys and webhooks — and calling an API yourself.</span></span><span class="rd">II · Weeks 5–8</span></button>
+      <button class="row" data-go="contents"><span><span class="rt">Quality assurance</span><span class="rsub">Test cases, bug reports, regression, API testing, security, automation.</span></span><span class="rd">III · Weeks 9–15</span></button>
+      <button class="row" data-go="contents"><span><span class="rt">Technical support</span><span class="rsub">Triage, diagnosis from evidence, writing well, and the payments domain.</span></span><span class="rd">IV · Weeks 16–19</span></button>
+      <button class="row" data-go="contents"><span><span class="rt">AI automation</span><span class="rsub">Workflows that run themselves, keep receipts, and stop for a human.</span></span><span class="rd">V · Weeks 20–26</span></button>
+    </div>
+  </section>
+
+  <!-- ============ CONTENTS ============ -->
+  <section id="v-contents" hidden>
+    <div class="contents">
+      <span class="label">Part three · Quality assurance</span>
+      <h2 style="margin:10px 0 28px">Weeks nine to fifteen</h2>
+      <button class="row" data-go="lesson"><span><span class="rt">Thinking like a tester</span><span class="rsub">Six lessons · complete</span></span><span class="rd">Week 9</span></button>
+      <button class="row" data-go="lesson"><span><span class="rt">Test cases and coverage</span><span class="rsub">Six lessons · complete</span></span><span class="rd">Week 10</span></button>
+      <button class="row" data-go="lesson"><span><span class="rt">Bugs</span><span class="rsub">Six lessons · you are on day five</span></span><span class="rd">Week 11</span></button>
+      <button class="row" data-go="lesson"><span><span class="rt">Testing the web</span><span class="rsub">Six lessons</span></span><span class="rd">Week 12</span></button>
+      <button class="row" data-go="lesson"><span><span class="rt">API and data testing</span><span class="rsub">Six lessons</span></span><span class="rd">Week 13</span></button>
+      <button class="row" data-go="lesson"><span><span class="rt">Security testing basics</span><span class="rsub">Six lessons</span></span><span class="rd">Week 14</span></button>
+      <button class="row" data-go="lesson"><span><span class="rt">Automated testing</span><span class="rsub">Six lessons</span></span><span class="rd">Week 15</span></button>
+    </div>
+  </section>
+
+  <!-- ============ LESSON ============ -->
+  <section id="v-lesson" hidden>
+    <article class="sheet">
+      <div class="folio">
+        <span class="label">Week 11 · Bugs · Day 5</span>
+        <span class="label">65 / 156</span>
+      </div>
+
+      <h1>Writing a report that needs no follow-up</h1>
+      <p class="standfirst">This is the most valuable thing a tester produces. Not the bug — the report.</p>
+
+      <div class="body">
+        <p>The standard is one sentence long: an engineer should be able to act on it without asking you anything. Everything below is in service of that one test, and a report that fails it has failed whatever else it does well.</p>
+
+        <h2>The shape</h2>
+        <pre>Title       Applying the same discount code twice stacks
+            the reduction (cart)
+
+Environment Meridian sandbox, stage 3 · Chrome 131 · 7 Nov
+
+Steps       1. Add Harmattan Field Jacket to the cart
+            2. Open the cart
+            3. Enter SAVE10 and click Apply
+            4. Enter SAVE10 again and click Apply
+
+Expected    The second application is refused; the total
+            stays at NGN 43,650.00
+
+Actual      The discount becomes 20%. The total drops to
+            NGN 38,800.00. Ten applications reach NGN 0.00
+
+Severity    Critical          Priority  Highest</pre>
+
+        <p>Read it as an engineer: you know what to do, where to go, what you will see, and what it should have been. Nothing is missing, and you did not have to ask.</p>
+
+        <h2>The title does most of the work</h2>
+        <p>It is read in a list of a hundred, in a notification, in a stand-up. The pattern is <mark>what happens, where, and under what condition</mark>.</p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Weak</th><th>Strong</th></tr></thead>
+            <tbody>
+              <tr><td>Discount bug</td><td>Same code applied twice stacks the reduction</td></tr>
+              <tr><td>Cart broken</td><td>Cart total ignores quantity for items added twice</td></tr>
+              <tr><td>Payment issue</td><td>Double-clicking Place order charges twice</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Tone</h2>
+        <p>You are describing a system, never a person. “Applying the same code twice stacks the reduction” gets fixed faster than “you broke the discount logic” — not because engineers are fragile, but because a report that reads as an accusation invites a defence, and a defence is a delay.</p>
+      </div>
+
+      <aside class="note n1">
+        <b>Never put urgency in the subject</b>
+        That is what the priority field is for. A title shouting at you is noise the twentieth time you scroll past it.
+      </aside>
+
+      <aside class="note n2">
+        <b>The sentence people leave out</b>
+        When severity and priority differ, say why. Without it someone reads “Critical” and “Low” together and comes to ask; with it, the trade-off is visible and agreed.
+      </aside>
+
+      <div class="end">
+        <button data-go="contents"><span class="label">Previous</span>Reproducing reliably</button>
+        <button data-go="contents" style="text-align:right"><span class="label">Next</span>Three reports, graded</button>
+      </div>
+    </article>
+  </section>
+</main>
+
+<footer class="wrap">Tracesmith — design sample 2 of 5 · “Paper”. The NobleThread register: the same Cormorant and Jost, set light, with notes in the margin instead of boxes.</footer>
+
+<script>
+(function () {
+  var views = { home: document.getElementById('v-home'), contents: document.getElementById('v-contents'), lesson: document.getElementById('v-lesson') };
+  var navs = document.querySelectorAll('nav button');
+  function show(name) {
+    if (!views[name]) name = 'home';
+    for (var k in views) views[k].hidden = (k !== name);
+    navs.forEach(function (b) { b.setAttribute('aria-current', String(b.dataset.go === name)); });
+    window.scrollTo(0, 0);
+    try { history.replaceState(null, '', '#' + name); } catch (e) {}
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-go]');
+    if (!t) return;
+    e.preventDefault();
+    show(t.dataset.go);
+  });
+  var start = (location.hash || '').replace('#', '');
+  show(views[start] ? start : 'home');
+})();
+</script>
+

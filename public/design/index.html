@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tracesmith — five design directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@300;400;500&family=JetBrains+Mono:wght@400&display=swap">
+
+<style>
+  :root {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    --bg: #0f1627;
+    --surface: #162036;
+    --line: #2b3854;
+    --ink: #e6ecf5;
+    --ink-2: #b0bbcf;
+    --ink-3: #8c98ae;
+    --accent: #86b4e3;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Jost", "Helvetica Neue", system-ui, sans-serif;
+    font-weight: 300;
+    font-size: 17px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 920px;
+    margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: clamp(40px, 8vw, 80px) 70px;
+  }
+  .label {
+    font-size: 0.68rem; font-weight: 500; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--ink-3);
+  }
+  h1 {
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-weight: 500; font-size: clamp(2.3rem, 6vw, 3.4rem);
+    line-height: 1.05; margin: 16px 0 0; text-wrap: balance;
+  }
+  .lede { color: var(--ink-2); max-width: 56ch; margin: 18px 0 0; }
+  .note {
+    margin-top: 26px; padding: 14px 18px; background: var(--surface);
+    border-left: 2px solid var(--accent); font-size: 0.95rem; color: var(--ink-2);
+  }
+  .grid { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 40px; }
+  a.card {
+    display: grid; grid-template-columns: 54px 1fr auto; gap: 18px; align-items: center;
+    background: var(--bg); padding: 22px 20px; text-decoration: none; color: inherit;
+    transition: background 0.15s;
+  }
+  a.card:hover, a.card:focus-visible { background: var(--surface); outline: none; }
+  a.card:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
+  .n { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.8rem; color: var(--ink-3); }
+  .t { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.5rem; }
+  .d { display: block; color: var(--ink-3); font-size: 0.93rem; margin-top: 2px; max-width: 54ch; }
+  .go { font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); white-space: nowrap; }
+  .sw { display: flex; gap: 4px; margin-top: 8px; }
+  .sw i { width: 20px; height: 7px; border-radius: 2px; display: block; }
+  footer { margin-top: 40px; padding-top: 22px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 0.88rem; }
+  @media (max-width: 620px) {
+    a.card { grid-template-columns: 1fr auto; gap: 10px; }
+    .n { grid-column: 1 / -1; }
+  }
+</style>
+
+<div class="wrap">
+  <span class="label">Tracesmith · design review</span>
+  <h1>Five directions, one course.</h1>
+  <p class="lede">The same week&nbsp;11 lesson rendered five ways. Each one has a working home, course index and lesson page — the navigation switches between them, so click around.</p>
+
+  <div class="note">
+    The current site puts 41 bordered boxes on a single lesson and runs 6,157&nbsp;pixels tall. Every direction below removes most of those boxes and uses the Cormorant&nbsp;Garamond, Jost and JetBrains&nbsp;Mono pairing from Python&nbsp;Atlas and Engram.
+  </div>
+
+  <div class="grid">
+    <a class="card" href="1-atlas.html">
+      <span class="n">01</span>
+      <span>
+        <span class="t">Atlas</span>
+        <span class="d">Your house style, applied faithfully. Deep navy, hairline rules instead of boxes, callouts as a flush-left accent rule.</span>
+        <span class="sw"><i style="background:#0f1627"></i><i style="background:#162036"></i><i style="background:#86b4e3"></i><i style="background:#e6ecf5"></i></span>
+      </span>
+      <span class="go">Open →</span>
+    </a>
+
+    <a class="card" href="2-paper.html">
+      <span class="n">02</span>
+      <span>
+        <span class="t">Paper</span>
+        <span class="d">The NobleThread register. Warm paper, a set book page, a drop cap, and callouts moved into the margin as notes.</span>
+        <span class="sw"><i style="background:#f7f4ee"></i><i style="background:#efeae1"></i><i style="background:#2f4858"></i><i style="background:#16161a"></i></span>
+      </span>
+      <span class="go">Open →</span>
+    </a>
+
+    <a class="card" href="3-focus.html">
+      <span class="n">03</span>
+      <span>
+        <span class="t">Focus</span>
+        <span class="d">A lesson as seven steps instead of one long scroll. One idea per screen; arrow keys work. The direct answer to “stressful”.</span>
+        <span class="sw"><i style="background:#fbfbf9"></i><i style="background:#f1f1ed"></i><i style="background:#1d6b53"></i><i style="background:#15171a"></i></span>
+      </span>
+      <span class="go">Open →</span>
+    </a>
+
+    <a class="card" href="4-studio.html">
+      <span class="n">04</span>
+      <span>
+        <span class="t">Studio</span>
+        <span class="d">An application shell. Course tree always on the left, contents on the right, brass on near-black. You never lose your place.</span>
+        <span class="sw"><i style="background:#0a0a0b"></i><i style="background:#17171a"></i><i style="background:#c8a45c"></i><i style="background:#fafafa"></i></span>
+      </span>
+      <span class="go">Open →</span>
+    </a>
+
+    <a class="card" href="5-field.html">
+      <span class="n">05</span>
+      <span>
+        <span class="t">Field</span>
+        <span class="d">An engineer’s notebook. Faint drafting grid, mono metadata, blueprint blue, tick and cross marks. The most “QA” of the five.</span>
+        <span class="sw"><i style="background:#fcfcfa"></i><i style="background:#f4f4ef"></i><i style="background:#14519b"></i><i style="background:#b23a2e"></i></span>
+      </span>
+      <span class="go">Open →</span>
+    </a>
+  </div>
+
+  <footer>
+    These are samples only — nothing on the live course has changed. Tracesmith remains at
+    <a href="/" style="color:var(--accent)">tracesmith.vercel.app</a>.
+  </footer>
+</div>

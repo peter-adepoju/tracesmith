@@ -1,0 +1,334 @@
+<title>Tracesmith Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+/* Layout: an application shell. Course tree always on the left, a thin
+   top bar, and the lesson in a reading column with its own contents to
+   the right. You always know where you are. */
+:root {
+  --bg: #0a0a0b;
+  --panel: #111113;
+  --panel-2: #17171a;
+  --line: #242428;
+  --line-2: #33333a;
+  --ink: #fafafa;
+  --ink-2: #a8a8b0;
+  --ink-3: #6e6e78;
+  --accent: #c8a45c;       /* brass */
+  --accent-soft: #2a2316;
+  --good: #4cc48a;
+  --rail: 268px;
+
+  --f-display: "Cormorant Garamond", Georgia, serif;
+  --f-sans: "Jost", "Helvetica Neue", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-sans);
+  font-weight: 300;
+  font-size: 16.5px;
+  line-height: 1.72;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px); z-index: 40; background: var(--panel);
+}
+
+h1, h2, h3 { font-family: var(--f-display); font-weight: 500; margin: 0; text-wrap: balance; }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+.label { font-size: 0.625rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); }
+
+/* ---------- top bar ---------- */
+.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30;
+  display: flex; align-items: center; gap: 14px; height: 54px;
+  background: var(--panel); border-bottom: 1px solid var(--line);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.brand { font-family: var(--f-display); font-size: 1.3rem; font-weight: 600; background: none; border: 0; color: var(--ink); cursor: pointer; padding: 0; }
+.burger {
+  display: none; background: none; border: 1px solid var(--line-2); color: var(--ink-2);
+  width: 34px; height: 30px; border-radius: 6px; cursor: pointer; font-size: 14px; line-height: 1;
+}
+.top .right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+.pill {
+  font-family: var(--f-mono); font-size: 0.68rem; color: var(--ink-2);
+  border: 1px solid var(--line-2); border-radius: 999px; padding: 4px 11px;
+  font-variant-numeric: tabular-nums;
+}
+.top .right button {
+  background: none; border: 0; cursor: pointer; font-family: var(--f-sans);
+  font-size: 0.65rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3);
+}
+.top .right button:hover { color: var(--accent); }
+
+/* ---------- shell ---------- */
+.shell { display: grid; grid-template-columns: var(--rail) minmax(0, 1fr); align-items: start; }
+
+.rail {
+  position: sticky; top: calc(54px + env(safe-area-inset-top, 0px));
+  height: calc(100vh - 54px - env(safe-area-inset-top, 0px));
+  overflow-y: auto;
+  border-right: 1px solid var(--line);
+  background: var(--panel);
+  padding: 18px 0 40px;
+}
+.rail .grp { padding: 14px 18px 6px; }
+.rail .grp .label { display: block; }
+.rail a, .rail button.nav {
+  display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center;
+  width: 100%; text-align: left; background: none; border: 0; cursor: pointer;
+  font: inherit; color: var(--ink-2); padding: 7px 18px; text-decoration: none;
+  border-left: 2px solid transparent;
+}
+.rail button.nav:hover { color: var(--ink); background: var(--panel-2); }
+.rail button.nav[aria-current="true"] { color: var(--accent); border-left-color: var(--accent); background: var(--accent-soft); }
+.rail .wn { font-family: var(--f-mono); font-size: 0.68rem; color: var(--ink-3); }
+.rail .nm { font-size: 0.94rem; }
+
+.main {
+  min-width: 0;
+  padding-left: max(28px, env(safe-area-inset-left, 0px));
+  padding-right: max(28px, env(safe-area-inset-right, 0px));
+  padding-block: 0 80px;
+}
+
+/* ---------- home ---------- */
+.hero { padding-block: clamp(44px, 8vw, 86px) clamp(30px, 5vw, 54px); max-width: 60ch; }
+.hero h1 { font-size: clamp(2.4rem, 5.6vw, 3.6rem); line-height: 1.04; }
+.hero p { color: var(--ink-2); font-size: 1.1rem; margin: 20px 0 32px; }
+.cta { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn {
+  font-family: var(--f-sans); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.15em;
+  text-transform: uppercase; padding: 13px 24px; cursor: pointer; border-radius: 7px;
+  border: 1px solid var(--accent); background: var(--accent); color: #141008;
+}
+.btn:hover { filter: brightness(1.08); }
+.btn.ghost { background: none; color: var(--accent); }
+.btn.ghost:hover { background: var(--accent-soft); filter: none; }
+
+.grid4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.grid4 div { background: var(--panel); padding: 18px 20px; }
+.grid4 b { display: block; font-family: var(--f-display); font-size: 2.1rem; font-weight: 500; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+.grid4 span { font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+
+/* ---------- lesson ---------- */
+.lessongrid { display: grid; grid-template-columns: minmax(0, 68ch) 190px; gap: 48px; align-items: start; }
+.crumb { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; padding-block: 24px 0; }
+.crumb i { color: var(--line-2); font-style: normal; }
+.lessongrid h1 { font-size: clamp(2rem, 4.6vw, 2.8rem); margin-top: 12px; line-height: 1.08; }
+
+.obj { margin-top: 24px; display: flex; gap: 10px; flex-wrap: wrap; }
+.chip {
+  font-size: 0.78rem; color: var(--ink-2); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 999px; padding: 5px 13px;
+}
+
+.prose { margin-top: 30px; }
+.prose > * + * { margin-top: 1.4em; }
+.prose p { margin: 0; }
+.prose strong { font-weight: 500; color: #fff; }
+.prose h2 { font-size: 1.6rem; margin-top: 2.2em; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.prose h2 + * { margin-top: 0.9em; }
+
+.key { margin-top: 2em; padding: 16px 20px; background: var(--panel); border-left: 2px solid var(--accent); border-radius: 0 8px 8px 0; }
+.key .label { display: block; color: var(--accent); margin-bottom: 6px; }
+.key p { color: var(--ink-2); font-size: 0.97rem; }
+
+pre {
+  font-family: var(--f-mono); font-size: 0.74rem; line-height: 1.8; margin: 0;
+  background: var(--panel); color: var(--ink-2); padding: 18px; overflow-x: auto;
+  border: 1px solid var(--line); border-radius: 9px;
+}
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.93rem; }
+th, td { text-align: left; padding: 10px 14px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
+td:first-child { color: var(--ink-3); }
+
+/* on this page */
+.toc { position: sticky; top: calc(78px + env(safe-area-inset-top, 0px)); }
+.toc .label { display: block; margin-bottom: 12px; }
+.toc a { display: block; color: var(--ink-3); text-decoration: none; font-size: 0.86rem; padding: 5px 0 5px 12px; border-left: 1px solid var(--line); }
+.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+
+footer { border-top: 1px solid var(--line); margin-top: 60px; padding-top: 24px; color: var(--ink-3); font-size: 0.84rem; }
+
+@media (max-width: 1080px) { .lessongrid { grid-template-columns: minmax(0, 1fr); } .toc { display: none; } }
+@media (max-width: 860px) {
+  .burger { display: block; }
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .rail {
+    position: fixed; z-index: 35; left: 0; width: min(300px, 86vw);
+    top: calc(54px + env(safe-area-inset-top, 0px));
+    transform: translateX(-102%); transition: transform 0.22s ease;
+    box-shadow: 0 0 40px rgba(0,0,0,0.6);
+  }
+  .rail[data-open="1"] { transform: none; }
+  .main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<header class="top">
+  <button class="burger" id="burger" aria-label="Course menu">☰</button>
+  <button class="brand" data-go="home">Tracesmith</button>
+  <span class="right">
+    <span class="pill">65 / 156</span>
+    <button data-go="home">Labs</button>
+    <button data-go="home">Review</button>
+  </span>
+</header>
+
+<div class="shell">
+  <aside class="rail" id="rail">
+    <div class="grp"><span class="label">Phase 3 · Quality assurance</span></div>
+    <button class="nav" data-go="lesson"><span class="nm">Thinking like a tester</span><span class="wn">W09</span></button>
+    <button class="nav" data-go="lesson"><span class="nm">Test cases and coverage</span><span class="wn">W10</span></button>
+    <button class="nav" data-go="lesson" aria-current="true"><span class="nm">Bugs</span><span class="wn">W11</span></button>
+    <button class="nav" data-go="lesson"><span class="nm">Testing the web</span><span class="wn">W12</span></button>
+    <button class="nav" data-go="lesson"><span class="nm">API and data testing</span><span class="wn">W13</span></button>
+    <button class="nav" data-go="lesson"><span class="nm">Security testing basics</span><span class="wn">W14</span></button>
+    <button class="nav" data-go="lesson"><span class="nm">Automated testing</span><span class="wn">W15</span></button>
+    <div class="grp" style="margin-top:12px"><span class="label">Phase 4 · Technical support</span></div>
+    <button class="nav" data-go="lesson"><span class="nm">The support function</span><span class="wn">W16</span></button>
+    <button class="nav" data-go="lesson"><span class="nm">Diagnosing</span><span class="wn">W17</span></button>
+    <button class="nav" data-go="lesson"><span class="nm">Writing and escalating</span><span class="wn">W18</span></button>
+    <button class="nav" data-go="lesson"><span class="nm">Money and systems</span><span class="wn">W19</span></button>
+    <div class="grp" style="margin-top:12px"><span class="label">Phase 5 · AI automation</span></div>
+    <button class="nav" data-go="lesson"><span class="nm">Thinking in automation</span><span class="wn">W20</span></button>
+    <button class="nav" data-go="lesson"><span class="nm">Building workflows</span><span class="wn">W21</span></button>
+    <button class="nav" data-go="lesson"><span class="nm">Reliability</span><span class="wn">W22</span></button>
+  </aside>
+
+  <main class="main">
+
+    <!-- ============ HOME ============ -->
+    <section id="v-home">
+      <div class="hero">
+        <span class="label">A free course · 26 weeks</span>
+        <h1 style="margin-top:14px">Three jobs that share a spine.</h1>
+        <p>Quality assurance, technical support and AI automation all live or die on the same skill: finding out what is actually true, and writing it down so someone else can act on it.</p>
+        <div class="cta">
+          <button class="btn" data-go="lesson">Resume week 11</button>
+          <button class="btn ghost" data-go="lesson">Browse the course</button>
+        </div>
+      </div>
+      <div class="grid4">
+        <div><b>5</b><span>Phases</span></div>
+        <div><b>26</b><span>Weeks</span></div>
+        <div><b>156</b><span>Lessons</span></div>
+        <div><b>41</b><span>Interactive figures</span></div>
+      </div>
+      <footer>Tracesmith — design sample 4 of 5 · “Studio”. An application shell: the course is always on the left, so you never lose your place.</footer>
+    </section>
+
+    <!-- ============ LESSON ============ -->
+    <section id="v-lesson" hidden>
+      <div class="lessongrid">
+        <article>
+          <div class="crumb"><span class="label">Week 11 · Bugs</span><i>/</i><span class="label">Day 5</span></div>
+          <h1>Writing a report that needs no follow-up</h1>
+          <div class="obj">
+            <span class="chip">Write all seven sections</span>
+            <span class="chip">Title a bug so it is findable</span>
+            <span class="chip">Pass the no-questions test</span>
+          </div>
+
+          <div class="prose">
+            <p>This is the most valuable thing a tester produces. Not the bug — the report.</p>
+            <p>The standard is one sentence long: <strong>an engineer should be able to act on it without asking you anything.</strong></p>
+
+            <h2 id="s-shape">The shape</h2>
+            <pre>Title       Applying the same discount code twice stacks
+            the reduction (cart)
+
+Environment Meridian sandbox, stage 3 · Chrome 131 · 7 Nov
+
+Steps       1. Add Harmattan Field Jacket to the cart
+            2. Enter SAVE10 and click Apply
+            3. Enter SAVE10 again and click Apply
+
+Expected    Refused; the total stays at NGN 43,650.00
+Actual      Accepted; the total drops to NGN 38,800.00
+
+Severity    Critical          Priority  Highest</pre>
+            <p>Read it as an engineer: you know what to do, where to go, what you will see, and what it should have been.</p>
+
+            <h2 id="s-title">The title does most of the work</h2>
+            <div class="tablewrap">
+              <table>
+                <thead><tr><th>Weak</th><th>Strong</th></tr></thead>
+                <tbody>
+                  <tr><td>Discount bug</td><td>Same code applied twice stacks the reduction</td></tr>
+                  <tr><td>Cart broken</td><td>Cart total ignores quantity for items added twice</td></tr>
+                  <tr><td>Payment issue</td><td>Double-clicking Place order charges twice</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="key">
+              <span class="label">The sentence people leave out</span>
+              <p>When severity and priority differ, say why. One line prevents the argument — without it, someone reads “Critical” and “Low” together and comes to ask.</p>
+            </div>
+
+            <h2 id="s-tone">Tone</h2>
+            <p>You are describing a system, never a person. “Applying the same code twice stacks the reduction” gets fixed faster than “you broke the discount logic” — because a report that reads as an accusation invites a defence, and a defence is a delay.</p>
+          </div>
+
+          <footer>Tracesmith — design sample 4 of 5 · “Studio”. Brass on near-black, with a persistent course rail.</footer>
+        </article>
+
+        <nav class="toc">
+          <span class="label">On this page</span>
+          <a href="#s-shape">The shape</a>
+          <a href="#s-title">The title</a>
+          <a href="#s-tone">Tone</a>
+        </nav>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+(function () {
+  var views = { home: document.getElementById('v-home'), lesson: document.getElementById('v-lesson') };
+  var rail = document.getElementById('rail');
+  function show(name) {
+    if (!views[name]) name = 'home';
+    for (var k in views) views[k].hidden = (k !== name);
+    rail.dataset.open = '0';
+    window.scrollTo(0, 0);
+    try { history.replaceState(null, '', '#' + name); } catch (e) {}
+  }
+  document.addEventListener('click', function (e) {
+    if (e.target.id === 'burger') { rail.dataset.open = rail.dataset.open === '1' ? '0' : '1'; return; }
+    var t = e.target.closest('[data-go]');
+    if (!t) return;
+    e.preventDefault();
+    if (t.classList.contains('nav')) {
+      document.querySelectorAll('.rail .nav').forEach(function (b) { b.removeAttribute('aria-current'); });
+      t.setAttribute('aria-current', 'true');
+    }
+    show(t.dataset.go);
+  });
+  var start = (location.hash || '').replace('#', '');
+  show(views[start] ? start : 'home');
+})();
+</script>

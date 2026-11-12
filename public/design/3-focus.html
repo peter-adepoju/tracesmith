@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+<title>Tracesmith Focus</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600&family=Jost:wght@300;400;500&family=JetBrains+Mono:wght@400&display=swap">
+
+<style>
+/* Layout: one idea per screen. A lesson is a short sequence you step
+   through, not a long page you scroll. Almost no chrome; a segmented
+   hairline carries the only progress signal. */
+:root {
+  --bg: #fbfbf9;
+  --bg-2: #f1f1ed;
+  --ink: #15171a;
+  --ink-2: #53575e;
+  --ink-3: #93979e;
+  --rule: #e2e2dc;
+  --accent: #1d6b53;      /* deep green ink */
+  --accent-soft: #e4efe9;
+
+  --f-display: "Cormorant Garamond", Georgia, serif;
+  --f-sans: "Jost", "Helvetica Neue", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-sans);
+  font-weight: 300;
+  font-size: 17px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px); z-index: 20; background: var(--bg);
+}
+
+.gut {
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+.label {
+  font-size: 0.65rem; font-weight: 500; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+
+h1, h2 { font-family: var(--f-display); font-weight: 500; margin: 0; text-wrap: balance; letter-spacing: -0.008em; }
+
+button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
+
+/* ---------- minimal bar ---------- */
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 19;
+  background: var(--bg);
+  display: flex; align-items: center; gap: 18px;
+  padding-block: 15px; border-bottom: 1px solid var(--rule);
+}
+.brand {
+  font-family: var(--f-display); font-size: 1.35rem; font-weight: 600;
+  background: none; border: 0; padding: 0; cursor: pointer; color: var(--ink);
+}
+.bar nav { margin-left: auto; display: flex; gap: 20px; }
+.bar nav button {
+  background: none; border: 0; padding: 0; cursor: pointer; font-family: var(--f-sans);
+  font-size: 0.65rem; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3);
+}
+.bar nav button:hover, .bar nav button[aria-current="true"] { color: var(--accent); }
+
+.page { max-width: 900px; margin: 0 auto; }
+
+/* ---------- home ---------- */
+.hero { padding-block: clamp(60px, 13vw, 130px) clamp(40px, 7vw, 70px); }
+.hero h1 { font-size: clamp(2.8rem, 8vw, 5rem); line-height: 1; max-width: 15ch; }
+.hero p { font-size: clamp(1.05rem, 2.2vw, 1.3rem); color: var(--ink-2); max-width: 50ch; margin: 26px 0 38px; }
+.cta { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn {
+  font-family: var(--f-sans); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.16em;
+  text-transform: uppercase; padding: 15px 30px; border: 1px solid var(--accent);
+  background: var(--accent); color: #fff; cursor: pointer; border-radius: 999px;
+}
+.btn:hover { opacity: 0.88; }
+.btn.ghost { background: none; color: var(--accent); }
+.btn.ghost:hover { background: var(--accent-soft); opacity: 1; }
+
+.three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px; padding-block: 20px 90px; border-top: 1px solid var(--rule); padding-top: 40px; }
+.three h2 { font-size: 1.45rem; }
+.three p { color: var(--ink-3); font-size: 0.95rem; margin: 8px 0 0; }
+
+/* ---------- course ---------- */
+.list { padding-block: 34px 90px; }
+.item {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 18px; align-items: center;
+  width: 100%; padding: 20px 0; border: 0; border-bottom: 1px solid var(--rule);
+  background: none; text-align: left; font: inherit; color: inherit; cursor: pointer;
+}
+.item:hover .it { color: var(--accent); }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--rule); }
+.dot.done { background: var(--accent); }
+.dot.now { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.it { font-family: var(--f-display); font-size: 1.4rem; }
+.ic { font-family: var(--f-mono); font-size: 0.72rem; color: var(--ink-3); white-space: nowrap; }
+
+/* ---------- the stepper ---------- */
+.deck { padding-block: 18px 40px; }
+.deckhead { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.segs { display: flex; gap: 4px; margin-left: auto; }
+.segs i { width: 26px; height: 3px; background: var(--rule); border-radius: 2px; transition: background 0.25s; }
+.segs i.on { background: var(--accent); }
+
+.card { padding-block: clamp(34px, 7vw, 70px) 20px; min-height: 52vh; }
+.card .label { display: block; margin-bottom: 18px; }
+.card h2 { font-size: clamp(2rem, 5.2vw, 3.1rem); line-height: 1.06; max-width: 18ch; }
+.card .say { font-size: clamp(1.1rem, 2.4vw, 1.4rem); color: var(--ink-2); max-width: 46ch; margin: 22px 0 0; }
+.card .say + .say { margin-top: 16px; }
+.card .say strong { font-weight: 500; color: var(--ink); }
+
+pre {
+  font-family: var(--f-mono); font-size: 0.74rem; line-height: 1.8;
+  background: var(--bg-2); color: var(--ink-2); padding: 22px; overflow-x: auto;
+  margin: 26px 0 0; border-radius: 10px;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; margin-top: 26px; }
+.pair > div { padding-top: 12px; border-top: 1px solid var(--rule); }
+.pair > div + div { border-top-color: var(--accent); }
+.pair h3 { font-family: var(--f-sans); font-size: 0.65rem; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 10px; }
+.pair ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 9px; }
+.pair li { font-size: 0.97rem; color: var(--ink-2); }
+.pair > div + div li { color: var(--ink); }
+
+.pull {
+  margin-top: 30px; font-family: var(--f-display); font-size: clamp(1.4rem, 3.4vw, 2rem);
+  line-height: 1.3; color: var(--accent); max-width: 24ch;
+}
+
+.steps {
+  position: sticky; bottom: 0;
+  display: flex; align-items: center; gap: 14px;
+  padding-block: 16px; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  background: var(--bg); border-top: 1px solid var(--rule);
+}
+.steps .count { font-family: var(--f-mono); font-size: 0.72rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.steps .sp { margin-left: auto; display: flex; gap: 10px; }
+.nav {
+  font-family: var(--f-sans); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.14em;
+  text-transform: uppercase; padding: 12px 22px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--rule); background: none; color: var(--ink-2);
+}
+.nav:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); }
+.nav[disabled] { opacity: 0.35; cursor: default; }
+.nav.go { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.nav.go:hover { background: var(--accent); border-color: var(--accent); }
+
+footer { border-top: 1px solid var(--rule); padding-block: 26px 44px; color: var(--ink-3); font-size: 0.85rem; }
+
+@media (max-width: 680px) {
+  .three { grid-template-columns: 1fr; gap: 28px; }
+  .pair { grid-template-columns: 1fr; gap: 22px; }
+  .item { grid-template-columns: auto 1fr; }
+  .ic { grid-column: 2; }
+  .segs i { width: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="page gut">
+  <header class="bar">
+    <button class="brand" data-go="home">Tracesmith</button>
+    <nav>
+      <button data-go="home">Home</button>
+      <button data-go="course">Course</button>
+      <button data-go="lesson">Lesson</button>
+    </nav>
+  </header>
+
+  <!-- ============ HOME ============ -->
+  <section id="v-home">
+    <div class="hero">
+      <span class="label">A free course · 156 lessons</span>
+      <h1 style="margin-top:18px">One idea at a time.</h1>
+      <p>Quality assurance, technical support and AI automation — taught in short daily steps instead of long pages, so you finish what you start.</p>
+      <div class="cta">
+        <button class="btn" data-go="lesson">Start day 1</button>
+        <button class="btn ghost" data-go="course">See the course</button>
+      </div>
+    </div>
+    <div class="three">
+      <div><h2>Short by design</h2><p>Every lesson is six or seven steps. Twenty minutes, and you are done for the day.</p></div>
+      <div><h2>Nothing to scroll past</h2><p>One idea per screen. No walls of boxes competing for the same attention.</p></div>
+      <div><h2>You keep the proof</h2><p>Bug reports, API cases, a security sweep, a working test suite — artefacts, not a certificate.</p></div>
+    </div>
+  </section>
+
+  <!-- ============ COURSE ============ -->
+  <section id="v-course" hidden>
+    <div class="list">
+      <span class="label">Phase 3 · Quality assurance</span>
+      <h1 style="font-size:clamp(2rem,5vw,2.8rem); margin:12px 0 26px">Weeks 9 to 15</h1>
+      <button class="item" data-go="lesson"><i class="dot done"></i><span class="it">Thinking like a tester</span><span class="ic">WEEK 9 · 6/6</span></button>
+      <button class="item" data-go="lesson"><i class="dot done"></i><span class="it">Test cases and coverage</span><span class="ic">WEEK 10 · 6/6</span></button>
+      <button class="item" data-go="lesson"><i class="dot now"></i><span class="it">Bugs</span><span class="ic">WEEK 11 · 4/6</span></button>
+      <button class="item" data-go="lesson"><i class="dot"></i><span class="it">Testing the web</span><span class="ic">WEEK 12 · 0/6</span></button>
+      <button class="item" data-go="lesson"><i class="dot"></i><span class="it">API and data testing</span><span class="ic">WEEK 13 · 0/6</span></button>
+      <button class="item" data-go="lesson"><i class="dot"></i><span class="it">Security testing basics</span><span class="ic">WEEK 14 · 0/6</span></button>
+      <button class="item" data-go="lesson"><i class="dot"></i><span class="it">Automated testing</span><span class="ic">WEEK 15 · 0/6</span></button>
+    </div>
+  </section>
+
+  <!-- ============ LESSON (stepper) ============ -->
+  <section id="v-lesson" hidden>
+    <div class="deck">
+      <div class="deckhead">
+        <span class="label">Week 11 · Bugs · Day 5</span>
+        <span class="segs" id="segs"></span>
+      </div>
+
+      <div class="card" data-step>
+        <span class="label">The lesson</span>
+        <h2>Writing a report that needs no follow-up</h2>
+        <p class="say">This is the most valuable thing a tester produces. Not the bug — the report.</p>
+        <p class="say">The standard is one sentence long: <strong>an engineer should be able to act on it without asking you anything.</strong></p>
+      </div>
+
+      <div class="card" data-step hidden>
+        <span class="label">Step 2 · The shape</span>
+        <h2>Seven sections, every time</h2>
+        <pre>Title       Applying the same discount code twice
+            stacks the reduction (cart)
+
+Environment Meridian sandbox · Chrome 131 · 7 Nov
+
+Steps       1. Add the jacket to the cart
+            2. Enter SAVE10 and click Apply
+            3. Enter SAVE10 again and click Apply
+
+Expected    Refused. Total stays NGN 43,650.00
+Actual      Accepted. Total drops to NGN 38,800.00
+
+Severity    Critical      Priority   Highest</pre>
+      </div>
+
+      <div class="card" data-step hidden>
+        <span class="label">Step 3 · The title</span>
+        <h2>It is read in a list of a hundred</h2>
+        <p class="say">The pattern: <strong>what happens, where, and under what condition.</strong></p>
+        <div class="pair">
+          <div>
+            <h3>Weak</h3>
+            <ul><li>Discount bug</li><li>Cart broken</li><li>Payment issue</li><li>Urgent!!</li></ul>
+          </div>
+          <div>
+            <h3>Strong</h3>
+            <ul>
+              <li>Same code applied twice stacks the reduction</li>
+              <li>Cart total ignores quantity for items added twice</li>
+              <li>Double-clicking Place order charges twice</li>
+              <li>POST /payments returns 500 above 1,000,000</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" data-step hidden>
+        <span class="label">Step 4 · The one people skip</span>
+        <h2>When severity and priority differ, say why</h2>
+        <p class="pull">“Critical severity, low priority: only two internal users reach it and exporting in two halves works.”</p>
+        <p class="say">Without that line, someone reads the two ratings together, decides one of them is a mistake, and comes to ask. With it, the trade-off is visible and already agreed.</p>
+      </div>
+
+      <div class="card" data-step hidden>
+        <span class="label">Step 5 · Tone</span>
+        <h2>Describe the system, never the person</h2>
+        <div class="pair">
+          <div>
+            <h3>Avoid</h3>
+            <ul><li>You broke the discount logic</li><li>Obviously nobody tested this</li><li>Why does this keep happening?</li></ul>
+          </div>
+          <div>
+            <h3>Prefer</h3>
+            <ul><li>Applying the same code twice stacks the reduction</li><li>Not covered by existing cases; I have added DISC-003</li><li>Third discount defect this sprint — worth a look at that area?</li></ul>
+          </div>
+        </div>
+        <p class="say" style="margin-top:26px">The right-hand column gets fixed faster. Not because engineers are fragile, but because a report that reads as an accusation invites a defence, and a defence is a delay.</p>
+      </div>
+
+      <div class="card" data-step hidden>
+        <span class="label">Step 6 · Before you file</span>
+        <h2>Is there a credential in it?</h2>
+        <p class="say">A report that leaks a key is <strong>worse than no report at all</strong>. The bug would have waited; the exposure does not — the key now lives in a ticket system and its backups, and it has to be rotated.</p>
+        <p class="say">Check the evidence for tokens, card numbers, passwords and session cookies before it leaves your hands.</p>
+      </div>
+
+      <div class="card" data-step hidden>
+        <span class="label">Done</span>
+        <h2>Tomorrow: three bug reports, written and graded</h2>
+        <p class="say">You can now write all seven sections, title a bug so it is findable, and judge your own report against the no-questions test.</p>
+        <div class="cta" style="margin-top:30px">
+          <button class="btn" data-go="course">Back to week 11</button>
+        </div>
+      </div>
+
+      <div class="steps">
+        <span class="count" id="count">1 / 7</span>
+        <span class="sp">
+          <button class="nav" id="prev">Back</button>
+          <button class="nav go" id="next">Next</button>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <footer>Tracesmith — design sample 3 of 5 · “Focus”. A lesson as six or seven steps instead of one long page. Use ← and → to move.</footer>
+</div>
+
+<script>
+(function () {
+  var views = { home: document.getElementById('v-home'), course: document.getElementById('v-course'), lesson: document.getElementById('v-lesson') };
+  var navs = document.querySelectorAll('.bar nav button');
+  var cards = [].slice.call(document.querySelectorAll('[data-step]'));
+  var segs = document.getElementById('segs');
+  var count = document.getElementById('count');
+  var prev = document.getElementById('prev');
+  var next = document.getElementById('next');
+  var i = 0;
+
+  cards.forEach(function () { segs.appendChild(document.createElement('i')); });
+  var bars = [].slice.call(segs.children);
+
+  function step(n) {
+    i = Math.max(0, Math.min(cards.length - 1, n));
+    cards.forEach(function (c, k) { c.hidden = (k !== i); });
+    bars.forEach(function (b, k) { b.classList.toggle('on', k <= i); });
+    count.textContent = (i + 1) + ' / ' + cards.length;
+    prev.disabled = (i === 0);
+    next.textContent = (i === cards.length - 1) ? 'Finish' : 'Next';
+    window.scrollTo(0, 0);
+  }
+
+  function show(name) {
+    if (!views[name]) name = 'home';
+    for (var k in views) views[k].hidden = (k !== name);
+    navs.forEach(function (b) { b.setAttribute('aria-current', String(b.dataset.go === name)); });
+    if (name === 'lesson') step(0);
+    window.scrollTo(0, 0);
+    try { history.replaceState(null, '', '#' + name); } catch (e) {}
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-go]');
+    if (t) { e.preventDefault(); show(t.dataset.go); return; }
+    if (e.target.id === 'next') { (i === cards.length - 1) ? show('course') : step(i + 1); }
+    if (e.target.id === 'prev') step(i - 1);
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (views.lesson.hidden) return;
+    if (e.key === 'ArrowRight') step(i + 1);
+    if (e.key === 'ArrowLeft') step(i - 1);
+  });
+
+  var start = (location.hash || '').replace('#', '');
+  show(views[start] ? start : 'home');
+})();
+</script>
+
