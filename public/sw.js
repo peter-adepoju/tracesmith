@@ -13,7 +13,7 @@
  *     point of installing this on a phone.
  */
 
-const VERSION = "tracesmith-v1";
+const VERSION = "tracesmith-v2";
 const SHELL = `${VERSION}-shell`;
 const PAGES = `${VERSION}-pages`;
 const ASSETS = `${VERSION}-assets`;

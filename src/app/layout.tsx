@@ -2,8 +2,29 @@ import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, JetBrains_Mono, Jost } from "next/font/google";
 import "./globals.css";
 import { SiteChrome } from "@/components/SiteChrome";
-import { InstallPrompt } from "@/components/mobile/InstallPrompt";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { ServiceWorkerRegister } from "@/components/mobile/ServiceWorkerRegister";
+
+/**
+ * Catch beforeinstallprompt before anything else runs.
+ *
+ * The browser fires it once, early — on desktop, before React has hydrated —
+ * so a listener added inside a component misses it entirely and the app looks
+ * uninstallable when it is not. This runs inline, ahead of hydration, parks
+ * the event on window and announces it; useInstall reads both.
+ */
+const CAPTURE_INSTALL = `(function(){
+  window.__tsInstall = null;
+  addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    window.__tsInstall = e;
+    dispatchEvent(new Event('ts:installable'));
+  });
+  addEventListener('appinstalled', function () {
+    window.__tsInstall = null;
+    dispatchEvent(new Event('ts:installed'));
+  });
+})();`;
 
 /* Self-hosted by next/font, so they are part of the build and keep working
    offline in the installed app — a Google Fonts link would not. */
@@ -73,6 +94,9 @@ export default function RootLayout({
       lang="en"
       className={`${display.variable} ${sans.variable} ${mono.variable}`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: CAPTURE_INSTALL }} />
+      </head>
       <body className="min-h-dvh">
         <SiteChrome>{children}</SiteChrome>
         <InstallPrompt />

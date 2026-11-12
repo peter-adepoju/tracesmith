@@ -1,13 +1,15 @@
 {
+  "id": "/",
   "name": "Tracesmith",
   "short_name": "Tracesmith",
-  "description": "QA testing, technical support and AI automation, from zero. One merged path, 156 days.",
+  "description": "QA testing, technical support and AI automation, from zero. One merged path, 26 weeks.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
-  "background_color": "#14130f",
-  "theme_color": "#14130f",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#0a0a0b",
+  "theme_color": "#111113",
+  "launch_handler": { "client_mode": "focus-existing" },
   "categories": ["education", "productivity"],
   "icons": [
     {
@@ -31,9 +33,9 @@
   ],
   "shortcuts": [
     {
-      "name": "Today's lesson",
-      "short_name": "Lesson",
-      "url": "/day/1/1",
+      "name": "Course",
+      "short_name": "Course",
+      "url": "/course",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {

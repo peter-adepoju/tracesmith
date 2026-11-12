@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AuthBadge } from "@/components/AuthBadge";
+import { InstallButton } from "@/components/InstallButton";
 import { MobileNav } from "@/components/mobile/MobileNav";
 
 /**
@@ -52,6 +53,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
                 {link.label}
               </Link>
             ))}
+            <InstallButton />
             <AuthBadge />
           </nav>
 
