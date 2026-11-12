@@ -10,7 +10,7 @@ export function Terms({
   items: { term: string; meaning: string }[];
 }) {
   return (
-    <section className="my-8 rounded-xl border border-border bg-surface p-4">
+    <section className="my-8 border-t border-border pt-4">
       <h3 className="!mt-0 text-sm font-semibold uppercase tracking-wider text-muted">
         New words
       </h3>

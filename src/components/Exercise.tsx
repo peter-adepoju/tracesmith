@@ -52,7 +52,7 @@ export function Exercise({
   const selfMarked = !accept || accept.length === 0;
 
   return (
-    <section className="my-7 rounded-xl border border-border bg-surface p-4">
+    <section className="my-7 border-l-2 border-accent-soft pl-5">
       <div className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
         Exercise
       </div>

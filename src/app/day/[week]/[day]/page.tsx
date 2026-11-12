@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LESSONS } from "@content/registry";
+import { CourseRail } from "@/components/CourseRail";
 import { LessonFooter } from "@/components/LessonFooter";
 import { LessonProvider } from "@/components/LessonContext";
 import { WEEKS, dayKey, getDay, getWeek, neighbours, phaseOf } from "@/lib/curriculum";
@@ -43,7 +44,12 @@ export default async function DayPage({
   const { index, total } = neighbours(weekNumber, dayNumber);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
+    <div className="mx-auto grid max-w-6xl lg:grid-cols-[264px_minmax(0,1fr)]">
+      <CourseRail currentWeek={weekNumber} />
+
+      {/* Capped at a reading measure: the rail takes the width a wide screen
+          would otherwise spend making lines too long to track. */}
+      <main className="min-w-0 max-w-[72ch] px-4 py-10 lg:px-10">
       <nav className="no-touch-target flex items-center gap-1.5 text-xs text-muted">
         <Link href="/" className="hover:text-text">
           Course
@@ -58,30 +64,30 @@ export default async function DayPage({
         <Link href={`/#week-${week.n}`} className="hover:text-text">
           Week {week.n}
         </Link>
-        <span className="ml-auto shrink-0 font-mono">
+        {/* Brass, because this is progress rather than navigation. */}
+        <span className="ml-auto shrink-0 rounded-full bg-prog-soft px-2.5 py-0.5 font-mono text-[0.6875rem] tabular-nums text-prog">
           {index + 1}/{total}
         </span>
       </nav>
 
-      <header className="mt-4">
-        <p className="text-sm text-muted">
+      <header className="mt-5">
+        <p className="text-[0.625rem] font-medium uppercase tracking-[0.18em] text-muted">
           Week {week.n} · {week.title} · Day {day.n}
         </p>
-        <h1 className="mt-1.5 text-3xl font-semibold tracking-tight">
+        <h1 className="mt-2.5 text-[clamp(2rem,4.6vw,2.9rem)] leading-[1.07]">
           {day.title}
         </h1>
       </header>
 
-      <section className="mt-6 rounded-xl border border-border bg-surface p-4">
-        <h2 className="!mt-0 text-xs font-semibold uppercase tracking-wider text-muted">
+      {/* A quiet aside, not a card: the objectives should not outweigh the
+          first paragraph of the lesson. */}
+      <section className="mt-7 border-l-2 border-accent-soft pl-5">
+        <h2 className="!mt-0 text-[0.625rem] font-medium uppercase tracking-[0.18em] text-muted">
           By the end you can
         </h2>
-        <ul className="mt-2 space-y-1 text-[0.9375rem]">
+        <ul className="mt-2 space-y-0.5 text-[0.9375rem] text-muted-2">
           {day.objectives.map((objective) => (
-            <li key={objective} className="flex gap-2">
-              <span className="text-accent">·</span>
-              <span>{objective}</span>
-            </li>
+            <li key={objective}>{objective}</li>
           ))}
         </ul>
       </section>
@@ -103,7 +109,8 @@ export default async function DayPage({
         </div>
       )}
 
-      <LessonFooter week={weekNumber} day={dayNumber} />
-    </main>
+        <LessonFooter week={weekNumber} day={dayNumber} />
+      </main>
+    </div>
   );
 }

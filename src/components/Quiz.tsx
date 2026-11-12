@@ -48,7 +48,7 @@ export function Quiz({
   );
 
   return (
-    <section className="my-10 rounded-xl border border-border bg-surface p-5">
+    <section className="my-10 border-t border-border pt-5">
       <h3 className="!mt-0 text-sm font-semibold uppercase tracking-wider text-muted">
         Check yourself
       </h3>
