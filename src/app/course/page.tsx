@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { hasLesson } from "@content/registry";
 import { CourseProgress } from "@/components/CourseProgress";
+import { PhaseDisclosure } from "@/components/PhaseDisclosure";
 import { PHASES, TOTAL_DAYS, WEEKS, dayKey } from "@/lib/curriculum";
 
 export const metadata: Metadata = {
@@ -18,15 +19,11 @@ export const metadata: Metadata = {
  * this page is where you choose a day.
  */
 export default function CoursePage() {
-  const written = WEEKS.flatMap((week) =>
-    week.days.filter((day) => hasLesson(dayKey(week.n, day.n))),
-  ).length;
-
   return (
     <main className="mx-auto max-w-5xl px-4 py-12">
       <header className="max-w-2xl">
         <p className="text-[0.625rem] font-medium uppercase tracking-[0.18em] text-muted">
-          26 weeks · {TOTAL_DAYS} days · {written} written
+          5 phases · 26 weeks · {TOTAL_DAYS} days
         </p>
         <h1 className="mt-2.5 text-[clamp(2.1rem,5vw,3.1rem)] leading-[1.05]">
           The course
@@ -42,19 +39,21 @@ export default function CoursePage() {
 
       <div className="mt-14 space-y-14">
         {PHASES.map((phase) => (
-          <section key={phase.n}>
-            <div className="border-b border-border pb-4">
-              <div className="text-[0.625rem] font-medium uppercase tracking-[0.18em] text-accent">
-                Phase {phase.n} · weeks {phase.from} to {phase.to}
-              </div>
-              <h2 className="mt-1.5 text-2xl">{phase.title}</h2>
-              <p className="mt-2 max-w-3xl text-sm text-muted">{phase.blurb}</p>
-            </div>
-
-            <div className="mt-6 space-y-8">
-              {WEEKS.filter(
-                (week) => week.n >= phase.from && week.n <= phase.to,
-              ).map((week) => (
+          <PhaseDisclosure
+            key={phase.n}
+            phase={phase.n}
+            eyebrow={`Phase ${phase.n} · weeks ${phase.from} to ${phase.to}`}
+            title={phase.title}
+            blurb={phase.blurb}
+            weeks={phase.to - phase.from + 1}
+            days={WEEKS.filter(
+              (week) => week.n >= phase.from && week.n <= phase.to,
+            ).reduce((sum, week) => sum + week.days.length, 0)}
+            defaultOpen={phase.n === 1}
+          >
+            {WEEKS.filter(
+              (week) => week.n >= phase.from && week.n <= phase.to,
+            ).map((week) => (
                 <div key={week.n} id={`week-${week.n}`} className="scroll-mt-20">
                   <h3 className="text-lg">
                     <span className="mr-2 font-mono text-sm text-muted">
@@ -100,9 +99,8 @@ export default function CoursePage() {
                     })}
                   </ol>
                 </div>
-              ))}
-            </div>
-          </section>
+            ))}
+          </PhaseDisclosure>
         ))}
       </div>
     </main>

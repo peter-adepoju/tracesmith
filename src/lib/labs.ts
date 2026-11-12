@@ -229,6 +229,174 @@ export const LABS: Lab[] = [
       },
     ],
   },
+
+  {
+    id: "meridian-money",
+    title: "Meridian: follow the money",
+    week: 11,
+    level: "intermediate",
+    summary:
+      "Three defects that all end with a wrong number. Find each one, then write the report an engineer could act on without asking you anything.",
+    trains:
+      "Checking arithmetic by hand rather than trusting a total, and writing the report that makes a defect fixable.",
+    minutes: 60,
+    stages: [
+      {
+        n: 1,
+        title: "Check every total by hand",
+        brief:
+          "A total is the easiest thing in a shop to get wrong and the hardest to notice, because a plausible number looks exactly like a correct one. Do the arithmetic yourself at every step.",
+        steps: [
+          "Add one item. Write down the price you expect and compare it with the cart.",
+          "Add the same item again. Multiply it out on paper first.",
+          "Apply SAVE10 and calculate the discount yourself before you look.",
+          "Apply SAVE10 a second time and work out what the total should now be.",
+          "For each disagreement, record the expected and the actual as exact figures.",
+        ],
+        defects: ["qty-ignored", "discount-stacks", "price-rounding"],
+      },
+      {
+        n: 2,
+        title: "Reduce each one",
+        brief:
+          "You now have three defects found by exploring. Nobody can act on twenty minutes of clicking, so cut each to the shortest sequence that still triggers it.",
+        steps: [
+          "Take one defect and write down every step you took.",
+          "Remove a step. Does it still happen? Keep removing until it stops.",
+          "Note what the removal taught you about the real cause.",
+          "Do the same for the other two.",
+          "Check whether any two are the same defect wearing different clothes.",
+        ],
+        defects: ["qty-ignored", "discount-stacks", "price-rounding"],
+      },
+      {
+        n: 3,
+        title: "Write them up",
+        brief:
+          "Three reports, to the week 11 standard. Someone who has never seen Meridian should be able to reproduce each one without asking you a single question.",
+        steps: [
+          "Write a title for each: what happens, where, under what condition.",
+          "Give the environment, the minimal steps, expected and actual with exact figures.",
+          "Rate severity and priority, and say why in one line if they differ.",
+          "Describe the system, never the person who wrote it.",
+          "Check every report for a credential before you call it finished.",
+        ],
+        defects: ["qty-ignored", "discount-stacks", "price-rounding"],
+      },
+    ],
+  },
+
+  {
+    id: "meridian-api",
+    title: "Meridian: below the screen",
+    week: 13,
+    level: "intermediate",
+    summary:
+      "Test the orders endpoint directly. The screen refuses things the server happily accepts, and the only way to see that is to stop using the screen.",
+    trains:
+      "API testing: asserting on status, shape and value, and on the side effect rather than only the response.",
+    minutes: 75,
+    stages: [
+      {
+        n: 1,
+        title: "Read the endpoint",
+        brief:
+          "Before testing an API you have to know what it promises. Use the browser console and fetch — no tool and no account needed.",
+        steps: [
+          "GET /api/meridian/products and read the shape of one product.",
+          "Note that money is an integer in minor units. 4850000 is NGN 48,500.00.",
+          "POST a valid order and record the status and the whole response body.",
+          "GET the orders list and find the order you just created.",
+          "Write down, for a valid order, what status and which fields you expect.",
+        ],
+        defects: [],
+      },
+      {
+        n: 2,
+        title: "Send what the form refuses",
+        brief:
+          "Client validation is convenience, not a control. Everything the checkout form blocks, send directly and see whether the server also refuses it.",
+        steps: [
+          "POST an order with quantity 0, then -1. Expect 422, not 201.",
+          "POST with an email that has no @ sign.",
+          "POST with no items at all, and with a productId that does not exist.",
+          "POST deliberately malformed JSON. A 500 here is a finding on its own.",
+          "After every rejection, GET the orders list and confirm nothing was created.",
+        ],
+        defects: ["qty-negative", "email-unvalidated"],
+      },
+      {
+        n: 3,
+        title: "Assert on the side effect",
+        brief:
+          "The response can be perfectly correct while the stored state is wrong. These two are invisible from the response alone, which is the whole lesson.",
+        steps: [
+          "Record a product's stock. Order two of it. Read the stock again.",
+          "Send the same order twice in quick succession and count the orders.",
+          "For each, say whether the response was correct and whether the state was.",
+          "Write the case that would have caught each, including its second call.",
+          "Decide which layer each defect belongs to: the screen, or the server.",
+        ],
+        defects: ["stock-not-decremented", "double-submit"],
+      },
+    ],
+  },
+
+  {
+    id: "meridian-regression",
+    title: "Meridian: the regression pass",
+    week: 12,
+    level: "senior",
+    summary:
+      "A change has shipped to the discount handler. You have forty minutes before the release window closes. Decide what to re-run, run it, and write the summary.",
+    trains:
+      "Choosing a regression set you can defend, and reporting what you did not test as deliberately as what you did.",
+    minutes: 60,
+    stages: [
+      {
+        n: 1,
+        title: "Choose the set",
+        brief:
+          "The change is one line in the cart's discount handler. You cannot re-run everything, so decide what to run before you run anything — and be able to say why.",
+        steps: [
+          "List what the change can reach through code, and through data.",
+          "Decide which areas are high risk regardless of what changed.",
+          "Write your set down, with a minute estimate against each.",
+          "Write down what you are deliberately not running, and why.",
+          "Check the total fits inside forty minutes before you start.",
+        ],
+        defects: [],
+      },
+      {
+        n: 2,
+        title: "Run the smoke test first",
+        brief:
+          "Ten minutes, wide and shallow: one path through every major area. If something fundamental is broken, stop and reject the build rather than testing around it.",
+        steps: [
+          "Catalogue loads and prices are formatted consistently.",
+          "A product page opens without console errors.",
+          "Add to cart updates the cart and the header.",
+          "Checkout reaches payment and an order completes.",
+          "Record pass, fail or blocked for each as you go, not at the end.",
+        ],
+        defects: ["price-rounding", "badge-stale", "console-error"],
+      },
+      {
+        n: 3,
+        title: "Run the set and write the summary",
+        brief:
+          "Now the areas you chose. Then the deliverable: a summary a release decision can be made from, including an assessment that is yours to make.",
+        steps: [
+          "Re-run the discount cases, including applying a code twice.",
+          "Check the cart total and the tax line, which the discount feeds.",
+          "Smoke the checkout path, since it is downstream of the total.",
+          "Write the counts: cases run, passed, failed, blocked.",
+          "State what you did not run and why, then give a ready or not-ready call.",
+        ],
+        defects: ["discount-stacks", "qty-ignored", "double-submit"],
+      },
+    ],
+  },
 ];
 
 /**

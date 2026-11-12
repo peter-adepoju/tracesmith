@@ -38,13 +38,8 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-5 px-4">
-          <Link href="/" className="flex items-baseline gap-2">
-            <span className="text-lg font-semibold tracking-tight">
-              Tracesmith
-            </span>
-            <span className="hidden text-xs text-muted sm:inline">
-              QA · Support · Automation
-            </span>
+          <Link href="/" className="font-display text-xl">
+            Tracesmith
           </Link>
 
           <nav className="ml-auto hidden items-center gap-1 text-sm md:flex">
