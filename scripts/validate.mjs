@@ -104,6 +104,99 @@ async function checkLabDefects(labsText, meridianText) {
   }
 }
 
+// --- 5. Manifest images must exist and be the size they claim -------------
+// Chrome does not complain about a manifest image whose declared sizes are
+// wrong — it silently ignores it, and ignores the whole screenshot set if the
+// aspect ratios disagree. So a mistyped number costs the install dialog with
+// no error anywhere. Both have happened here.
+
+/** Pixel dimensions of a PNG or JPEG, read from the file's own header. */
+function imageSize(buffer) {
+  // PNG: an 8-byte signature, then an IHDR chunk carrying width and height.
+  if (buffer.length > 24 && buffer.readUInt32BE(0) === 0x89504e47) {
+    return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
+  }
+  // JPEG: walk the marker segments to the start-of-frame, which holds them.
+  if (buffer.length > 4 && buffer.readUInt16BE(0) === 0xffd8) {
+    let offset = 2;
+    while (offset + 9 < buffer.length) {
+      if (buffer[offset] !== 0xff) return null;
+      const marker = buffer[offset + 1];
+      // SOF0 to SOF15, excluding the four that are not frame headers.
+      if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) {
+        return {
+          height: buffer.readUInt16BE(offset + 5),
+          width: buffer.readUInt16BE(offset + 7),
+        };
+      }
+      offset += 2 + buffer.readUInt16BE(offset + 2);
+    }
+  }
+  return null;
+}
+
+async function checkManifestImages(manifest) {
+  const entries = [
+    ...(manifest.icons ?? []).map((item) => ({ ...item, kind: "icon" })),
+    ...(manifest.screenshots ?? []).map((item) => ({ ...item, kind: "screenshot" })),
+  ];
+
+  const ratios = new Map();
+
+  for (const entry of entries) {
+    const file = join(root, "public", entry.src.replace(/^\//, ""));
+    let buffer;
+    try {
+      buffer = await readFile(file);
+    } catch {
+      problem("public/manifest.webmanifest", 0, `${entry.kind} ${entry.src} does not exist`);
+      continue;
+    }
+
+    const actual = imageSize(buffer);
+    if (!actual) {
+      problem("public/manifest.webmanifest", 0, `${entry.kind} ${entry.src} is not a readable PNG or JPEG`);
+      continue;
+    }
+
+    const claimed = `${actual.width}x${actual.height}`;
+    if (entry.sizes !== claimed) {
+      problem(
+        "public/manifest.webmanifest",
+        0,
+        `${entry.kind} ${entry.src} says sizes "${entry.sizes}" but is ${claimed} — the browser ignores it without saying so`,
+      );
+    }
+
+    if (entry.kind !== "screenshot") continue;
+
+    // Every screenshot of one form factor must share an aspect ratio, or the
+    // browser drops the set and shows the plain install dialog instead.
+    const ratio = actual.width / actual.height;
+    const seen = ratios.get(entry.form_factor);
+    if (seen && Math.abs(seen.ratio - ratio) > 0.01) {
+      problem(
+        "public/manifest.webmanifest",
+        0,
+        `screenshot ${entry.src} is ${claimed} but ${seen.src} is a different shape — same form_factor must mean same aspect ratio, or the whole set is dropped`,
+      );
+    } else if (!seen) {
+      ratios.set(entry.form_factor, { ratio, src: entry.src });
+    }
+
+    // The long side may be at most 2.3x the short one, and neither below 320.
+    const long = Math.max(actual.width, actual.height);
+    const short = Math.min(actual.width, actual.height);
+    if (short < 320 || long > 3840 || long > short * 2.3) {
+      problem(
+        "public/manifest.webmanifest",
+        0,
+        `screenshot ${entry.src} is ${claimed}, outside what a browser will display (320 to 3840 px, long side at most 2.3x the short)`,
+      );
+    }
+  }
+}
+
 // --- run ------------------------------------------------------------------
 const contentDir = join(root, "content");
 const weeks = (await readdir(contentDir, { withFileTypes: true }))
@@ -146,6 +239,10 @@ const meridianText = (
 ).join("\n");
 
 await checkLabDefects(labsText, meridianText);
+
+await checkManifestImages(
+  JSON.parse(await readFile(join(root, "public/manifest.webmanifest"), "utf8")),
+);
 
 if (problems.length === 0) {
   console.log(

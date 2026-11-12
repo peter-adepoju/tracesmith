@@ -11,6 +11,43 @@
   "theme_color": "#111113",
   "launch_handler": { "client_mode": "focus-existing" },
   "categories": ["education", "productivity"],
+  "screenshots": [
+    {
+      "src": "/screenshots/wide-home.jpg",
+      "sizes": "800x500",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Three jobs that share a spine: one path across QA, support and automation."
+    },
+    {
+      "src": "/screenshots/wide-course.jpg",
+      "sizes": "800x500",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Five phases, 26 weeks, 156 days, collapsible phase by phase."
+    },
+    {
+      "src": "/screenshots/wide-lesson.jpg",
+      "sizes": "800x500",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "A lesson, with the whole course on a rail beside it."
+    },
+    {
+      "src": "/screenshots/narrow-home.jpg",
+      "sizes": "750x1624",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Three jobs that share a spine: one path across QA, support and automation."
+    },
+    {
+      "src": "/screenshots/narrow-course.jpg",
+      "sizes": "750x1624",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Five phases, 26 weeks, 156 days, collapsible phase by phase."
+    }
+  ],
   "icons": [
     {
       "src": "/icon-192.png",
