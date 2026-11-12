@@ -66,9 +66,13 @@ async function checkVideoKeys(file, text, knownKeys) {
   });
 }
 
-// --- 4. Every defect a lab references must exist --------------------------
-async function checkLabDefects(labsText) {
-  const known = new Set(
+// --- 4. Every defect a lab references must exist AND be implemented -------
+// Declaring a defect is half the work; making Meridian exhibit it is the
+// other half. A declared-but-unimplemented defect never appears, which makes
+// the lab unwinnable in a way nothing else would catch — so this checks both
+// halves rather than only the declaration, as it once did.
+async function checkLabDefects(labsText, meridianText) {
+  const declared = new Set(
     [...labsText.matchAll(/^\s{2}"([a-z0-9-]+)":\s*\{$/gm)].map((m) => m[1]),
   );
   const referenced = new Set(
@@ -77,12 +81,24 @@ async function checkLabDefects(labsText) {
       .map((s) => s.trim().replace(/^["']|["']$/g, ""))
       .filter(Boolean),
   );
+
   for (const id of referenced) {
-    if (!known.has(id)) {
+    if (!declared.has(id)) {
       problem(
         "src/lib/labs.ts",
         0,
         `lab references defect "${id}" which is not in DEFECTS — the lab would be unwinnable`,
+      );
+    }
+  }
+
+  // Every declared defect must be named somewhere Meridian can act on it.
+  for (const id of declared) {
+    if (!meridianText.includes(`"${id}"`)) {
+      problem(
+        "src/lib/labs.ts",
+        0,
+        `defect "${id}" is declared but never referenced in Meridian — it can never appear, so any lab using it is unwinnable`,
       );
     }
   }
@@ -118,7 +134,18 @@ for (const week of weeks) {
 }
 
 await checkLessonsAreMapped(lessonKeys, curriculumText);
-await checkLabDefects(labsText);
+// Both files Meridian's behaviour can live in, concatenated: a defect is
+// implemented if either the API route or the catalogue names it.
+const meridianText = (
+  await Promise.all(
+    [
+      "src/app/api/meridian/[...path]/route.ts",
+      "src/app/meridian/page.tsx",
+    ].map((p) => readFile(join(root, p), "utf8")),
+  )
+).join("\n");
+
+await checkLabDefects(labsText, meridianText);
 
 if (problems.length === 0) {
   console.log(

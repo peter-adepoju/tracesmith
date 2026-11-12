@@ -103,13 +103,23 @@ export type OrderItem = { productId: string; quantity: number };
 
 export type Order = {
   id: string;
+  /** Who placed it. Without an owner, "can you read someone else's
+      order?" has no meaning, so access-control labs need this. */
+  customerId: string;
   items: OrderItem[];
   email: string;
   subtotalMinor: number;
   discountMinor: number;
   totalMinor: number;
   createdAt: string;
+  /** Internal fields. Correct behaviour never returns these to a browser;
+      the pii-overexposed defect does. */
+  internalRiskScore: number;
+  internalNote: string;
 };
+
+/** The customers a lab can act as. Switch with x-meridian-customer. */
+export const CUSTOMERS = ["cus_01", "cus_02"] as const;
 
 type Session = {
   stock: Record<string, number>;

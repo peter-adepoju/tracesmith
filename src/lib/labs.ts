@@ -149,6 +149,68 @@ export const DEFECTS: Record<string, Defect> = {
     howToFind:
       "Open the console before you navigate, not after. Red lines are evidence even when the page looks fine.",
   },
+  "order-idor": {
+    id: "order-idor",
+    title: "Any order can be read by changing the reference in the URL",
+    where:
+      "GET /api/meridian/orders/{id} with the x-meridian-customer header set to someone else.",
+    severity: "critical",
+    reasoning:
+      "Authentication was checked and ownership never was, so every order in the system is readable by anyone who can change four characters. It is personal data, and under the NDPA it is reportable.",
+    howToFind:
+      "Place an order as cus_01, note its reference, then request it again as cus_02. A correct server returns 404 for both a stranger's order and one that does not exist, so a guess reveals nothing.",
+  },
+  "admin-unauthenticated": {
+    id: "admin-unauthenticated",
+    title: "The admin orders endpoint requires no authentication at all",
+    where: "GET /api/meridian/admin/orders with no role header.",
+    severity: "critical",
+    reasoning:
+      "Every customer's order is downloadable by anyone who knows the path, with no account and nothing in any log tied to a user. This is the finding that stops a release.",
+    howToFind:
+      "Ask a developer for the route list rather than testing only what the shop happens to call, then send each route with no credentials and expect 401 or 403.",
+  },
+  "pii-overexposed": {
+    id: "pii-overexposed",
+    title: "Order responses carry internal fields that must not reach a browser",
+    where:
+      "The body of any order response: internalRiskScore and internalNote.",
+    severity: "high",
+    reasoning:
+      "An internal score and a staff note about the customer are returned to that customer's own browser. The page never draws them, which is not a defence — they are in the Network panel either way.",
+    howToFind:
+      "Read the raw response rather than the screen, and list every field the page never displays.",
+  },
+  "error-leaks-internals": {
+    id: "error-leaks-internals",
+    title: "A validation error returns the database's own message",
+    where: "POST /api/meridian/orders with an invalid email address.",
+    severity: "high",
+    reasoning:
+      "The response names the engine, the table, the constraint and a file path. That is reconnaissance handed to anyone who sends a bad address, and the customer still learns nothing actionable.",
+    howToFind:
+      "Send deliberately invalid input and read the error body, not just the status code.",
+  },
+  "slow-checkout": {
+    id: "slow-checkout",
+    title: "Placing an order takes eight seconds",
+    where: "POST /api/meridian/orders.",
+    severity: "medium",
+    reasoning:
+      "Past most default timeouts, so a client gives up while the server is still working — and a client that then retries without an idempotency key creates a second order.",
+    howToFind:
+      "Watch the timing column in the Network panel, not just the status.",
+  },
+  "flaky-orders": {
+    id: "flaky-orders",
+    title: "Checkout fails intermittently with a 503",
+    where: "POST /api/meridian/orders, roughly two attempts in five.",
+    severity: "high",
+    reasoning:
+      "Intermittent by design, so a single test run passes and the suite is called flaky rather than the product. Counting the rate is what turns it into a report that gets investigated.",
+    howToFind:
+      "Do not write 'sometimes'. Place twenty orders, count the failures, and report the rate.",
+  },
   "stock-not-decremented": {
     id: "stock-not-decremented",
     title: "Stock count does not decrease after an order is placed",
@@ -1075,6 +1137,118 @@ export const LABS: Lab[] = [
       },
     ],
   },
+
+  {
+    id: "meridian-access",
+    title: "Meridian: can you read someone else's order?",
+    week: 14,
+    level: "senior",
+    summary:
+      "Two customers, one shop. Change the id, change the role, and find out what the server checks — which is not what the screen implies.",
+    trains:
+      "Broken access control: authorisation against authentication, tenant isolation, and stopping at one proof.",
+    minutes: 70,
+    stages: [
+      {
+        n: 1,
+        title: "Establish whose is whose",
+        brief:
+          "Act as cus_01 with the x-meridian-customer header, then as cus_02. Before testing a boundary you have to know where it is.",
+        steps: [
+          "Place an order as cus_01 and note its reference.",
+          "Place a different order as cus_02 and note that reference.",
+          "List orders as each customer and confirm each sees only their own.",
+          "Write down what you expect for a stranger's reference: 404 or 403?",
+          "Say why returning 404 for both is better than 403 for one.",
+        ],
+        defects: [],
+      },
+      {
+        n: 2,
+        title: "Change the id",
+        brief:
+          "The test is one character long and it finds the most common serious defect on the web. One proof is enough; do not enumerate.",
+        steps: [
+          "As cus_02, request the order belonging to cus_01.",
+          "Record the status and whether the body is another customer's data.",
+          "Note which fields of theirs you can now read.",
+          "Stop. Do not walk further references to see how many you can get.",
+          "Say whether authentication or authorisation failed here.",
+        ],
+        defects: ["order-idor"],
+      },
+      {
+        n: 3,
+        title: "The route nobody listed",
+        brief:
+          "The shop never calls the admin endpoint, so clicking will never find it. Test the route list, not the interface.",
+        steps: [
+          "Request /api/meridian/admin/orders with no role header.",
+          "Record the status and how many customers' orders came back.",
+          "Read the response for fields a customer should never see.",
+          "Write the finding: what, scope, impact, and one proof.",
+          "Say which channel this report goes to, and which it must not.",
+        ],
+        defects: ["admin-unauthenticated", "pii-overexposed"],
+      },
+    ],
+  },
+
+  {
+    id: "meridian-flaky",
+    title: "Meridian: the intermittent one",
+    week: 22,
+    level: "senior",
+    summary:
+      "Checkout fails sometimes, and is slow when it works. Replace “sometimes” with a number, then design the retry that would survive it.",
+    trains:
+      "Measuring an intermittent failure, reading timing, and deciding what may be retried safely.",
+    minutes: 70,
+    stages: [
+      {
+        n: 1,
+        title: "Count it",
+        brief:
+          "“Sometimes” is the hardest word in a bug report and the easiest to fix. Place enough orders to turn it into a rate.",
+        steps: [
+          "Place twenty orders in a loop from the console and record each status.",
+          "Count the failures and express it as a figure out of twenty.",
+          "Read the error body: is it the same failure every time?",
+          "Check whether a failed attempt left an order behind.",
+          "Write the opening line of the report using the count, not a word.",
+        ],
+        defects: ["flaky-orders"],
+      },
+      {
+        n: 2,
+        title: "Read the clock",
+        brief:
+          "Now the slow one. Timing is a column in the Network panel and almost nobody looks at it.",
+        steps: [
+          "Place one order and record how long the request took.",
+          "Compare that with a default client timeout of five seconds.",
+          "Decide what a client that gives up at five seconds would believe.",
+          "Check whether the order exists anyway after such a timeout.",
+          "Name the state the client is in: succeeded, failed, or unknown.",
+        ],
+        defects: ["slow-checkout"],
+      },
+      {
+        n: 3,
+        title: "Design the retry",
+        brief:
+          "You have a call that fails two times in five and takes eight seconds when it works. Say exactly what you would do about it.",
+        steps: [
+          "Decide which statuses here may be retried and which may not.",
+          "Choose a timeout, an attempt count and a backoff, and justify each.",
+          "Work out the worst-case duration of your policy.",
+          "Say why this call must not be retried without an idempotency key.",
+          "Write the key you would send, and what it must be derived from.",
+        ],
+        defects: ["flaky-orders", "slow-checkout", "double-submit"],
+      },
+    ],
+  },
 ];
 
 /**
@@ -1101,6 +1275,12 @@ export const MATCHERS: Record<string, string[]> = {
   "discount-stacks": ["discount", "code", "twice", "stack", "repeat", "again"],
   "console-error": ["console", "typeerror", "uncaught", "error", "red"],
   "stock-not-decremented": ["stock", "decrement", "decrease", "after", "order", "inventory"],
+  "order-idor": ["idor", "another", "other", "ownership", "someone else", "customer", "reference"],
+  "admin-unauthenticated": ["admin", "unauthenticated", "no auth", "without", "403", "401"],
+  "pii-overexposed": ["internal", "risk", "note", "exposed", "response", "field"],
+  "error-leaks-internals": ["leak", "internal", "stack", "database", "constraint", "message"],
+  "slow-checkout": ["slow", "timeout", "seconds", "latency", "hang", "wait"],
+  "flaky-orders": ["intermittent", "flaky", "503", "sometimes", "rate", "fails"],
 };
 
 /** Returns the defect ids a free-text report plausibly describes. */

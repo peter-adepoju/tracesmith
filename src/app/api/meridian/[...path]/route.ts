@@ -27,6 +27,26 @@ function sessionIdOf(request: Request): string {
   return request.headers.get("x-meridian-session") ?? "anonymous";
 }
 
+/** Who the caller claims to be. Defaults to the first customer. */
+function customerOf(request: Request): string {
+  return request.headers.get("x-meridian-customer") ?? "cus_01";
+}
+
+function roleOf(request: Request): string {
+  return request.headers.get("x-meridian-role") ?? "customer";
+}
+
+/** Strip the internal fields unless the exposure defect is switched on. */
+function present(order: Order, defects: Set<string>) {
+  if (defects.has("pii-overexposed")) return order;
+  const { internalRiskScore, internalNote, ...safe } = order;
+  void internalRiskScore;
+  void internalNote;
+  return safe;
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 function json(body: unknown, status = 200) {
   return NextResponse.json(body, {
     status,
@@ -40,6 +60,8 @@ export async function GET(
 ) {
   const { path } = await params;
   const session = getSession(sessionIdOf(request));
+  const defects = defectsOf(request);
+  const customer = customerOf(request);
   const route = path.join("/");
 
   if (route === "products") {
@@ -51,15 +73,38 @@ export async function GET(
     });
   }
 
+  // Admin: every order, for every customer. Correct behaviour requires the
+  // admin role; with admin-unauthenticated on, the check is skipped entirely
+  // and anyone who knows the path gets the lot.
+  if (route === "admin/orders") {
+    if (!defects.has("admin-unauthenticated") && roleOf(request) !== "admin") {
+      return json(
+        { error: "forbidden", message: "Admin role required." },
+        403,
+      );
+    }
+    return json({ data: session.orders.map((o) => present(o, defects)) });
+  }
+
   if (route.startsWith("orders/")) {
     const id = path[1];
     const order = session.orders.find((item) => item.id === id);
-    if (!order) return json({ error: "not_found", message: `No order ${id}.` }, 404);
-    return json(order);
+
+    // Correct behaviour: an order you do not own is indistinguishable from
+    // one that does not exist, so a guess tells an attacker nothing. With
+    // order-idor on, ownership is never checked.
+    const mine = order && order.customerId === customer;
+    if (!order || (!mine && !defects.has("order-idor"))) {
+      return json({ error: "not_found", message: `No order ${id}.` }, 404);
+    }
+    return json(present(order, defects));
   }
 
   if (route === "orders") {
-    return json({ data: session.orders });
+    const mine = session.orders.filter(
+      (order) => order.customerId === customer || defects.has("order-idor"),
+    );
+    return json({ data: mine.map((order) => present(order, defects)) });
   }
 
   return json({ error: "unknown_endpoint", message: `No route /${route}.` }, 404);
@@ -82,6 +127,19 @@ export async function POST(
 
   if (route !== "orders") {
     return json({ error: "unknown_endpoint", message: `No route /${route}.` }, 404);
+  }
+
+  // Eight seconds is past most default timeouts, which is the point: it lets
+  // a lab exercise a retry policy against something genuinely slow.
+  if (defects.has("slow-checkout")) await sleep(8000);
+
+  // Fails roughly two times in five. Enough to be unmistakable over twenty
+  // attempts, not so much that the shop is unusable.
+  if (defects.has("flaky-orders") && Math.random() < 0.4) {
+    return json(
+      { error: "upstream_unavailable", message: "Payment provider did not respond." },
+      503,
+    );
   }
 
   let body: { items?: OrderItem[]; email?: string; discountCode?: string };
@@ -113,7 +171,15 @@ export async function POST(
     return json(
       {
         error: "validation_failed",
-        message: "A valid email address is required.",
+        // Correct behaviour says what the caller must fix and nothing about
+        // how the shop is built. error-leaks-internals returns the database's
+        // own complaint instead, which names the engine, the table and the
+        // column to anyone who sends a bad address.
+        message: defects.has("error-leaks-internals")
+          ? 'PG::CheckViolation: new row for relation "orders" violates check constraint "orders_email_format" (DETAIL: Failing row contains (ORD-xxxxx, ' +
+            email +
+            ")) at /srv/meridian/app/models/order.rb:118"
+          : "A valid email address is required.",
         fields: ["email"],
       },
       422,
@@ -144,12 +210,15 @@ export async function POST(
 
   const order: Order = {
     id: "ORD-" + Math.random().toString(36).slice(2, 8).toUpperCase(),
+    customerId: customerOf(request),
     items,
     email,
     subtotalMinor: subtotal,
     discountMinor: discount,
     totalMinor: Math.max(0, subtotal - discount),
     createdAt: new Date().toISOString(),
+    internalRiskScore: Math.round(Math.random() * 60 + 20) / 100,
+    internalNote: "Flagged for manual review on a previous order.",
   };
 
   session.orders.push(order);
@@ -162,5 +231,8 @@ export async function POST(
     }
   }
 
-  return json(order, 201);
+  // Through present(), like every other order response: the internal fields
+  // must be absent unless pii-overexposed is switched on. Returning the raw
+  // order here leaked them on every create, defect or not.
+  return json(present(order, defects), 201);
 }
