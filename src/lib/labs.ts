@@ -397,6 +397,684 @@ export const LABS: Lab[] = [
       },
     ],
   },
+
+  {
+    id: "meridian-markup",
+    title: "Meridian: read the page",
+    week: 2,
+    level: "beginner",
+    summary:
+      "Open the Elements panel on a real shop and learn to read what a page is actually made of, before you try to test one.",
+    trains:
+      "Reading HTML in DevTools, and telling what a page says from what it renders.",
+    minutes: 40,
+    stages: [
+      {
+        n: 1,
+        title: "Find the structure",
+        brief:
+          "Every page is a tree. Open Elements and find the trunk before you worry about the leaves.",
+        steps: [
+          "Open DevTools and select the Elements panel.",
+          "Find the header, the main region and the list of products.",
+          "Expand one product card and write down every element inside it.",
+          "Use the picker to click a price, and note which element it lands on.",
+          "Say in one sentence what the page would look like with CSS removed.",
+        ],
+        defects: [],
+      },
+      {
+        n: 2,
+        title: "Attributes carry the meaning",
+        brief:
+          "The tag says what something is; the attributes say which one it is and what it does. Testers live in the attributes.",
+        steps: [
+          "Find the Add to cart button and read all of its attributes.",
+          "Find an image and check whether it has an alt attribute.",
+          "Find a link and note where its href points.",
+          "Find anything with a data- attribute and work out what it is for.",
+          "Identify one element you could use to find this button reliably.",
+        ],
+        defects: [],
+      },
+      {
+        n: 3,
+        title: "What the markup already tells you",
+        brief:
+          "You have not tested anything yet and the page has already admitted to one problem. Read carefully.",
+        steps: [
+          "Find the item marked out of stock and read its card's markup.",
+          "Check whether its button is disabled, or only looks unavailable.",
+          "Try the button and see which of the two it was.",
+          "Open the console as a product page loads and read what appears.",
+          "File both as bug reports with the markup as your evidence.",
+        ],
+        defects: ["oos-addable", "console-error"],
+      },
+    ],
+  },
+
+  {
+    id: "meridian-network",
+    title: "Meridian: watch the traffic",
+    week: 5,
+    level: "beginner",
+    summary:
+      "Every click is a request. Open the Network panel and learn to read what the shop actually sends and what comes back.",
+    trains:
+      "Reading the Network panel: method, path, status, payload, and the timing of a request.",
+    minutes: 45,
+    stages: [
+      {
+        n: 1,
+        title: "One request, end to end",
+        brief:
+          "Before you look for problems, watch one ordinary request all the way through.",
+        steps: [
+          "Open the Network panel and tick Preserve log before you start.",
+          "Load the catalogue and count the requests the page makes.",
+          "Find the request that fetches the products and open it.",
+          "Read its method, path and status, then read the response body.",
+          "Write down which part of the page each field in that body became.",
+        ],
+        defects: [],
+      },
+      {
+        n: 2,
+        title: "Status and payload",
+        brief:
+          "A status tells you what kind of thing happened. A payload tells you what actually happened. You need both.",
+        steps: [
+          "Place a valid order and find the POST in the panel.",
+          "Record its status, then read every field in the request body.",
+          "Read the response body and check the total against your own arithmetic.",
+          "Note how money is represented, and why it is not a decimal.",
+          "Compare what the screen showed you with what the response said.",
+        ],
+        defects: ["price-rounding"],
+      },
+      {
+        n: 3,
+        title: "When the screen and the traffic disagree",
+        brief:
+          "The panel is the referee. Where the page and the network tell different stories, the network is the one to believe.",
+        steps: [
+          "Add an item and watch the header count as the request completes.",
+          "Reload, and see whether the header now agrees with the cart.",
+          "Decide from the traffic whether the data or the display is wrong.",
+          "Add the same item twice and check the total against the payload.",
+          "File each one, saying which side of the screen the defect is on.",
+        ],
+        defects: ["badge-stale", "qty-ignored"],
+      },
+    ],
+  },
+
+  {
+    id: "meridian-console",
+    title: "Meridian: the console and what is stored",
+    week: 6,
+    level: "beginner",
+    summary:
+      "Errors nobody reads, and the data a site keeps in your browser. Two panels, and both are checked in seconds.",
+    trains:
+      "Treating console errors as defects, and auditing what a product stores client-side.",
+    minutes: 35,
+    stages: [
+      {
+        n: 1,
+        title: "Open the console first",
+        brief:
+          "A console error that nobody looks at is a bug nobody files. Open it before you load the page, not after.",
+        steps: [
+          "Open the console and clear it.",
+          "Load a product page and read everything that appears.",
+          "Note the error type, the message, and the file and line.",
+          "Decide whether the page still works despite it.",
+          "Write the report, with the stack as evidence.",
+        ],
+        defects: ["console-error"],
+      },
+      {
+        n: 2,
+        title: "What the shop keeps",
+        brief:
+          "Open Application and look at storage. You are checking for anything that should not be sitting in a browser.",
+        steps: [
+          "List every key in localStorage and sessionStorage.",
+          "For each, say in a word what it is for.",
+          "Look for anything that resembles a credential or personal data.",
+          "Check the cookies, and note any flags you can see.",
+          "Say which of these would matter on a shared computer.",
+        ],
+        defects: [],
+      },
+      {
+        n: 3,
+        title: "State that outlives the page",
+        brief:
+          "Stored state is where stale data hides. Change something, reload, and see whether the two agree.",
+        steps: [
+          "Add an item, then reload and compare the header with the cart.",
+          "Work out which of the two is reading stale state.",
+          "Clear storage, reload, and see whether the symptom changes.",
+          "Say whether this is a data defect or a display defect, with evidence.",
+          "File it, naming exactly what disagrees with what.",
+        ],
+        defects: ["badge-stale"],
+      },
+    ],
+  },
+
+  {
+    id: "meridian-curl",
+    title: "Meridian: call the API by hand",
+    week: 8,
+    level: "beginner",
+    summary:
+      "Leave the browser. Talk to the shop's API directly, and find out what it will accept when no form is in the way.",
+    trains:
+      "Composing requests by hand, reading a JSON response, and understanding path, query and body.",
+    minutes: 45,
+    stages: [
+      {
+        n: 1,
+        title: "Read before you write",
+        brief:
+          "Start with the safe verb. A GET cannot break anything, and it teaches you the shape of everything else.",
+        steps: [
+          "GET /api/meridian/products from the console with fetch.",
+          "Print the status, then the body, then one product on its own.",
+          "Identify which field is the id, and which is the price.",
+          "GET a single order by its reference and compare the shapes.",
+          "Write down the three fields you would assert on for any product.",
+        ],
+        defects: [],
+      },
+      {
+        n: 2,
+        title: "Build a POST",
+        brief:
+          "Now write. Compose the order request yourself, field by field, and watch what the server makes of it.",
+        steps: [
+          "POST a valid order with one item and a sensible email address.",
+          "Note the status, and find the new order in the orders list.",
+          "Change the quantity and send it again; check the total yourself.",
+          "Note which values you sent and which the server decided.",
+          "Say which of those the server should never trust a client for.",
+        ],
+        defects: [],
+      },
+      {
+        n: 3,
+        title: "Send what the form would not",
+        brief:
+          "The checkout form refuses some things. The server is a separate question, and it is the one that matters.",
+        steps: [
+          "POST an order with an email address that has no @ sign.",
+          "POST one with a quantity of -1.",
+          "Record the status and body for each, and whether an order appeared.",
+          "Check the orders list to confirm whether anything was written.",
+          "File each case where the server accepted what the form refused.",
+        ],
+        defects: ["email-unvalidated", "qty-negative"],
+      },
+    ],
+  },
+
+  {
+    id: "meridian-risk",
+    title: "Meridian: where to look first",
+    week: 9,
+    level: "intermediate",
+    summary:
+      "You have thirty minutes and a whole shop. Rank the product by risk, test in that order, and find out whether your ranking was right.",
+    trains:
+      "Risk-based testing: deciding what to test first, and being able to defend the order afterwards.",
+    minutes: 50,
+    stages: [
+      {
+        n: 1,
+        title: "Rank before you test",
+        brief:
+          "Testing time is always shorter than the list of things that could be tested, so the real skill is choosing. Choose first, in writing.",
+        steps: [
+          "List the areas of the shop: catalogue, product, cart, checkout, orders.",
+          "Give each a likelihood of being broken, from 1 to 3.",
+          "Give each an impact if it is broken, from 1 to 3.",
+          "Multiply, and write your test order down before you open anything.",
+          "Note which area you expect to hold the worst defect, and why.",
+        ],
+        defects: [],
+      },
+      {
+        n: 2,
+        title: "Test in that order",
+        brief:
+          "Work your ranking, highest first, and stop when the thirty minutes are gone — not when you feel finished.",
+        steps: [
+          "Start a timer and work the top area first.",
+          "Record every defect with the area it was in and the minute you found it.",
+          "Do not skip ahead to something that looks more interesting.",
+          "Stop at thirty minutes even if an area is unfinished.",
+          "Write down which areas you never reached.",
+        ],
+        defects: [
+          "qty-ignored",
+          "discount-stacks",
+          "double-submit",
+          "stock-not-decremented",
+          "price-rounding",
+        ],
+      },
+      {
+        n: 3,
+        title: "Score your own ranking",
+        brief:
+          "The point of the exercise is not the defects. It is whether your ranking put the expensive ones first.",
+        steps: [
+          "Sort what you found by real severity, ignoring the order you found it.",
+          "Compare that with the order you planned.",
+          "Name the area you under-rated, and say what misled you.",
+          "Say which defect you would have missed entirely at twenty minutes.",
+          "Rewrite the ranking as you would give it to someone else.",
+        ],
+        defects: [],
+      },
+    ],
+  },
+
+  {
+    id: "meridian-cases",
+    title: "Meridian: write the cases",
+    week: 10,
+    level: "intermediate",
+    summary:
+      "Turn one feature into a set of test cases somebody else could run, then run a colleague's version of them and see what breaks.",
+    trains:
+      "Writing repeatable test cases, and using boundary and equivalence thinking to keep the set short.",
+    minutes: 55,
+    stages: [
+      {
+        n: 1,
+        title: "Cover the checkout",
+        brief:
+          "Write cases for checkout. Aim for a set short enough to run in fifteen minutes and complete enough to trust.",
+        steps: [
+          "Write the happy path as one case, with numbered steps and an expected result.",
+          "Partition the quantity field and pick one value from each partition.",
+          "Add the boundary values at each edge of the valid range.",
+          "Write one case per negative input you can think of.",
+          "Stop at twelve cases and say what you chose to leave out.",
+        ],
+        defects: [],
+      },
+      {
+        n: 2,
+        title: "Run them exactly as written",
+        brief:
+          "Follow your own steps literally, without filling gaps from memory. Every gap you have to fill is a defect in the case.",
+        steps: [
+          "Run each case and record pass, fail or blocked as you finish it.",
+          "Note every point where you had to guess what you meant.",
+          "Where a case fails, confirm it before writing it up.",
+          "Record the exact expected and actual values, not a description.",
+          "Count how many of your twelve found something.",
+        ],
+        defects: ["qty-negative", "email-unvalidated", "qty-ignored"],
+      },
+      {
+        n: 3,
+        title: "Fix the cases, not the product",
+        brief:
+          "The deliverable is the set, not the bugs. Rewrite it so a stranger could run it tomorrow and get your results.",
+        steps: [
+          "Rewrite every step that needed interpretation.",
+          "Replace any vague expected result with an exact value.",
+          "Give every case a stable id and a title that says what it checks.",
+          "Add a case for anything you found by accident rather than by plan.",
+          "Delete any case that could never fail.",
+        ],
+        defects: [],
+      },
+    ],
+  },
+
+  {
+    id: "meridian-responsive",
+    title: "Meridian: three widths",
+    week: 12,
+    level: "intermediate",
+    summary:
+      "The same shop at phone, tablet and desktop width. Find the breakpoints first, then test either side of each one.",
+    trains:
+      "Responsive testing, and the discipline of testing a boundary rather than a comfortable middle.",
+    minutes: 45,
+    stages: [
+      {
+        n: 1,
+        title: "Find the breakpoints",
+        brief:
+          "You cannot test either side of a line you have not located. Drag the width slowly and watch for the jumps.",
+        steps: [
+          "Open device mode and drag the width from 320px upward.",
+          "Note every width at which the layout changes.",
+          "Write the breakpoints down; these are the values you will test.",
+          "Decide which of them is likeliest to be wrong, and why.",
+          "Check whether anything scrolls sideways at any width.",
+        ],
+        defects: [],
+      },
+      {
+        n: 2,
+        title: "Either side of each line",
+        brief:
+          "Boundary thinking applies to pixels too. The bug lives at 767 or 769 far more often than at exactly 768.",
+        steps: [
+          "At each breakpoint, test one pixel below and one pixel above.",
+          "Check the catalogue grid, the product page and the cart at each.",
+          "Check that every price and total is fully visible, not clipped.",
+          "Check that touch targets are reachable at 375px.",
+          "Note anything that is merely ugly, separately from anything broken.",
+        ],
+        defects: ["price-rounding"],
+      },
+      {
+        n: 3,
+        title: "Does it still work small?",
+        brief:
+          "A layout can survive a narrow screen and still lose a feature. Complete a purchase at phone width, carefully.",
+        steps: [
+          "At 375px, add an item and watch the header count.",
+          "Add the same item twice and check the total.",
+          "Complete checkout end to end without widening the window.",
+          "Note any step that was harder rather than impossible, and say why.",
+          "File anything that fails at one width and not another, naming both.",
+        ],
+        defects: ["badge-stale", "qty-ignored"],
+      },
+    ],
+  },
+
+  {
+    id: "meridian-a11y",
+    title: "Meridian: the keyboard pass",
+    week: 12,
+    level: "intermediate",
+    summary:
+      "Put the mouse away and buy something. Four accessibility checks you can run on any screen in ten minutes.",
+    trains:
+      "Keyboard-only navigation, visible focus, accessible names, and writing an accessibility finding.",
+    minutes: 40,
+    stages: [
+      {
+        n: 1,
+        title: "Tab through the whole thing",
+        brief:
+          "Hands off the mouse from here. You are checking four things: can you reach it, can you see where you are, does the order make sense, can you get out.",
+        steps: [
+          "Tab through the catalogue and write the focus order down.",
+          "Note any control you cannot reach at all.",
+          "Note any control that takes focus invisibly.",
+          "Check whether the order matches what you see on screen.",
+          "Try to complete a purchase without touching the mouse.",
+        ],
+        defects: [],
+      },
+      {
+        n: 2,
+        title: "Names, images and contrast",
+        brief:
+          "What a screen reader would announce, and what a reader with low vision would struggle with.",
+        steps: [
+          "Check every image for an alt attribute, and judge whether it is useful.",
+          "Find any icon-only control and work out what it would be announced as.",
+          "Use DevTools to check the contrast of the prices and the muted text.",
+          "Set the browser to 200% zoom and check nothing is clipped or overlapping.",
+          "Note which of these is a Level A failure rather than a preference.",
+        ],
+        defects: [],
+      },
+      {
+        n: 3,
+        title: "Write one properly",
+        brief:
+          "Pick the worst thing you found and write it up to the standard an accessibility finding needs.",
+        steps: [
+          "Name who it affects, and whether they are blocked or inconvenienced.",
+          "Give the steps, using keys rather than clicks.",
+          "Say what should happen instead, concretely.",
+          "Cite the guideline if you know it, and the level.",
+          "Rate severity on whether the feature exists at all for that user.",
+        ],
+        defects: ["oos-addable", "console-error"],
+      },
+    ],
+  },
+
+  {
+    id: "meridian-security",
+    title: "Meridian: the five-check sweep",
+    week: 14,
+    level: "senior",
+    summary:
+      "Ninety minutes, five questions, one shop. The sweep that finds most of what is seriously wrong, with no special tools.",
+    trains:
+      "Testing authorisation, isolation, exposure and input validation — and stopping at one proof.",
+    minutes: 90,
+    stages: [
+      {
+        n: 1,
+        title: "What reaches the browser",
+        brief:
+          "Open the Network panel and read the responses the shop actually sends, rather than what the page chooses to draw.",
+        steps: [
+          "Read every response body on the catalogue and a product page.",
+          "List any field the page never displays.",
+          "Look for anything resembling a credential, a key or personal data.",
+          "Check an error response for internal detail: paths, queries, stack traces.",
+          "Note that the UI not showing a field is no defence.",
+        ],
+        defects: [],
+      },
+      {
+        n: 2,
+        title: "Does the server validate?",
+        brief:
+          "Client-side validation is convenience, not a control. Everything the form refuses, send directly.",
+        steps: [
+          "Remove the required attribute on a checkout field and submit.",
+          "Send a quantity of -1 straight to the API and check the status.",
+          "Send an email with no @ sign the same way.",
+          "After each, check the orders list to see whether anything was written.",
+          "Try a value a form could never produce, like a 10,000 character name.",
+        ],
+        defects: ["qty-negative", "email-unvalidated"],
+      },
+      {
+        n: 3,
+        title: "Write the sweep up",
+        brief:
+          "The deliverable is a summary a release decision can be made from, ranked by damage rather than by how clever the bug is.",
+        steps: [
+          "List findings as critical, high, medium, with one line of reasoning each.",
+          "Include a Not found section for the checks that came back clean.",
+          "Include a Not tested section, and say why.",
+          "Use field names, never values, for anything sensitive.",
+          "End with a one-sentence assessment: release, or do not.",
+        ],
+        defects: ["qty-negative", "email-unvalidated", "stock-not-decremented"],
+      },
+    ],
+  },
+
+  {
+    id: "meridian-automate",
+    title: "Meridian: automate the smoke test",
+    week: 15,
+    level: "senior",
+    summary:
+      "Turn the ten-minute manual smoke test into a suite that runs in seconds, then break it on purpose to prove it works.",
+    trains:
+      "Writing durable selectors, auto-waiting instead of sleeping, and proving a suite can actually fail.",
+    minutes: 90,
+    stages: [
+      {
+        n: 1,
+        title: "Write the smoke test down first",
+        brief:
+          "Automating an undefined process gives you an undefined process that runs faster. Define it by hand first.",
+        steps: [
+          "List the wide-and-shallow path: one trip through every major area.",
+          "Run it manually once and time it.",
+          "For each step, write the assertion that proves it worked.",
+          "Choose a locator for every element you will touch.",
+          "Prefer a role and an accessible name over a CSS class, and say why.",
+        ],
+        defects: [],
+      },
+      {
+        n: 2,
+        title: "Make it run",
+        brief:
+          "Now write it. Every wait should be a condition, never a fixed sleep, and every assertion should fail usefully.",
+        steps: [
+          "Write the test: open the catalogue, open a product, add it, check out.",
+          "Assert on what a user sees, not on an internal class name.",
+          "Replace any sleep with a wait for the thing you actually need.",
+          "Run it three times and confirm the same result each time.",
+          "Make one assertion name the expected and actual values when it fails.",
+        ],
+        defects: [],
+      },
+      {
+        n: 3,
+        title: "Prove it can fail",
+        brief:
+          "A suite you have never seen fail is a suite you have no reason to trust. Break things deliberately and watch.",
+        steps: [
+          "Turn on a defect and confirm the matching assertion goes red.",
+          "Change an expected string and confirm the test fails, not errors.",
+          "Remove an await and observe a test that passes when it should not.",
+          "Record which defects your smoke test would never catch.",
+          "Decide which of those deserve a test, and which do not.",
+        ],
+        defects: ["qty-ignored", "badge-stale", "console-error"],
+      },
+    ],
+  },
+
+  {
+    id: "meridian-diagnose",
+    title: "Meridian: diagnose from a ticket",
+    week: 17,
+    level: "intermediate",
+    summary:
+      "Four customer messages, no diagnosis. Work out what actually happened in each, decide who owns it, and write the escalation.",
+    trains:
+      "Turning a description into a diagnosis, and routing from evidence rather than from a guess.",
+    minutes: 60,
+    stages: [
+      {
+        n: 1,
+        title: "Reproduce what they describe",
+        brief:
+          "A customer describes a symptom, not a cause. Your first job is to see it yourself, in the data rather than in their words.",
+        steps: [
+          "“I was charged for two orders but I only clicked once.” Reproduce it.",
+          "“I bought the last one and it is still showing as in stock.” Reproduce it.",
+          "“The cart total is wrong when I buy two of something.” Reproduce it.",
+          "For each, record the exact steps that produced the symptom.",
+          "Note any report whose symptom is not what the customer thinks it is.",
+        ],
+        defects: ["double-submit", "stock-not-decremented", "qty-ignored"],
+      },
+      {
+        n: 2,
+        title: "Front end or back end",
+        brief:
+          "The Network panel decides this in ten seconds, and getting it right routes the ticket correctly first time.",
+        steps: [
+          "For each, note whether a request was sent at all.",
+          "Record the status, and whether the response was correct.",
+          "Decide whether the data was wrong or only the display was.",
+          "Name the owning team for each, with the evidence for that choice.",
+          "Identify the one where the response is right and the screen is wrong.",
+        ],
+        defects: ["double-submit", "stock-not-decremented", "qty-ignored"],
+      },
+      {
+        n: 3,
+        title: "Write the escalation",
+        brief:
+          "An engineer should be able to start work from your message without replying to it.",
+        steps: [
+          "Give the instance: the exact reference, time and account.",
+          "Give what you checked and what you ruled out.",
+          "Give the scope: one customer, or everyone.",
+          "Say what the customer has been told, and when you promised an update.",
+          "State what you need from the engineer, specifically.",
+        ],
+        defects: ["double-submit", "stock-not-decremented"],
+      },
+    ],
+  },
+
+  {
+    id: "meridian-reliability",
+    title: "Meridian: run it twice",
+    week: 22,
+    level: "senior",
+    summary:
+      "The defects that only appear when something happens twice. Prove each one, then design the guard that would stop it.",
+    trains:
+      "Idempotency, the run-twice test, and asserting on state rather than on a response.",
+    minutes: 60,
+    stages: [
+      {
+        n: 1,
+        title: "Count before and after",
+        brief:
+          "A duplicate is invisible in a response and obvious in a count. Measure the state on both sides of every action.",
+        steps: [
+          "Count the orders. Place one order. Count again.",
+          "Count the orders. Double-click Place order. Count again.",
+          "Record the status of both requests in the second case.",
+          "Note that both responses can look entirely correct.",
+          "Say which number told you the truth.",
+        ],
+        defects: ["double-submit"],
+      },
+      {
+        n: 2,
+        title: "Repeat what should not repeat",
+        brief:
+          "Some actions are safe to repeat and some are not. Find out which is which by repeating them.",
+        steps: [
+          "Apply a discount code, then apply the same code again.",
+          "Work out the total by hand after each application.",
+          "Keep going and record what happens at the extreme.",
+          "Order an item twice and check the stock after each.",
+          "For each, say whether repeating changed the state or only the response.",
+        ],
+        defects: ["discount-stacks", "stock-not-decremented"],
+      },
+      {
+        n: 3,
+        title: "Design the guard",
+        brief:
+          "You have three defects that all come from the same shape. Say what would have prevented each, precisely.",
+        steps: [
+          "For the duplicate order, write the idempotency key you would use.",
+          "Say where it must be derived from, and why not from a timestamp.",
+          "For the discount, say what the server should check and when.",
+          "For the stock, say which assertion a test should have made.",
+          "Write the run-twice test that would catch all three.",
+        ],
+        defects: ["double-submit", "discount-stacks", "stock-not-decremented"],
+      },
+    ],
+  },
 ];
 
 /**
