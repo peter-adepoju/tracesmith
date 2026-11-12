@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+<title>Tracesmith Meridian</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+/* Atlas typography and hairline prose inside a Studio shell.
+   Two accents by role: blue carries navigation and links, brass
+   carries progress and where you are. Dark only, like Engram. */
+:root {
+  --bg: #0f1627;
+  --panel: #131c30;
+  --surface: #162036;
+  --surface-2: #1c2841;
+  --line: #243354;
+  --line-2: #2f4063;
+
+  --ink: #e6ecf5;
+  --ink-2: #b0bbcf;
+  --ink-3: #8795ad;
+
+  --nav: #86b4e3;          /* navigation and links */
+  --nav-soft: #1b2b47;
+  --prog: #c8a45c;         /* progress and current position */
+  --prog-soft: #2a2316;
+
+  --ok: #4cc48a;
+  --warn: #e3a54a;
+  --bad: #f08fb0;
+
+  --f-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --f-sans: "Jost", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  --rail: 280px;
+  --bar: 56px;
+
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-sans);
+  font-weight: 300;
+  font-size: 17px;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px); z-index: 40; background: var(--panel);
+}
+
+h1, h2, h3 { font-family: var(--f-display); font-weight: 500; margin: 0; text-wrap: balance; }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--nav); outline-offset: 3px; border-radius: 2px; }
+
+.label {
+  font-family: var(--f-sans);
+  font-size: 0.625rem; font-weight: 500; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+
+/* ── progress hairline, brass, pinned to the very top ───────── */
+.prog {
+  position: fixed; top: env(safe-area-inset-top, 0px); left: 0;
+  height: 2px; width: 0; background: var(--prog); z-index: 41;
+  transition: width 0.1s linear;
+}
+
+/* ── top bar ────────────────────────────────────────────────── */
+.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30;
+  display: flex; align-items: center; gap: 16px; height: var(--bar);
+  background: var(--panel); border-bottom: 1px solid var(--line);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.brand {
+  font-family: var(--f-display); font-size: 1.45rem; font-weight: 600;
+  background: none; border: 0; padding: 0; cursor: pointer; color: var(--ink);
+  letter-spacing: 0.01em; white-space: nowrap;
+}
+.burger {
+  display: none; background: none; border: 1px solid var(--line-2);
+  color: var(--ink-2); width: 34px; height: 30px; border-radius: 6px; cursor: pointer;
+  font-size: 13px; line-height: 1;
+}
+.top .right { margin-left: auto; display: flex; align-items: center; gap: 18px; }
+.top .right button {
+  background: none; border: 0; cursor: pointer; font-family: var(--f-sans);
+  font-size: 0.625rem; font-weight: 500; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.top .right button:hover { color: var(--nav); }
+/* the one brass element in the bar: how far you are */
+.counter {
+  font-family: var(--f-mono); font-size: 0.68rem; color: var(--prog);
+  border: 1px solid var(--prog-soft); background: var(--prog-soft);
+  border-radius: 999px; padding: 3px 11px; font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ── shell ──────────────────────────────────────────────────── */
+.shell { display: grid; grid-template-columns: var(--rail) minmax(0, 1fr); align-items: start; }
+
+.rail {
+  position: sticky;
+  top: calc(var(--bar) + env(safe-area-inset-top, 0px));
+  height: calc(100vh - var(--bar) - env(safe-area-inset-top, 0px));
+  overflow-y: auto; border-right: 1px solid var(--line);
+  padding-bottom: 50px;
+  scrollbar-width: thin;
+}
+.phase-h {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 20px 20px 7px;
+}
+.phase-h .pn { font-family: var(--f-mono); font-size: 0.62rem; color: var(--ink-3); }
+.wk {
+  display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center;
+  width: 100%; text-align: left; background: none; border: 0; cursor: pointer;
+  font: inherit; color: var(--ink-2); padding: 7px 20px;
+  border-left: 2px solid transparent;
+}
+.wk:hover { color: var(--ink); background: var(--surface); }
+.wk .nm { font-size: 0.93rem; }
+/* brass marks where you are */
+.wk[aria-current="true"] {
+  color: var(--prog); border-left-color: var(--prog); background: var(--prog-soft);
+}
+.wk[aria-current="true"] .nm { font-weight: 400; }
+.meter { width: 44px; height: 2px; background: var(--surface-2); position: relative; flex: none; }
+.meter i { position: absolute; inset: 0 auto 0 0; background: var(--prog); }
+.wk.done .meter i { background: var(--ok); opacity: 0.55; }
+
+/* ── main ───────────────────────────────────────────────────── */
+.main {
+  min-width: 0;
+  padding-left: max(32px, env(safe-area-inset-left, 0px));
+  padding-right: max(32px, env(safe-area-inset-right, 0px));
+  padding-block: 0 90px;
+}
+
+/* ── home ───────────────────────────────────────────────────── */
+.hero { padding-block: clamp(46px, 8vw, 96px) clamp(30px, 5vw, 56px); max-width: 60ch; }
+.hero h1 { font-size: clamp(2.5rem, 6vw, 3.9rem); line-height: 1.03; letter-spacing: -0.012em; }
+.hero p { color: var(--ink-2); font-size: clamp(1.02rem, 2vw, 1.2rem); margin: 22px 0 34px; }
+.cta { display: flex; gap: 13px; flex-wrap: wrap; }
+.btn {
+  font-family: var(--f-sans); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.15em;
+  text-transform: uppercase; padding: 13px 26px; cursor: pointer;
+  border: 1px solid var(--nav); background: var(--nav); color: #0c1322;
+}
+.btn:hover { opacity: 0.88; }
+.btn.ghost { background: none; color: var(--nav); }
+.btn.ghost:hover { background: var(--nav-soft); opacity: 1; }
+
+.stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+  background: var(--line); border-block: 1px solid var(--line);
+  margin-top: clamp(40px, 6vw, 72px);
+}
+.stats div { background: var(--bg); padding: 20px 18px; }
+.stats b {
+  display: block; font-family: var(--f-display); font-size: 2.3rem; font-weight: 500;
+  line-height: 1; color: var(--prog); font-variant-numeric: tabular-nums;
+}
+.stats span { font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+
+.phases { padding-block: clamp(40px, 6vw, 74px); }
+.prow {
+  display: grid; grid-template-columns: 50px 1fr auto; gap: 18px; align-items: baseline;
+  width: 100%; background: none; border: 0; border-bottom: 1px solid var(--line);
+  padding: 22px 0; text-align: left; font: inherit; color: inherit; cursor: pointer;
+  transition: padding-left 0.18s;
+}
+.prow:hover { padding-left: 10px; }
+.prow:hover h3 { color: var(--nav); }
+.prow .pn { font-family: var(--f-mono); font-size: 0.74rem; color: var(--ink-3); }
+.prow h3 { font-size: 1.28rem; }
+.prow p { margin: 5px 0 0; color: var(--ink-3); font-size: 0.93rem; max-width: 60ch; }
+.prow .wkn { font-family: var(--f-mono); font-size: 0.7rem; color: var(--ink-3); white-space: nowrap; }
+
+/* ── lesson: Atlas prose in a Studio frame ──────────────────── */
+.lgrid { display: grid; grid-template-columns: minmax(0, 68ch) 186px; gap: 52px; align-items: start; }
+.crumb { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; padding-block: 26px 0; }
+.crumb i { color: var(--line-2); font-style: normal; }
+.lgrid h1 { font-size: clamp(2.05rem, 4.6vw, 2.9rem); line-height: 1.07; margin-top: 12px; }
+
+/* objectives: a quiet aside, not a box */
+.obj { margin-top: 28px; padding-left: 20px; border-left: 2px solid var(--nav-soft); }
+.obj .label { display: block; margin-bottom: 7px; }
+.obj ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; }
+.obj li { color: var(--ink-2); font-size: 0.94rem; }
+
+.prose { margin-top: 34px; }
+.prose > * + * { margin-top: 1.5em; }
+.prose p { margin: 0; }
+.prose strong { font-weight: 500; color: #fff; }
+.prose a { color: var(--nav); }
+.prose h2 {
+  font-size: 1.62rem; margin-top: 2.3em; padding-bottom: 9px;
+  border-bottom: 1px solid var(--line);
+}
+.prose h2 + * { margin-top: 0.85em; }
+
+/* the only structural device: a flush-left rule, no box */
+.key { margin-top: 2.1em; padding-left: 22px; border-left: 2px solid var(--nav); }
+.key .label { display: block; color: var(--nav); margin-bottom: 6px; }
+.key p { color: var(--ink-2); }
+.key p:first-of-type { color: var(--ink); }
+
+pre {
+  font-family: var(--f-mono); font-size: 0.755rem; line-height: 1.72; margin: 0;
+  background: var(--surface); color: var(--ink-2); padding: 20px;
+  border-left: 2px solid var(--line-2); overflow-x: auto;
+}
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.93rem; }
+th, td { text-align: left; padding: 11px 16px 11px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 0.625rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
+td:first-child { color: var(--ink-3); }
+
+/* on this page */
+.toc { position: sticky; top: calc(var(--bar) + 26px + env(safe-area-inset-top, 0px)); }
+.toc .label { display: block; margin-bottom: 11px; }
+.toc a {
+  display: block; color: var(--ink-3); text-decoration: none; font-size: 0.85rem;
+  padding: 5px 0 5px 13px; border-left: 1px solid var(--line);
+}
+.toc a:hover { color: var(--nav); border-left-color: var(--nav); }
+
+.endnav {
+  display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+  margin-top: 58px; padding-top: 24px; border-top: 1px solid var(--line);
+}
+.endnav button { background: none; border: 0; padding: 0; cursor: pointer; text-align: left; font-family: var(--f-sans); color: var(--ink-3); }
+.endnav button:hover .t { color: var(--nav); }
+.endnav .t { display: block; font-family: var(--f-display); font-size: 1.1rem; color: var(--ink-2); }
+
+footer { border-top: 1px solid var(--line); margin-top: 58px; padding-top: 24px; color: var(--ink-3); font-size: 0.85rem; }
+
+@media (max-width: 1100px) { .lgrid { grid-template-columns: minmax(0, 1fr); } .toc { display: none; } }
+/* Narrow bars cannot hold the secondary links; the rail carries them. */
+@media (max-width: 620px) {
+  .top .right button { display: none; }
+  .brand { font-size: 1.3rem; }
+  .top { gap: 12px; }
+}
+@media (max-width: 880px) {
+  .burger { display: block; }
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .rail {
+    position: fixed; z-index: 35; left: 0; width: min(300px, 86vw);
+    top: calc(var(--bar) + env(safe-area-inset-top, 0px));
+    background: var(--panel); transform: translateX(-102%);
+    transition: transform 0.22s ease; box-shadow: 0 0 44px rgba(0,0,0,0.6);
+  }
+  .rail[data-open="1"] { transform: none; }
+  .main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .prow { grid-template-columns: 1fr; gap: 4px; }
+  .prow .wkn { grid-row: 1; justify-self: start; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="prog" id="prog"></div>
+
+<header class="top">
+  <button class="burger" id="burger" aria-label="Course menu">☰</button>
+  <button class="brand" data-go="home">Tracesmith</button>
+  <span class="right">
+    <span class="counter">65 / 156</span>
+    <button data-go="home">Labs</button>
+    <button data-go="home">Review</button>
+  </span>
+</header>
+
+<div class="shell">
+  <aside class="rail" id="rail">
+    <div class="phase-h"><span class="pn">03</span><span class="label">Quality assurance</span></div>
+    <button class="wk done" data-go="lesson"><span class="nm">Thinking like a tester</span><span class="meter"><i style="width:100%"></i></span></button>
+    <button class="wk done" data-go="lesson"><span class="nm">Test cases and coverage</span><span class="meter"><i style="width:100%"></i></span></button>
+    <button class="wk" data-go="lesson" aria-current="true"><span class="nm">Bugs</span><span class="meter"><i style="width:66%"></i></span></button>
+    <button class="wk" data-go="lesson"><span class="nm">Testing the web</span><span class="meter"><i style="width:0"></i></span></button>
+    <button class="wk" data-go="lesson"><span class="nm">API and data testing</span><span class="meter"><i style="width:0"></i></span></button>
+    <button class="wk" data-go="lesson"><span class="nm">Security testing basics</span><span class="meter"><i style="width:0"></i></span></button>
+    <button class="wk" data-go="lesson"><span class="nm">Automated testing</span><span class="meter"><i style="width:0"></i></span></button>
+
+    <div class="phase-h"><span class="pn">04</span><span class="label">Technical support</span></div>
+    <button class="wk" data-go="lesson"><span class="nm">The support function</span><span class="meter"><i style="width:0"></i></span></button>
+    <button class="wk" data-go="lesson"><span class="nm">Diagnosing</span><span class="meter"><i style="width:0"></i></span></button>
+    <button class="wk" data-go="lesson"><span class="nm">Writing and escalating</span><span class="meter"><i style="width:0"></i></span></button>
+    <button class="wk" data-go="lesson"><span class="nm">Money and systems</span><span class="meter"><i style="width:0"></i></span></button>
+
+    <div class="phase-h"><span class="pn">05</span><span class="label">AI automation</span></div>
+    <button class="wk" data-go="lesson"><span class="nm">Thinking in automation</span><span class="meter"><i style="width:0"></i></span></button>
+    <button class="wk" data-go="lesson"><span class="nm">Building workflows</span><span class="meter"><i style="width:0"></i></span></button>
+    <button class="wk" data-go="lesson"><span class="nm">Reliability</span><span class="meter"><i style="width:0"></i></span></button>
+  </aside>
+
+  <main class="main">
+
+    <!-- ============ HOME ============ -->
+    <section id="v-home">
+      <div class="hero">
+        <span class="label">A free course · 26 weeks · 156 lessons</span>
+        <h1 style="margin-top:16px">Three jobs that share a spine.</h1>
+        <p>Quality assurance, technical support and AI automation all live or die on the same skill: finding out what is actually true, and writing it down so someone else can act on it.</p>
+        <div class="cta">
+          <button class="btn" data-go="lesson">Resume week 11</button>
+          <button class="btn ghost" data-go="lesson">See the whole course</button>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div><b>5</b><span>Phases</span></div>
+        <div><b>26</b><span>Weeks</span></div>
+        <div><b>156</b><span>Lessons</span></div>
+        <div><b>41</b><span>Figures</span></div>
+      </div>
+
+      <div class="phases">
+        <button class="prow" data-go="lesson"><span class="pn">01</span><span><h3>How the web actually works</h3><p>What a browser sends, what a server answers with, and how a page is built.</p></span><span class="wkn">1–4</span></button>
+        <button class="prow" data-go="lesson"><span class="pn">02</span><span><h3>Data, APIs and evidence</h3><p>Endpoints, payloads, keys and webhooks — and calling an API yourself instead of guessing.</p></span><span class="wkn">5–8</span></button>
+        <button class="prow" data-go="lesson"><span class="pn">03</span><span><h3>Quality assurance</h3><p>Test cases, bug reports, regression, API testing, five security checks, automation.</p></span><span class="wkn">9–15</span></button>
+        <button class="prow" data-go="lesson"><span class="pn">04</span><span><h3>Technical support</h3><p>Triage, diagnosis from evidence, writing to customers and engineers, payments.</p></span><span class="wkn">16–19</span></button>
+        <button class="prow" data-go="lesson"><span class="pn">05</span><span><h3>AI automation</h3><p>Workflows that run themselves, keep receipts, and stop for a human before anything leaves.</p></span><span class="wkn">20–26</span></button>
+      </div>
+
+      <footer>Tracesmith — design sample 6 · “Meridian”. Atlas typography and hairline prose inside the Studio shell. Blue carries navigation; brass carries progress.</footer>
+    </section>
+
+    <!-- ============ LESSON ============ -->
+    <section id="v-lesson" hidden>
+      <div class="lgrid">
+        <article>
+          <div class="crumb"><span class="label">Week 11 · Bugs</span><i>/</i><span class="label">Day 5</span></div>
+          <h1>Writing a report that needs no follow-up</h1>
+
+          <div class="obj">
+            <span class="label">By the end you can</span>
+            <ul>
+              <li>Write all seven sections well</li>
+              <li>Title a bug so it is findable</li>
+              <li>Judge your own report against the no-questions test</li>
+            </ul>
+          </div>
+
+          <div class="prose">
+            <p>This is the most valuable thing a tester produces. Not the bug — the report.</p>
+            <p>The standard is one sentence long: <strong>an engineer should be able to act on it without asking you anything.</strong></p>
+
+            <h2 id="s-shape">The shape</h2>
+            <pre>Title       Applying the same discount code twice stacks
+            the reduction (cart)
+
+Environment Meridian sandbox, stage 3 · Chrome 131 · 7 Nov
+
+Steps       1. Add Harmattan Field Jacket to the cart
+            2. Open the cart
+            3. Enter SAVE10 and click Apply
+            4. Enter SAVE10 again and click Apply
+
+Expected    The second application is refused; the total
+            stays at NGN 43,650.00
+
+Actual      The discount becomes 20%. The total drops to
+            NGN 38,800.00. Ten applications reach NGN 0.00
+
+Severity    Critical          Priority  Highest</pre>
+            <p>Read it as an engineer: you know what to do, where to go, what you will see, and what it should have been. Nothing is missing, and you did not have to ask.</p>
+
+            <h2 id="s-title">The title does most of the work</h2>
+            <p>It is read in a list of a hundred, in a notification, in a stand-up. The pattern is <strong>what happens, where, and under what condition.</strong></p>
+            <div class="tablewrap">
+              <table>
+                <thead><tr><th>Weak</th><th>Strong</th></tr></thead>
+                <tbody>
+                  <tr><td>Discount bug</td><td>Same discount code applied twice stacks the reduction</td></tr>
+                  <tr><td>Cart broken</td><td>Cart total ignores quantity for items added twice</td></tr>
+                  <tr><td>Payment issue</td><td>Double-clicking Place order creates two orders and charges twice</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="key">
+              <span class="label">The sentence people leave out</span>
+              <p>When severity and priority differ, say why. One line, and it prevents the argument.</p>
+              <p>Without it, someone reads “Critical” and “Low” together and comes to ask. With it, the trade-off is visible and agreed.</p>
+            </div>
+
+            <h2 id="s-tone">Tone</h2>
+            <p>You are describing a system, never a person.</p>
+            <div class="tablewrap">
+              <table>
+                <thead><tr><th>Avoid</th><th>Prefer</th></tr></thead>
+                <tbody>
+                  <tr><td>You broke the discount logic</td><td>Applying the same code twice stacks the reduction</td></tr>
+                  <tr><td>Obviously nobody tested this</td><td>Not covered by the existing cases; I have added DISC-003</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>The right-hand column gets fixed faster. Not because engineers are fragile, but because a report that reads as an accusation invites a defence, and a defence is a delay.</p>
+          </div>
+
+          <div class="endnav">
+            <button data-go="lesson"><span class="label">Previous</span><span class="t">Reproducing reliably</span></button>
+            <button data-go="lesson" style="text-align:right"><span class="label">Next</span><span class="t">Three reports, graded</span></button>
+          </div>
+
+          <footer>Tracesmith — design sample 6 · “Meridian”. The rail keeps your place; the prose stays out of boxes.</footer>
+        </article>
+
+        <nav class="toc">
+          <span class="label">On this page</span>
+          <a href="#s-shape">The shape</a>
+          <a href="#s-title">The title</a>
+          <a href="#s-tone">Tone</a>
+        </nav>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+(function () {
+  var views = { home: document.getElementById('v-home'), lesson: document.getElementById('v-lesson') };
+  var rail = document.getElementById('rail');
+  var prog = document.getElementById('prog');
+
+  function show(name) {
+    if (!views[name]) name = 'home';
+    for (var k in views) views[k].hidden = (k !== name);
+    rail.dataset.open = '0';
+    window.scrollTo(0, 0);
+    onScroll();
+    try { history.replaceState(null, '', '#' + name); } catch (e) {}
+  }
+
+  document.addEventListener('click', function (e) {
+    if (e.target.id === 'burger') {
+      rail.dataset.open = rail.dataset.open === '1' ? '0' : '1';
+      return;
+    }
+    var t = e.target.closest('[data-go]');
+    if (!t) return;
+    e.preventDefault();
+    if (t.classList.contains('wk')) {
+      document.querySelectorAll('.rail .wk').forEach(function (b) { b.removeAttribute('aria-current'); });
+      t.setAttribute('aria-current', 'true');
+    }
+    show(t.dataset.go);
+  });
+
+  function onScroll() {
+    var h = document.documentElement;
+    var max = h.scrollHeight - h.clientHeight;
+    prog.style.width = (max > 8 ? (h.scrollTop / max) * 100 : 0) + '%';
+  }
+  document.addEventListener('scroll', onScroll, { passive: true });
+
+  var start = (location.hash || '').replace('#', '');
+  show(views[start] ? start : 'home');
+})();
+</script>
+
