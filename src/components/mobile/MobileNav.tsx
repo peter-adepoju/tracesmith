@@ -32,9 +32,9 @@ const stroke = {
 
 const TABS: Tab[] = [
   {
-    href: "/",
+    href: "/course",
     label: "Course",
-    match: ["/day"],
+    match: ["/day", "/course"],
     icon: (
       <svg viewBox="0 0 24 24" className="h-5 w-5" {...stroke}>
         <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5Z" />

@@ -51,7 +51,7 @@ export default async function DayPage({
           would otherwise spend making lines too long to track. */}
       <main className="min-w-0 max-w-[72ch] px-4 py-10 lg:px-10">
       <nav className="no-touch-target flex items-center gap-1.5 text-xs text-muted">
-        <Link href="/" className="hover:text-text">
+        <Link href="/course" className="hover:text-text">
           Course
         </Link>
         {phase ? (
@@ -61,7 +61,7 @@ export default async function DayPage({
           </>
         ) : null}
         <span>/</span>
-        <Link href={`/#week-${week.n}`} className="hover:text-text">
+        <Link href={`/course#week-${week.n}`} className="hover:text-text">
           Week {week.n}
         </Link>
         {/* Brass, because this is progress rather than navigation. */}

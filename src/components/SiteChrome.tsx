@@ -18,7 +18,7 @@ import { MobileNav } from "@/components/mobile/MobileNav";
  */
 
 const LINKS = [
-  { href: "/", label: "Course" },
+  { href: "/course", label: "Course" },
   { href: "/lab", label: "Labs" },
   { href: "/build", label: "Build" },
   { href: "/review", label: "Review" },

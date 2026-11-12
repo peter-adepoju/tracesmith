@@ -88,8 +88,8 @@ export default function ReviewPage() {
             : ""}
         </p>
         <Link
-          href="/"
-          className="mt-6 inline-block rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white"
+          href="/course"
+          className="mt-6 inline-block rounded-lg bg-accent px-4 py-2 text-sm font-medium text-[#141008]"
         >
           Back to the course
         </Link>

@@ -59,8 +59,8 @@ export const viewport: Viewport = {
   // Lets the page paint under the notch and the home indicator, which is what
   // makes an installed PWA feel like an app rather than a web page.
   viewportFit: "cover",
-  // One colour now: Meridian is dark only, and this is the top bar's panel.
-  themeColor: "#131c30",
+  // One colour: the theme is dark only, and this is the top bar's panel.
+  themeColor: "#111113",
 };
 
 export default function RootLayout({

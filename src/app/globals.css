@@ -5,34 +5,38 @@
    --prog (brass) carries progress and where you are. Dark only, so every
    token is defined once here and nothing redefines it per theme. */
 :root {
-  --bg: #0f1627;
-  --panel: #131c30;
-  --surface: #162036;
-  --surface-2: #1c2841;
-  --border: #243354;
-  --border-2: #2f4063;
+  --bg: #0a0a0b;
+  --panel: #111113;
+  --surface: #17171a;
+  --surface-2: #1e1e22;
+  --border: #242428;
+  --border-2: #33333a;
 
-  --text: #e6ecf5;
-  --muted: #8795ad;
-  --muted-2: #b0bbcf;
+  --text: #fafafa;
+  --muted: #6e6e78;
+  --muted-2: #a8a8b0;
 
-  /* navigation, links, anything you can click */
-  --accent: #86b4e3;
-  --accent-soft: #1b2b47;
+  /* Brass is the only accent: links, buttons, progress and the week you
+     are on all use it. Everything else is a neutral, so the one warm
+     colour on the page always means "this is yours to act on". */
+  --accent: #c8a45c;
+  --accent-soft: #2a2316;
+  --on-accent: #141008;
 
-  /* progress, and only progress */
+  /* Kept as separate names so progress can be split back out later
+     without touching every component. Both are brass today. */
   --prog: #c8a45c;
   --prog-soft: #2a2316;
 
   --ok: #4cc48a;
-  --ok-soft: #17291f;
+  --ok-soft: #13251b;
   --warn: #e3a54a;
-  --warn-soft: #2e2516;
+  --warn-soft: #2a2114;
   --bad: #f08fb0;
-  --bad-soft: #3a2131;
+  --bad-soft: #301a24;
 
-  --code-bg: #0b1120;
-  --code-text: #cdd8ea;
+  --code-bg: #0e0e10;
+  --code-text: #d8d8de;
 
   color-scheme: dark;
 }
@@ -144,6 +148,15 @@ code,
 pre,
 kbd {
   font-family: var(--f-mono);
+}
+
+/* Brass needs dark text, not white: #fff on --accent is about 2:1, well under
+   the 4.5:1 this course teaches in week 12. Rather than edit text-white out of
+   forty-odd call sites, anything sitting on an accent fill takes --on-accent.
+   The two-class selector outranks Tailwind's own text-white. */
+.bg-accent,
+.bg-accent.text-white {
+  color: var(--on-accent);
 }
 
 /* A completed day on the course map. Applied from JavaScript once progress
