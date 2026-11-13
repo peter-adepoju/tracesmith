@@ -1,0 +1,32 @@
+{
+  "_comment": "A pretend export from system A. Copy to source.json and edit it. Run the sync, change one record, delete another, and run it again — the counts in sync-log.jsonl are the whole lesson.",
+  "records": [
+    {
+      "id": "c-1001",
+      "name": "Ada Okonkwo",
+      "email": "ada@example.test",
+      "plan": "standard",
+      "updated_at": "2026-01-04T09:12:00Z"
+    },
+    {
+      "id": "c-1002",
+      "name": "Grace Adeyemi",
+      "email": "grace@example.test",
+      "plan": "premium",
+      "updated_at": "2026-01-04T11:40:00Z"
+    },
+    {
+      "id": "c-1003",
+      "name": "Tunde Bello",
+      "email": "tunde@example.test",
+      "plan": "standard",
+      "updated_at": "2026-01-05T08:05:00Z"
+    },
+    {
+      "name": "Walk-in, no id yet",
+      "email": "Someone@Example.TEST",
+      "plan": "trial",
+      "updated_at": "2026-01-05T16:30:00Z"
+    }
+  ]
+}

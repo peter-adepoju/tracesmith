@@ -1,0 +1,41 @@
+{
+  "_comment": "A pretend shared inbox. Copy to inbox.json and add your own. Every message here is invented — do not paste real customer mail into a repo. Milestone 1 wants twenty held-out messages with labels you assigned by hand before the classifier saw them.",
+  "messages": [
+    {
+      "id": "m-001",
+      "sender": "ada@example.test",
+      "subject": "How do I export my data?",
+      "body": "I cannot find the export button anywhere in settings. Where is it?"
+    },
+    {
+      "id": "m-002",
+      "sender": "grace@example.test",
+      "subject": "Refund for invoice 88120",
+      "body": "We were charged twice this month. Please refund the second charge."
+    },
+    {
+      "id": "m-003",
+      "sender": "tunde@example.test",
+      "subject": "This is unacceptable",
+      "body": "Third time this week the dashboard is down. I am furious. Call me today."
+    },
+    {
+      "id": "m-004",
+      "sender": "buyer@example.test",
+      "subject": "Pricing for 40 seats",
+      "body": "Could you send a quote for forty seats, and do you offer a demo?"
+    },
+    {
+      "id": "m-005",
+      "sender": "chidi@example.test",
+      "subject": "500 error on save",
+      "body": "Saving a record returns a 500. Started this morning. Screenshot attached."
+    },
+    {
+      "id": "m-006",
+      "sender": "someone@example.test",
+      "subject": "re: re: fwd: following up",
+      "body": "Any news on the thing we discussed?"
+    }
+  ]
+}

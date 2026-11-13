@@ -1,0 +1,43 @@
+{
+  "_comment": "Three worked examples to show the shape. Milestone 1 is getting this to twenty, with at least four deliberately awkward ones, BEFORE you write a prompt. Invent every one of them: no real supplier, no real person, no real invoice. The verifier checks your scoring script, not this file — the count is on you, and writing eighteen easy examples to make the number look good only fools you.",
+  "examples": [
+    {
+      "name": "clean and ordinary",
+      "input": "HARMATTAN SUPPLIES LTD\nInvoice INV-2026-114\nDate issued: 4 February 2026\nPO: none\n\n2 x Field jacket    48,500.00\nTotal due: NGN 48,500.00",
+      "expected": {
+        "invoice_no": "INV-2026-114",
+        "supplier": "Harmattan Supplies Ltd",
+        "total_minor": 4850000,
+        "currency": "NGN",
+        "issued_on": "2026-02-04",
+        "po_number": null
+      }
+    },
+    {
+      "name": "awkward: ambiguous date, two readings",
+      "input": "LAGOS CANVAS CO\nInv. 2026/03/04\nIssued 03/04/2026\nAmount: 27,500.50 NGN\nPurchase order 88120",
+      "expected": {
+        "invoice_no": "2026/03/04",
+        "supplier": "Lagos Canvas Co",
+        "total_minor": 2750050,
+        "currency": "NGN",
+        "issued_on": null,
+        "po_number": "88120"
+      },
+      "note": "03/04/2026 is 3 April or 4 March depending on where it was written. There is no way to tell from the document, so the only honest answer is null and a low confidence. A model that picks one is guessing, and this example exists to catch that."
+    },
+    {
+      "name": "awkward: total is not the largest number",
+      "input": "JOS PLATEAU WOOL\nInvoice JP-9\n12 Jan 2026\n\nSubtotal      985,000.00\nDiscount      -98,500.00\nTotal         886,500.00\nGBP",
+      "expected": {
+        "invoice_no": "JP-9",
+        "supplier": "Jos Plateau Wool",
+        "total_minor": 88650000,
+        "currency": "GBP",
+        "issued_on": "2026-01-12",
+        "po_number": null
+      },
+      "note": "The subtotal is bigger than the total. Anything reaching for the largest number on the page gets this wrong."
+    }
+  ]
+}
