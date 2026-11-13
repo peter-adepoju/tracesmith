@@ -1,0 +1,50 @@
+{
+  "_comment": "Pretend invoices. Copy to invoices.json and edit. Every client here is invented. Run with --today to move time about, and --paid to simulate money arriving between runs.",
+  "invoices": [
+    {
+      "id": "INV-2026-001",
+      "client": "Harmattan Supplies Ltd",
+      "amount_minor": 4850000,
+      "due_on": "2026-03-02",
+      "state": "unpaid",
+      "messages_sent": 0,
+      "last_sent_on": null
+    },
+    {
+      "id": "INV-2026-002",
+      "client": "Lagos Canvas Co",
+      "amount_minor": 2750050,
+      "due_on": "2026-02-16",
+      "state": "reminded-1",
+      "messages_sent": 1,
+      "last_sent_on": "2026-02-19"
+    },
+    {
+      "id": "INV-2026-003",
+      "client": "Jos Plateau Wool",
+      "amount_minor": 985000,
+      "due_on": "2026-02-02",
+      "state": "reminded-2",
+      "messages_sent": 2,
+      "last_sent_on": "2026-02-12"
+    },
+    {
+      "id": "INV-2026-004",
+      "client": "Calabar Leather Works",
+      "amount_minor": 6200000,
+      "due_on": "2026-03-20",
+      "state": "unpaid",
+      "messages_sent": 0,
+      "last_sent_on": null
+    },
+    {
+      "id": "INV-2026-005",
+      "client": "Kano Indigo",
+      "amount_minor": 3400050,
+      "due_on": "2026-01-05",
+      "state": "paid",
+      "messages_sent": 2,
+      "last_sent_on": "2026-01-20"
+    }
+  ]
+}

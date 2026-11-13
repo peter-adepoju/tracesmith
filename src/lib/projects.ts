@@ -413,7 +413,7 @@ export const PROJECTS: Project[] = [
         ],
       },
     ],
-    scaffold: null,
+    scaffold: "projects/05-chaser",
   },
   {
     id: "recap",
@@ -469,7 +469,7 @@ export const PROJECTS: Project[] = [
         ],
       },
     ],
-    scaffold: null,
+    scaffold: "projects/06-recap",
   },
   {
     id: "prospector",
@@ -537,7 +537,7 @@ export const PROJECTS: Project[] = [
         ],
       },
     ],
-    scaffold: null,
+    scaffold: "projects/07-prospector",
   },
   {
     id: "herald",

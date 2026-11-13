@@ -1,0 +1,46 @@
+{
+  "_comment": "A pretend week. The 'calendar' source is set to fail on purpose, so you can see gap handling without unplugging anything. One item has no reference, so you can see exclusion. Copy to week.json and point the real sources at your own systems.",
+  "sources": {
+    "github": {
+      "items": [
+        {
+          "kind": "commit",
+          "title": "Fix the duplicate rows on re-sync",
+          "at": "2026-03-03",
+          "reference": "a41f0c2"
+        },
+        {
+          "kind": "commit",
+          "title": "Add the watermark to the nightly job",
+          "at": "2026-03-04",
+          "reference": "9b7e311"
+        },
+        {
+          "kind": "commit",
+          "title": "Tidy up the logging",
+          "at": "2026-03-05",
+          "reference": null
+        }
+      ]
+    },
+    "tracker": {
+      "items": [
+        {
+          "kind": "ticket",
+          "title": "Export button missing on mobile",
+          "at": "2026-03-02",
+          "reference": "T-1181"
+        },
+        {
+          "kind": "ticket",
+          "title": "Invoice total off by one kobo",
+          "at": "2026-03-06",
+          "reference": "T-1184"
+        }
+      ]
+    },
+    "calendar": {
+      "error": "403 the service account has no access to this calendar"
+    }
+  }
+}
