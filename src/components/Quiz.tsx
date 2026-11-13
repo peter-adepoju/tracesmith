@@ -80,7 +80,7 @@ export function Quiz({
                       type="button"
                       disabled={choice !== undefined}
                       onClick={() => setPicked((p) => ({ ...p, [qi]: oi }))}
-                      className={`block w-full rounded-lg border px-3 py-2 text-left text-sm transition-colors disabled:cursor-default ${tone}`}
+                      className={`block w-full border px-3 py-2 text-left text-sm transition-colors disabled:cursor-default ${tone}`}
                     >
                       <span className="mr-2 font-mono text-xs text-muted">
                         {String.fromCharCode(65 + oi)}
@@ -111,7 +111,7 @@ export function Quiz({
                 void persist(score, questions.length);
                 onComplete?.(score, questions.length);
               }}
-              className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white"
+              className="bg-accent px-3 py-1.5 text-sm font-medium text-white"
             >
               Save score
             </button>
@@ -124,7 +124,7 @@ export function Quiz({
               setPicked({});
               setDone(false);
             }}
-            className="rounded-lg border border-border px-3 py-1.5 text-sm"
+            className="border border-border px-3 py-1.5 text-sm"
           >
             Try again
           </button>

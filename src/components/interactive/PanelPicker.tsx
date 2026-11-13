@@ -95,7 +95,7 @@ export function PanelPicker() {
   }
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Which panel first?
@@ -129,7 +129,7 @@ export function PanelPicker() {
                     asked: s.asked + 1,
                   }));
                 }}
-                className={`rounded-lg border px-3 py-2.5 text-sm transition-colors disabled:cursor-default ${tone}`}
+                className={`border px-3 py-2.5 text-sm transition-colors disabled:cursor-default ${tone}`}
               >
                 {panel}
               </button>
@@ -144,7 +144,7 @@ export function PanelPicker() {
             </p>
             <p>{current.why}</p>
             {current.nearMiss && choice === current.nearMiss.panel ? (
-              <p className="rounded-lg bg-surface-2 p-2.5 text-xs text-muted">
+              <p className="bg-surface-2 p-2.5 text-xs text-muted">
                 <strong>On {current.nearMiss.panel}. </strong>
                 {current.nearMiss.note}
               </p>
@@ -152,7 +152,7 @@ export function PanelPicker() {
             <button
               type="button"
               onClick={next}
-              className="mt-1 rounded-lg bg-accent px-3 py-2 text-sm font-medium text-white"
+              className="mt-1 bg-accent px-3 py-2 text-sm font-medium text-white"
             >
               Next symptom
             </button>

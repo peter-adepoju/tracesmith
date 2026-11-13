@@ -175,7 +175,7 @@ export function AssertionLab() {
   };
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Assertion lab
@@ -186,7 +186,7 @@ export function AssertionLab() {
             setIndex(Number(event.target.value));
             setRan(false);
           }}
-          className="ml-auto max-w-[14rem] rounded border border-border bg-bg px-1.5 py-1 text-xs"
+          className="ml-auto max-w-[14rem] border border-border bg-bg px-1.5 py-1 text-xs"
           aria-label="Choose a response"
         >
           {SCENARIOS.map((s, i) => (
@@ -202,7 +202,7 @@ export function AssertionLab() {
           <p className="text-[0.625rem] font-semibold uppercase tracking-wider text-muted">
             The response
           </p>
-          <pre className="mt-1.5 overflow-x-auto rounded-lg bg-[var(--code-bg)] p-2.5 font-mono text-[0.6875rem] text-[var(--code-text)]">
+          <pre className="mt-1.5 overflow-x-auto bg-[var(--code-bg)] p-2.5 font-mono text-[0.6875rem] text-[var(--code-text)]">
             {`${scenario.request}\n\n${scenario.response.status} ${
               scenario.response.status === 201 ? "Created" : "OK"
             }\n${JSON.stringify(scenario.response.body, null, 2)}`}
@@ -227,7 +227,7 @@ export function AssertionLab() {
                       className="mt-0.5"
                     />
                     <span className="flex-1">
-                      <span className="mr-1.5 rounded bg-surface-2 px-1 py-0.5 text-[0.5625rem] font-semibold uppercase tracking-wider text-muted">
+                      <span className="mr-1.5 bg-surface-2 px-1 py-0.5 text-[0.5625rem] font-semibold uppercase tracking-wider text-muted">
                         {LEVEL_LABEL[assertion.level]}
                       </span>
                       {assertion.label}
@@ -249,7 +249,7 @@ export function AssertionLab() {
         <button
           type="button"
           onClick={() => setRan(true)}
-          className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white"
+          className="bg-accent px-3 py-1.5 text-sm font-medium text-white"
         >
           Run assertions
         </button>
@@ -262,23 +262,23 @@ export function AssertionLab() {
         <div className="p-3 text-sm">
           {scenario.defect === null ? (
             caught ? (
-              <p className="rounded-lg border border-bad/40 bg-bad-soft p-2.5">
+              <p className="border border-bad/40 bg-bad-soft p-2.5">
                 <strong>False failure.</strong> This response is correct, but
                 your set reports a failure. A suite that cries wolf gets
                 ignored, which costs you the next real one.
               </p>
             ) : (
-              <p className="rounded-lg border border-ok/40 bg-ok-soft p-2.5">
+              <p className="border border-ok/40 bg-ok-soft p-2.5">
                 All green, and the response really is correct. That is what a
                 passing run should mean.
               </p>
             )
           ) : caught ? (
-            <p className="rounded-lg border border-ok/40 bg-ok-soft p-2.5">
+            <p className="border border-ok/40 bg-ok-soft p-2.5">
               <strong>Caught it.</strong> {scenario.defect}
             </p>
           ) : (
-            <p className="rounded-lg border border-bad/40 bg-bad-soft p-2.5">
+            <p className="border border-bad/40 bg-bad-soft p-2.5">
               <strong>All green, and the response is wrong.</strong>{" "}
               {scenario.defect}
               <br />

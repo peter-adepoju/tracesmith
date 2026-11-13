@@ -90,7 +90,7 @@ export function FormLab() {
   const dropped = fields.filter((f) => !f.hasName || f.disabled);
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           What a form actually sends
@@ -99,7 +99,7 @@ export function FormLab() {
 
       <form onSubmit={submit} className="space-y-3 p-3">
         {fields.map((field) => (
-          <div key={field.key} className="rounded-lg border border-border p-3">
+          <div key={field.key} className="border border-border p-3">
             <label className="block text-sm font-medium">
               {field.label}
               <input
@@ -110,7 +110,7 @@ export function FormLab() {
                 onChange={(event) =>
                   update(field.key, { value: event.target.value })
                 }
-                className="mt-1 w-full rounded-md border border-border bg-bg px-2 py-2 text-sm disabled:opacity-40"
+                className="mt-1 w-full border border-border bg-bg px-2 py-2 text-sm disabled:opacity-40"
               />
             </label>
 
@@ -140,7 +140,7 @@ export function FormLab() {
 
         <button
           type="submit"
-          className="w-full rounded-lg bg-accent px-3 py-2.5 text-sm font-medium text-white"
+          className="w-full bg-accent px-3 py-2.5 text-sm font-medium text-white"
         >
           Submit
         </button>
@@ -148,7 +148,7 @@ export function FormLab() {
 
       <figcaption className="border-t border-border p-3 text-sm">
         {blocked ? (
-          <p className="rounded-lg border border-warn/40 bg-warn-soft p-2.5 text-xs">
+          <p className="border border-warn/40 bg-warn-soft p-2.5 text-xs">
             {blocked}
           </p>
         ) : payload ? (
@@ -156,11 +156,11 @@ export function FormLab() {
             <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
               Request payload
             </p>
-            <pre className="mt-1.5 overflow-x-auto rounded-lg bg-[var(--code-bg)] p-3 font-mono text-xs text-[var(--code-text)]">
+            <pre className="mt-1.5 overflow-x-auto bg-[var(--code-bg)] p-3 font-mono text-xs text-[var(--code-text)]">
               {payload}
             </pre>
             {dropped.length > 0 ? (
-              <p className="mt-2 rounded-lg border border-bad/40 bg-bad-soft p-2.5 text-xs">
+              <p className="mt-2 border border-bad/40 bg-bad-soft p-2.5 text-xs">
                 <strong>
                   {dropped.length} field{dropped.length > 1 ? "s" : ""} never
                   left the browser:

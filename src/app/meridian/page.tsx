@@ -173,7 +173,7 @@ function MeridianShop() {
           <button
             type="button"
             onClick={() => setView("catalogue")}
-            className="text-lg font-semibold tracking-tight"
+            className="text-lg"
           >
             Meridian
           </button>

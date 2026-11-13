@@ -111,7 +111,7 @@ export function RequestInspector({
     : 0;
 
   return (
-    <div className="my-7 overflow-hidden rounded-xl border border-border bg-surface text-sm">
+    <div className="my-7 overflow-hidden border border-border bg-surface text-sm">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-xs font-semibold uppercase tracking-wider text-muted">
           Request inspector
@@ -119,7 +119,7 @@ export function RequestInspector({
         <select
           onChange={(event) => load(event.target.value)}
           defaultValue=""
-          className="ml-auto max-w-[14rem] rounded-md border border-border bg-bg px-2 py-1 text-xs"
+          className="ml-auto max-w-[14rem] border border-border bg-bg px-2 py-1 text-xs"
           aria-label="Load a preset request"
         >
           <option value="" disabled>
@@ -139,7 +139,7 @@ export function RequestInspector({
           <select
             value={method}
             onChange={(event) => setMethod(event.target.value)}
-            className="rounded-md border border-border bg-bg px-2 py-1.5 font-mono text-xs"
+            className="border border-border bg-bg px-2 py-1.5 font-mono text-xs"
             aria-label="HTTP method"
           >
             {["GET", "POST", "PUT", "PATCH", "DELETE"].map((verb) => (
@@ -150,13 +150,13 @@ export function RequestInspector({
             value={path}
             onChange={(event) => setPath(event.target.value)}
             spellCheck={false}
-            className="min-w-[12rem] flex-1 rounded-md border border-border bg-bg px-2 py-1.5 font-mono text-xs"
+            className="min-w-[12rem] flex-1 border border-border bg-bg px-2 py-1.5 font-mono text-xs"
             aria-label="Path"
           />
           <button
             type="button"
             onClick={run}
-            className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white"
+            className="bg-accent px-3 py-1.5 text-xs font-medium text-white"
           >
             Send
           </button>
@@ -169,26 +169,26 @@ export function RequestInspector({
             onChange={(event) => setAuth(event.target.value)}
             placeholder="(no key)"
             spellCheck={false}
-            className="min-w-[12rem] flex-1 rounded-md border border-border bg-bg px-2 py-1.5 font-mono text-xs"
+            className="min-w-[12rem] flex-1 border border-border bg-bg px-2 py-1.5 font-mono text-xs"
           />
           <button
             type="button"
             onClick={() => setAuth(PUBLIC_KEY)}
-            className="rounded-md border border-border px-2 py-1 text-xs"
+            className="border border-border px-2 py-1 text-xs"
           >
             public
           </button>
           <button
             type="button"
             onClick={() => setAuth(SECRET_KEY)}
-            className="rounded-md border border-border px-2 py-1 text-xs"
+            className="border border-border px-2 py-1 text-xs"
           >
             secret
           </button>
           <button
             type="button"
             onClick={() => setAuth("")}
-            className="rounded-md border border-border px-2 py-1 text-xs"
+            className="border border-border px-2 py-1 text-xs"
           >
             none
           </button>
@@ -200,7 +200,7 @@ export function RequestInspector({
             onChange={(event) => setBody(event.target.value)}
             rows={compact ? 3 : 5}
             spellCheck={false}
-            className="w-full rounded-md border border-border bg-bg p-2 font-mono text-xs"
+            className="w-full border border-border bg-bg p-2 font-mono text-xs"
             aria-label="Request body"
           />
         ) : null}
@@ -272,7 +272,7 @@ export function RequestInspector({
                 key={name}
                 type="button"
                 onClick={() => setTab(name)}
-                className={`rounded px-2.5 py-1 text-xs capitalize ${
+                className={`px-2.5 py-1 text-xs capitalize ${
                   tab === name
                     ? "bg-bg font-medium"
                     : "text-muted hover:text-text"
@@ -346,9 +346,9 @@ ${headerLines(current.response.headers)
                       <span>{label}</span>
                       <span className="text-muted">{ms} ms</span>
                     </div>
-                    <div className="mt-1 h-2 rounded bg-surface-2">
+                    <div className="mt-1 h-2 bg-surface-2">
                       <div
-                        className="h-2 rounded bg-accent"
+                        className="h-2 bg-accent"
                         style={{ width: `${Math.max(2, (ms / total) * 100)}%` }}
                       />
                     </div>

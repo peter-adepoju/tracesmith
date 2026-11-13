@@ -125,13 +125,13 @@ export function JsonExplorer({ value = DEFAULT, task, rows = 14 }: Props) {
   }, [parsed]);
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           JSON explorer
         </span>
         <span
-          className={`ml-auto rounded px-2 py-0.5 font-mono text-xs ${
+          className={`ml-auto px-2 py-0.5 font-mono text-xs ${
             parsed.ok ? "bg-ok-soft text-ok" : "bg-bad-soft text-bad"
           }`}
         >
@@ -141,7 +141,7 @@ export function JsonExplorer({ value = DEFAULT, task, rows = 14 }: Props) {
           <button
             type="button"
             onClick={() => setText(value.trim())}
-            className="rounded border border-border px-2 py-0.5 text-xs"
+            className="border border-border px-2 py-0.5 text-xs"
           >
             Reset
           </button>
@@ -169,7 +169,7 @@ export function JsonExplorer({ value = DEFAULT, task, rows = 14 }: Props) {
 
         <div className="max-h-96 overflow-auto p-2">
           {!parsed.ok ? (
-            <p className="rounded-lg border border-bad/40 bg-bad-soft p-2.5 font-mono text-xs">
+            <p className="border border-bad/40 bg-bad-soft p-2.5 font-mono text-xs">
               {parsed.error}
             </p>
           ) : (
@@ -180,7 +180,7 @@ export function JsonExplorer({ value = DEFAULT, task, rows = 14 }: Props) {
                     type="button"
                     onClick={() => setPicked(line)}
                     style={{ paddingLeft: line.depth * 12 + 4 }}
-                    className={`block w-full rounded py-0.5 text-left hover:bg-surface-2 ${
+                    className={`block w-full py-0.5 text-left hover:bg-surface-2 ${
                       picked?.path === line.path ? "bg-surface-2" : ""
                     }`}
                   >

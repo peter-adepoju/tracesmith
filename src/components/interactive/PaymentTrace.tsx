@@ -161,7 +161,7 @@ export function PaymentTrace() {
   const clean = failure.id === "none";
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           One payment, end to end
@@ -169,7 +169,7 @@ export function PaymentTrace() {
         <select
           value={index}
           onChange={(event) => setIndex(Number(event.target.value))}
-          className="ml-auto max-w-[13rem] rounded border border-border bg-bg px-1.5 py-1 text-xs"
+          className="ml-auto max-w-[13rem] border border-border bg-bg px-1.5 py-1 text-xs"
           aria-label="Choose what fails"
         >
           {FAILURES.map((f, i) => (
@@ -196,7 +196,7 @@ export function PaymentTrace() {
                 <span className="block text-sm font-medium">
                   {stage.label}
                   {failedHere ? (
-                    <span className="ml-2 rounded bg-bad px-1.5 py-0.5 text-[0.5625rem] font-semibold uppercase tracking-wider text-white">
+                    <span className="ml-2 bg-bad px-1.5 py-0.5 text-[0.5625rem] font-semibold uppercase tracking-wider text-white">
                       fails here
                     </span>
                   ) : neverHappened ? (
@@ -222,7 +222,7 @@ export function PaymentTrace() {
         ].map(([label, value]) => (
           <div
             key={label}
-            className="rounded-lg border border-border bg-surface-2 p-2.5"
+            className="border border-border bg-surface-2 p-2.5"
           >
             <p className="text-[0.625rem] font-semibold uppercase tracking-wider text-muted">
               {label}
@@ -234,7 +234,7 @@ export function PaymentTrace() {
 
       {!clean ? (
         <div className="border-t border-border p-3 text-sm">
-          <p className="rounded-lg border border-ok/40 bg-ok-soft p-2.5">
+          <p className="border border-ok/40 bg-ok-soft p-2.5">
             <strong>What support does:</strong> {failure.action}
           </p>
           <p className="mt-2 text-xs text-muted">

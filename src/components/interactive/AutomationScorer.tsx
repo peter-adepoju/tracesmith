@@ -130,7 +130,7 @@ export function AutomationScorer() {
   };
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Which of these would you build?
@@ -165,7 +165,7 @@ export function AutomationScorer() {
                     key={option}
                     type="button"
                     onClick={() => guess(process.id, option)}
-                    className={`rounded-lg border px-2.5 py-1 text-xs ${
+                    className={`border px-2.5 py-1 text-xs ${
                       picked === option
                         ? "border-accent bg-accent-soft font-semibold"
                         : "border-border bg-surface-2"
@@ -187,7 +187,7 @@ export function AutomationScorer() {
 
               {shown ? (
                 <div
-                  className={`mt-2 rounded-lg border p-2.5 text-xs ${VERDICT_STYLE[s.worth]}`}
+                  className={`mt-2 border p-2.5 text-xs ${VERDICT_STYLE[s.worth]}`}
                 >
                   <p>
                     <strong>
@@ -215,7 +215,7 @@ export function AutomationScorer() {
         <button
           type="button"
           onClick={() => setShown(true)}
-          className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white"
+          className="bg-accent px-3 py-1.5 text-sm font-medium text-white"
         >
           Score them
         </button>

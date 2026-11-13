@@ -40,7 +40,7 @@ export function HidingDemo() {
   const current = METHODS.find((m) => m.id === method)!;
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Three ways to hide a button
@@ -57,7 +57,7 @@ export function HidingDemo() {
               setHits(0);
               setMissed(0);
             }}
-            className={`rounded-lg border px-2.5 py-1.5 font-mono text-xs transition-colors ${
+            className={`border px-2.5 py-1.5 font-mono text-xs transition-colors ${
               method === m.id
                 ? "border-accent bg-accent-soft font-semibold"
                 : "border-border hover:bg-surface-2"
@@ -72,7 +72,7 @@ export function HidingDemo() {
           a miss, which is how you feel the difference between the methods. */}
       <div
         onClick={() => setMissed((n) => n + 1)}
-        className="relative mx-3 mb-3 cursor-pointer rounded-lg border border-dashed border-border bg-surface-2 p-4"
+        className="relative mx-3 mb-3 cursor-pointer border border-dashed border-border bg-surface-2 p-4"
       >
         <p className="mb-2 text-xs text-muted">
           Click where the orange button is, or should be.
@@ -84,11 +84,11 @@ export function HidingDemo() {
             event.stopPropagation();
             setHits((n) => n + 1);
           }}
-          className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white"
+          className="bg-accent px-4 py-2.5 text-sm font-medium text-white"
         >
           Buy now
         </button>
-        <p className="mt-2 rounded border border-border bg-bg px-2 py-1 text-xs">
+        <p className="mt-2 border border-border bg-bg px-2 py-1 text-xs">
           A neighbour, to show whether the button still takes up space.
         </p>
       </div>
@@ -112,7 +112,7 @@ export function HidingDemo() {
           ].map(([label, value]) => (
             <div
               key={label as string}
-              className={`rounded-lg border p-2 ${
+              className={`border p-2 ${
                 value ? "border-ok/40 bg-ok-soft" : "border-border bg-surface-2"
               }`}
             >

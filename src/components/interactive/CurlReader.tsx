@@ -164,7 +164,7 @@ export function CurlReader() {
   }, [command, parsed.headers]);
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Read a cURL command
@@ -172,7 +172,7 @@ export function CurlReader() {
         <select
           defaultValue="2"
           onChange={(event) => setCommand(SAMPLES[Number(event.target.value)].command)}
-          className="ml-auto max-w-[12rem] rounded border border-border bg-bg px-1.5 py-1 text-xs"
+          className="ml-auto max-w-[12rem] border border-border bg-bg px-1.5 py-1 text-xs"
           aria-label="Load a sample command"
         >
           {SAMPLES.map((sample, index) => (
@@ -194,7 +194,7 @@ export function CurlReader() {
 
       <div className="space-y-2 p-3 text-sm">
         <div className="flex flex-wrap gap-2">
-          <span className="rounded bg-accent px-2 py-0.5 font-mono text-xs text-white">
+          <span className="bg-accent px-2 py-0.5 font-mono text-xs text-white">
             {parsed.method}
           </span>
           <code className="min-w-0 flex-1 break-all text-xs">
@@ -211,7 +211,7 @@ export function CurlReader() {
               {parsed.headers.map((header, index) => (
                 <li key={index} className="break-all">
                   <span className="text-muted">{header.name}: </span>
-                  <span className={header.secret ? "rounded bg-bad-soft px-1 text-bad" : ""}>
+                  <span className={header.secret ? "bg-bad-soft px-1 text-bad" : ""}>
                     {header.value}
                   </span>
                   {header.secret ? (
@@ -230,7 +230,7 @@ export function CurlReader() {
             <p className="text-[0.625rem] font-semibold uppercase tracking-wider text-muted">
               Body
             </p>
-            <pre className="mt-1 overflow-x-auto rounded bg-surface-2 p-2 font-mono text-xs">
+            <pre className="mt-1 overflow-x-auto bg-surface-2 p-2 font-mono text-xs">
               {parsed.body}
             </pre>
           </div>
@@ -248,7 +248,7 @@ export function CurlReader() {
           {parsed.warnings.map((warning) => (
             <p
               key={warning}
-              className="rounded-lg border border-bad/40 bg-bad-soft p-2.5 text-xs"
+              className="border border-bad/40 bg-bad-soft p-2.5 text-xs"
             >
               {warning}
             </p>
@@ -261,7 +261,7 @@ export function CurlReader() {
           <p className="text-[0.625rem] font-semibold uppercase tracking-wider text-muted">
             Safe to paste into a ticket
           </p>
-          <pre className="mt-1 overflow-x-auto rounded-lg bg-surface-2 p-2.5 font-mono text-[0.6875rem]">
+          <pre className="mt-1 overflow-x-auto bg-surface-2 p-2.5 font-mono text-[0.6875rem]">
             {redacted}
           </pre>
         </figcaption>

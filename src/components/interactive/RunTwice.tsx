@@ -138,7 +138,7 @@ export function RunTwice() {
   const duplicated = method === "POST" && orders > 1;
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Send it twice
@@ -151,7 +151,7 @@ export function RunTwice() {
             key={m}
             type="button"
             onClick={() => switchMethod(m)}
-            className={`rounded-lg border px-2.5 py-1 font-mono text-xs ${
+            className={`border px-2.5 py-1 font-mono text-xs ${
               method === m
                 ? "border-accent bg-accent-soft font-semibold"
                 : "border-border bg-surface-2"
@@ -183,14 +183,14 @@ export function RunTwice() {
         <button
           type="button"
           onClick={send}
-          className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white"
+          className="bg-accent px-3 py-1.5 text-sm font-medium text-white"
         >
           Send
         </button>
         <button
           type="button"
           onClick={reset}
-          className="rounded-lg border border-border px-3 py-1.5 text-sm"
+          className="border border-border px-3 py-1.5 text-sm"
         >
           Reset
         </button>
@@ -230,7 +230,7 @@ export function RunTwice() {
 
       {duplicated ? (
         <p className="border-t border-border p-3 text-sm">
-          <span className="block rounded-lg border border-bad/40 bg-bad-soft p-2.5">
+          <span className="block border border-bad/40 bg-bad-soft p-2.5">
             <strong>{orders} orders, {money(chargedMinor)} taken.</strong> One
             customer, one intention, {orders} charges. Turn the
             Idempotency-Key on and do it again.

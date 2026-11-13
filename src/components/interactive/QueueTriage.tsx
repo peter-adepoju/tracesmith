@@ -173,7 +173,7 @@ export function QueueTriage() {
   );
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Monday, 09:30. Fifteen tickets, one of you.
@@ -200,7 +200,7 @@ export function QueueTriage() {
                     key={p}
                     type="button"
                     onClick={() => set(ticket.id, p)}
-                    className={`rounded-lg border px-2.5 py-1 font-mono text-xs ${
+                    className={`border px-2.5 py-1 font-mono text-xs ${
                       pick === p
                         ? "border-accent bg-accent-soft font-semibold"
                         : "border-border bg-surface-2"
@@ -236,7 +236,7 @@ export function QueueTriage() {
         <button
           type="button"
           onClick={() => setShown(true)}
-          className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white"
+          className="bg-accent px-3 py-1.5 text-sm font-medium text-white"
         >
           Check the queue
         </button>
@@ -252,7 +252,7 @@ export function QueueTriage() {
           </p>
 
           {missedP1.length > 0 ? (
-            <p className="rounded-lg border border-bad/40 bg-bad-soft p-2.5">
+            <p className="border border-bad/40 bg-bad-soft p-2.5">
               <strong>
                 You under-rated {missedP1.length} P1
                 {missedP1.length === 1 ? "" : "s"} (
@@ -264,7 +264,7 @@ export function QueueTriage() {
           ) : null}
 
           {inflated.length > 0 ? (
-            <p className="rounded-lg border border-warn/40 bg-warn-soft p-2.5">
+            <p className="border border-warn/40 bg-warn-soft p-2.5">
               <strong>
                 You over-rated {inflated.length} ticket
                 {inflated.length === 1 ? "" : "s"} (
@@ -276,14 +276,14 @@ export function QueueTriage() {
             </p>
           ) : null}
 
-          <p className="rounded-lg border border-border bg-surface-2 p-2.5">
+          <p className="border border-border bg-surface-2 p-2.5">
             <strong>T-01 and T-03 are one incident.</strong> Same symptom,
             same start time, two merchants. Link them, raise a single
             incident, and reply to both — and once you have seen two, start
             looking for the third rather than waiting for it.
           </p>
 
-          <p className="rounded-lg border border-border bg-surface-2 p-2.5">
+          <p className="border border-border bg-surface-2 p-2.5">
             <strong>T-04 is the test of your judgement.</strong> It is the
             angriest message in the queue and the lowest priority in it. The
             two-day silence deserves a genuine apology; it does not deserve a

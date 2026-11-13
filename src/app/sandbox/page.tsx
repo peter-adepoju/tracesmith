@@ -7,12 +7,19 @@ export const metadata: Metadata = { title: "Sandbox" };
 export default function SandboxPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="text-3xl font-semibold tracking-tight">Sandbox</h1>
-      <p className="mt-2 text-muted">
-        A fake API that runs entirely in this page. Nothing leaves your
-        computer, nothing costs money, and nothing can break. Use it to practise
-        reading requests the way you will read them in DevTools.
-      </p>
+      <header className="max-w-2xl">
+        <p className="text-[0.625rem] font-medium uppercase tracking-[0.18em] text-muted">
+          A fake API · nothing leaves this page
+        </p>
+        <h1 className="mt-2.5 text-[clamp(2.1rem,5vw,3.1rem)] leading-[1.05]">
+          Sandbox
+        </h1>
+        <p className="mt-4 text-[0.9375rem] leading-relaxed text-muted-2">
+          A fake API that runs entirely in this page. Nothing leaves your
+          computer, nothing costs money, and nothing can break. Use it to
+          practise reading requests the way you will read them in DevTools.
+        </p>
+      </header>
 
       <section className="prose mt-8">
         <h2>The endpoints</h2>

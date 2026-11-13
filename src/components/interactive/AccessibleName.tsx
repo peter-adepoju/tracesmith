@@ -65,7 +65,7 @@ export function AccessibleName() {
     .join("\n");
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Computed accessible name
@@ -97,7 +97,7 @@ export function AccessibleName() {
           <p className="text-[0.625rem] font-semibold uppercase tracking-wider text-muted">
             The markup
           </p>
-          <pre className="mt-1.5 overflow-x-auto rounded-lg bg-[var(--code-bg)] p-2.5 font-mono text-[0.6875rem] text-[var(--code-text)]">
+          <pre className="mt-1.5 overflow-x-auto bg-[var(--code-bg)] p-2.5 font-mono text-[0.6875rem] text-[var(--code-text)]">
             {markup}
           </pre>
         </div>
@@ -107,7 +107,7 @@ export function AccessibleName() {
             What a screen reader says
           </p>
           <div
-            className={`mt-1.5 rounded-lg border p-3 ${
+            className={`mt-1.5 border p-3 ${
               name ? "border-ok/40 bg-ok-soft" : "border-bad/40 bg-bad-soft"
             }`}
           >

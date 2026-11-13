@@ -124,7 +124,7 @@ export function EvalRunner() {
   const ships = accuracy >= threshold;
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Twenty held-out messages
@@ -138,7 +138,7 @@ export function EvalRunner() {
                 setVersion(v);
                 setRan(false);
               }}
-              className={`rounded-lg border px-2.5 py-1 text-xs ${
+              className={`border px-2.5 py-1 text-xs ${
                 version === v
                   ? "border-accent bg-accent-soft font-semibold"
                   : "border-border bg-surface-2"
@@ -154,7 +154,7 @@ export function EvalRunner() {
         <button
           type="button"
           onClick={() => setRan(true)}
-          className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white"
+          className="bg-accent px-3 py-1.5 text-sm font-medium text-white"
         >
           Run the evals
         </button>
@@ -182,7 +182,7 @@ export function EvalRunner() {
               </span>
             </p>
             <p
-              className={`mt-2 rounded-lg border p-2.5 text-sm ${
+              className={`mt-2 border p-2.5 text-sm ${
                 ships
                   ? "border-ok/40 bg-ok-soft"
                   : "border-bad/40 bg-bad-soft"
@@ -219,7 +219,7 @@ export function EvalRunner() {
                 {failures.map((failure) => (
                   <li
                     key={failure.text}
-                    className="rounded-lg border border-bad/40 bg-bad-soft p-2.5 text-xs"
+                    className="border border-bad/40 bg-bad-soft p-2.5 text-xs"
                   >
                     <p className="italic">&ldquo;{failure.text}&rdquo;</p>
                     <p className="mt-1">

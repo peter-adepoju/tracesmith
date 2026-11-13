@@ -94,7 +94,7 @@ export function RiskMatrix() {
   );
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           What would you test first?
@@ -102,7 +102,7 @@ export function RiskMatrix() {
         <button
           type="button"
           onClick={() => setRevealed((r) => !r)}
-          className="ml-auto rounded bg-accent px-2.5 py-1 text-xs font-medium text-white"
+          className="ml-auto bg-accent px-2.5 py-1 text-xs font-medium text-white"
         >
           {revealed ? "Hide" : "Compare"}
         </button>
@@ -110,7 +110,7 @@ export function RiskMatrix() {
 
       <div className="no-touch-target space-y-2 p-3">
         {AREAS.map((area) => (
-          <div key={area.id} className="rounded-lg border border-border p-2.5">
+          <div key={area.id} className="border border-border p-2.5">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm font-medium">{area.label}</span>
               <span className="ml-auto font-mono text-xs text-muted">

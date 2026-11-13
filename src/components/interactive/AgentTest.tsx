@@ -84,7 +84,7 @@ export function AgentTest() {
   );
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Workflow or agent?
@@ -111,7 +111,7 @@ export function AgentTest() {
                     key={option}
                     type="button"
                     onClick={() => pick(task.id, option)}
-                    className={`rounded-lg border px-2.5 py-1 text-xs capitalize ${
+                    className={`border px-2.5 py-1 text-xs capitalize ${
                       picked === option
                         ? "border-accent bg-accent-soft font-semibold"
                         : "border-border bg-surface-2"
@@ -143,7 +143,7 @@ export function AgentTest() {
         <button
           type="button"
           onClick={() => setShown(true)}
-          className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white"
+          className="bg-accent px-3 py-1.5 text-sm font-medium text-white"
         >
           Check
         </button>
@@ -155,7 +155,7 @@ export function AgentTest() {
             {right} of {TASKS.length} correct. Four of the six are workflows.
           </p>
           {overAgented.length > 0 ? (
-            <p className="rounded-lg border border-warn/40 bg-warn-soft p-2.5">
+            <p className="border border-warn/40 bg-warn-soft p-2.5">
               <strong>
                 You called {overAgented.length} workflow
                 {overAgented.length === 1 ? "" : "s"} an agent.
@@ -167,7 +167,7 @@ export function AgentTest() {
               advance.
             </p>
           ) : (
-            <p className="rounded-lg border border-ok/40 bg-ok-soft p-2.5">
+            <p className="border border-ok/40 bg-ok-soft p-2.5">
               Nothing over-agented. Most teams get this wrong in the other
               direction and spend a quarter on it.
             </p>

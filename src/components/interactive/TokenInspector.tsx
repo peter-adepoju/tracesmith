@@ -142,7 +142,7 @@ export function TokenInspector() {
   const expired = typeof exp === "number" && exp < now;
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Token inspector
@@ -153,7 +153,7 @@ export function TokenInspector() {
             setIndex(Number(event.target.value));
             setEdited(null);
           }}
-          className="ml-auto max-w-[12rem] rounded border border-border bg-bg px-1.5 py-1 text-xs"
+          className="ml-auto max-w-[12rem] border border-border bg-bg px-1.5 py-1 text-xs"
           aria-label="Load a sample token"
         >
           {samples.map((sample, index) => (
@@ -187,13 +187,13 @@ export function TokenInspector() {
             <p className="text-[0.625rem] font-semibold uppercase tracking-wider text-muted">
               Header
             </p>
-            <pre className="mt-1 overflow-x-auto rounded-lg bg-surface-2 p-2.5 font-mono text-[0.6875rem]">
+            <pre className="mt-1 overflow-x-auto bg-surface-2 p-2.5 font-mono text-[0.6875rem]">
               {JSON.stringify(parsed.header, null, 2)}
             </pre>
             <p className="mt-2 text-[0.625rem] font-semibold uppercase tracking-wider text-muted">
               Signature
             </p>
-            <pre className="mt-1 overflow-x-auto rounded-lg bg-surface-2 p-2.5 font-mono text-[0.6875rem] break-all">
+            <pre className="mt-1 overflow-x-auto bg-surface-2 p-2.5 font-mono text-[0.6875rem] break-all">
               {parsed.signature}
             </pre>
           </div>
@@ -202,12 +202,12 @@ export function TokenInspector() {
             <p className="text-[0.625rem] font-semibold uppercase tracking-wider text-muted">
               Payload — readable by anyone holding the token
             </p>
-            <pre className="mt-1 overflow-x-auto rounded-lg bg-surface-2 p-2.5 font-mono text-[0.6875rem]">
+            <pre className="mt-1 overflow-x-auto bg-surface-2 p-2.5 font-mono text-[0.6875rem]">
               {JSON.stringify(parsed.payload, null, 2)}
             </pre>
             {typeof exp === "number" ? (
               <p
-                className={`mt-2 rounded-lg border p-2 text-xs ${
+                className={`mt-2 border p-2 text-xs ${
                   expired
                     ? "border-bad/40 bg-bad-soft"
                     : "border-ok/40 bg-ok-soft"

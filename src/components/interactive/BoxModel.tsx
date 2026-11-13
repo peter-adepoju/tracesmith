@@ -27,7 +27,7 @@ const Slider = ({
   <label className="block">
     <span className="flex items-baseline justify-between text-xs">
       <span className="flex items-center gap-1.5">
-        <span className={`inline-block h-2.5 w-2.5 rounded-sm ${tone}`} />
+        <span className={`inline-block h-2.5 w-2.5 ${tone}`} />
         {label}
       </span>
       <span className="font-mono text-muted">{value}px</span>
@@ -57,7 +57,7 @@ export function BoxModel() {
   const spaceWidth = boxWidth + margin * 2;
 
   return (
-    <figure className="no-touch-target my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="no-touch-target my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           The box model
@@ -109,7 +109,7 @@ export function BoxModel() {
       </div>
 
       <figcaption className="border-t border-border p-4 text-sm">
-        <pre className="overflow-x-auto rounded-lg bg-[var(--code-bg)] p-3 font-mono text-xs text-[var(--code-text)]">
+        <pre className="overflow-x-auto bg-[var(--code-bg)] p-3 font-mono text-xs text-[var(--code-text)]">
 {`width: ${width}px;  padding: ${padding}px;  border: ${border}px;  margin: ${margin}px;
 ${borderBox ? "box-sizing: border-box;" : "/* box-sizing: content-box, the original default */"}`}
         </pre>

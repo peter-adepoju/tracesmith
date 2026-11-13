@@ -45,16 +45,24 @@ export function CourseProgress() {
   const percent = Math.round((done.length / TOTAL_DAYS) * 100);
 
   return (
-    <section className="mt-10 rounded-xl border border-border bg-surface p-4">
-      <div className="flex items-baseline justify-between text-sm">
-        <span className="font-medium">Your progress</span>
-        <span className="text-muted">
-          {done.length} of {TOTAL_DAYS} days · {percent}%
+    /* Same shape as HomeProgress: a rule and a hairline meter rather than a
+       panel. The two sit on sibling pages and should not look unrelated. */
+    <section className="mt-10 border-t border-border pt-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+        <span className="text-[0.625rem] font-medium uppercase tracking-[0.18em] text-muted">
+          Your progress
+        </span>
+        <span className="font-mono text-xs tabular-nums text-muted-2">
+          {done.length} of {TOTAL_DAYS} · {percent}%
         </span>
       </div>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-2">
+      <div
+        className="mt-3 h-[3px] w-full bg-surface-2"
+        role="img"
+        aria-label={`${percent} per cent complete`}
+      >
         <div
-          className="h-full rounded-full bg-ok transition-[width]"
+          className="h-full bg-accent transition-[width] duration-500"
           style={{ width: `${Math.max(1, percent)}%` }}
         />
       </div>

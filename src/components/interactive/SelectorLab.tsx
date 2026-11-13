@@ -114,7 +114,7 @@ export function SelectorLab() {
     locator.breaks.filter((b) => applied.includes(b));
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Which locator survives?
@@ -130,7 +130,7 @@ export function SelectorLab() {
         {CHANGES.map((change) => (
           <label
             key={change.id}
-            className="flex cursor-pointer items-start gap-2 rounded-lg border border-border p-2.5 text-xs hover:bg-surface-2"
+            className="flex cursor-pointer items-start gap-2 border border-border p-2.5 text-xs hover:bg-surface-2"
           >
             <input
               type="checkbox"
@@ -160,7 +160,7 @@ export function SelectorLab() {
                   {locator.code}
                 </code>
                 <span
-                  className={`rounded px-1.5 py-0.5 text-[0.5625rem] font-semibold uppercase tracking-wider ${
+                  className={`px-1.5 py-0.5 text-[0.5625rem] font-semibold uppercase tracking-wider ${
                     failed
                       ? "bg-bad text-white"
                       : "bg-surface-2 text-muted"

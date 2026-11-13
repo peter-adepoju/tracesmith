@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Offline" };
 export default function OfflinePage() {
   return (
     <main className="mx-auto flex min-h-[70dvh] max-w-md flex-col justify-center px-5 py-16 text-center">
-      <h1 className="text-2xl font-semibold tracking-tight">You are offline</h1>
+      <h1 className="text-2xl">You are offline</h1>
       <p className="mt-3 text-muted">
         This page has not been opened on this device before, so there is no
         copy saved.
@@ -18,13 +18,13 @@ export default function OfflinePage() {
       <div className="mt-8 flex flex-col gap-2">
         <Link
           href="/review"
-          className="rounded-xl bg-accent px-4 py-3 text-sm font-medium text-white"
+          className="bg-accent px-4 py-3 text-sm font-medium text-white"
         >
           Review your flashcards
         </Link>
         <Link
           href="/"
-          className="rounded-xl border border-border px-4 py-3 text-sm font-medium"
+          className="border border-border px-4 py-3 text-sm font-medium"
         >
           Back to the course
         </Link>

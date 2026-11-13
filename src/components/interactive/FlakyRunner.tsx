@@ -86,7 +86,7 @@ export function FlakyRunner() {
   };
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Fifty runs, four waiting strategies
@@ -102,7 +102,7 @@ export function FlakyRunner() {
         <button
           type="button"
           onClick={run}
-          className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white"
+          className="bg-accent px-3 py-1.5 text-sm font-medium text-white"
         >
           {results ? "Run the suite again" : "Run the suite 50 times"}
         </button>

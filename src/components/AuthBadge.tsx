@@ -57,7 +57,7 @@ export function AuthBadge() {
   if (!isConfigured()) {
     return (
       <span
-        className="ml-2 rounded-md border border-border px-2 py-1 text-xs text-muted"
+        className="ml-2 border border-border px-2 py-1 text-xs text-muted"
         title="Add your Supabase keys to .env.local to sync progress across devices."
       >
         Guest
@@ -73,7 +73,7 @@ export function AuthBadge() {
     return (
       <Link
         href={`/login?next=${encodeURIComponent(next)}`}
-        className="ml-2 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white"
+        className="ml-2 bg-accent px-3 py-1.5 text-xs font-medium text-white"
       >
         Sign in
       </Link>
@@ -87,7 +87,7 @@ export function AuthBadge() {
       {synced ? (
         <p
           role="status"
-          className="fixed inset-x-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 rounded-xl border border-ok/40 bg-ok-soft p-3 text-center text-xs md:inset-x-auto md:right-4 md:bottom-4 md:max-w-xs"
+          className="fixed inset-x-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 border border-ok/40 bg-ok-soft p-3 text-center text-xs md:inset-x-auto md:right-4 md:bottom-4 md:max-w-xs"
         >
           {synced}
         </p>
@@ -115,7 +115,7 @@ export function AuthBadge() {
           />
           <div
             role="menu"
-            className="absolute right-0 top-10 z-50 w-56 rounded-xl border border-border bg-surface p-1.5 shadow-lg"
+            className="absolute right-0 top-10 z-50 w-56 border border-border bg-surface p-1.5 shadow-lg"
           >
             <p className="truncate px-2.5 py-2 text-xs text-muted" title={email}>
               {email}
@@ -128,7 +128,7 @@ export function AuthBadge() {
                 setMenu(false);
                 router.refresh();
               }}
-              className="w-full rounded-lg px-2.5 py-2 text-left text-sm hover:bg-surface-2"
+              className="w-full px-2.5 py-2 text-left text-sm hover:bg-surface-2"
             >
               Sign out
             </button>

@@ -70,7 +70,7 @@ export function RedactionDrill() {
   };
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Redact before you share
@@ -78,7 +78,7 @@ export function RedactionDrill() {
         <button
           type="button"
           onClick={() => setChecked(true)}
-          className="ml-auto rounded bg-accent px-2.5 py-1 text-xs font-medium text-white"
+          className="ml-auto bg-accent px-2.5 py-1 text-xs font-medium text-white"
         >
           Check
         </button>
@@ -89,7 +89,7 @@ export function RedactionDrill() {
             setChecked(false);
             setPicked(null);
           }}
-          className="rounded border border-border px-2 py-1 text-xs"
+          className="border border-border px-2 py-1 text-xs"
         >
           Reset
         </button>
@@ -112,7 +112,7 @@ export function RedactionDrill() {
                   key={part.id}
                   type="button"
                   onClick={() => toggle(part)}
-                  className={`rounded px-1 transition-colors ${
+                  className={`px-1 transition-colors ${
                     hidden.includes(part.id)
                       ? "bg-white/80 text-transparent"
                       : "underline decoration-dotted underline-offset-2 hover:bg-white/15"
@@ -148,13 +148,13 @@ export function RedactionDrill() {
               ) : null}
             </p>
             {caught.length < secrets.length ? (
-              <p className="rounded-lg border border-bad/40 bg-bad-soft p-2.5 text-xs">
+              <p className="border border-bad/40 bg-bad-soft p-2.5 text-xs">
                 Outlined in red: left in, and should not have been. Any one of
                 these turns your bug report into a second incident.
               </p>
             ) : null}
             {overRedacted.length > 0 ? (
-              <p className="rounded-lg border border-warn/40 bg-warn-soft p-2.5 text-xs">
+              <p className="border border-warn/40 bg-warn-soft p-2.5 text-xs">
                 Outlined in amber: removed, and should have stayed. Redacting
                 the endpoint, the error code or the request id leaves a report
                 nobody can act on. The goal is a capture that proves the bug
@@ -162,7 +162,7 @@ export function RedactionDrill() {
               </p>
             ) : null}
             {caught.length === secrets.length && overRedacted.length === 0 ? (
-              <p className="rounded-lg border border-ok/40 bg-ok-soft p-2.5 text-xs">
+              <p className="border border-ok/40 bg-ok-soft p-2.5 text-xs">
                 Exactly right. Every credential and every piece of personal
                 data is gone, and everything an engineer needs is still there.
               </p>

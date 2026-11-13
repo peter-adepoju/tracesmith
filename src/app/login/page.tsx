@@ -147,7 +147,7 @@ function LoginForm() {
 
   if (!configured) {
     return (
-      <div className="rounded-2xl border border-border bg-surface p-5 text-sm">
+      <div className="border border-border bg-surface p-5 text-sm">
         <p className="font-medium">Supabase is not configured.</p>
         <p className="mt-2 text-muted">
           The course works fully as a guest and keeps progress in this browser.
@@ -158,7 +158,7 @@ function LoginForm() {
         </p>
         <Link
           href="/"
-          className="mt-4 inline-block rounded-xl bg-accent px-4 py-2.5 text-sm font-medium text-white"
+          className="mt-4 inline-block bg-accent px-4 py-2.5 text-sm font-medium text-white"
         >
           Back to the course
         </Link>
@@ -175,7 +175,7 @@ function LoginForm() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+      <h1 className="text-2xl">{title}</h1>
       <p className="mt-2 text-sm text-muted">
         {mode === "forgot"
           ? "Enter your email and we will send a link to set a new password."
@@ -184,7 +184,7 @@ function LoginForm() {
 
       {/* Mode switch */}
       {mode !== "forgot" ? (
-        <div className="no-touch-target mt-5 grid grid-cols-2 gap-1 rounded-xl bg-surface-2 p-1">
+        <div className="no-touch-target mt-5 grid grid-cols-2 gap-1 bg-surface-2 p-1">
           {(["signin", "signup"] as const).map((m) => (
             <button
               key={m}
@@ -194,7 +194,7 @@ function LoginForm() {
                 setError("");
                 setNotice("");
               }}
-              className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              className={`px-3 py-2 text-sm font-medium transition-colors ${
                 mode === m ? "bg-bg shadow-sm" : "text-muted"
               }`}
             >
@@ -221,7 +221,7 @@ function LoginForm() {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             placeholder="you@example.com"
-            className="mt-1.5 w-full rounded-xl border border-border bg-surface px-3 py-3 text-base outline-none focus:border-accent"
+            className="mt-1.5 w-full border border-border bg-surface px-3 py-3 text-base outline-none focus:border-accent"
           />
         </div>
 
@@ -257,12 +257,12 @@ function LoginForm() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder={mode === "signup" ? "At least 6 characters" : "••••••••"}
-                className="w-full rounded-xl border border-border bg-surface px-3 py-3 pr-16 text-base outline-none focus:border-accent"
+                className="w-full border border-border bg-surface px-3 py-3 pr-16 text-base outline-none focus:border-accent"
               />
               <button
                 type="button"
                 onClick={() => setShow((s) => !s)}
-                className="no-touch-target absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1.5 text-xs text-muted"
+                className="no-touch-target absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1.5 text-xs text-muted"
                 aria-label={show ? "Hide password" : "Show password"}
               >
                 {show ? "Hide" : "Show"}
@@ -274,13 +274,13 @@ function LoginForm() {
         {error ? (
           <p
             role="alert"
-            className="rounded-xl border border-bad/40 bg-bad-soft p-3 text-sm"
+            className="border border-bad/40 bg-bad-soft p-3 text-sm"
           >
             {error}
           </p>
         ) : null}
         {notice ? (
-          <p className="rounded-xl border border-ok/40 bg-ok-soft p-3 text-sm">
+          <p className="border border-ok/40 bg-ok-soft p-3 text-sm">
             {notice}
           </p>
         ) : null}
@@ -288,7 +288,7 @@ function LoginForm() {
         <button
           type="submit"
           disabled={busy}
-          className="w-full rounded-xl bg-accent px-4 py-3.5 text-base font-medium text-white disabled:opacity-60"
+          className="w-full bg-accent px-4 py-3.5 text-base font-medium text-white disabled:opacity-60"
         >
           {busy
             ? "Working…"
@@ -307,7 +307,7 @@ function LoginForm() {
               setError("");
               setNotice("");
             }}
-            className="w-full rounded-xl border border-border px-4 py-3 text-sm"
+            className="w-full border border-border px-4 py-3 text-sm"
           >
             Back to sign in
           </button>

@@ -104,7 +104,7 @@ export function RequestJourney() {
   const step = STEPS[active];
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           One request, step by step
@@ -116,7 +116,7 @@ export function RequestJourney() {
               setActive(0);
               setPlaying(true);
             }}
-            className="rounded bg-accent px-2.5 py-1 text-xs font-medium text-white"
+            className="bg-accent px-2.5 py-1 text-xs font-medium text-white"
           >
             {playing ? "Playing…" : "Play"}
           </button>
@@ -126,7 +126,7 @@ export function RequestJourney() {
               setPlaying(false);
               setActive((c) => Math.max(0, c - 1));
             }}
-            className="rounded border border-border px-2 py-1 text-xs"
+            className="border border-border px-2 py-1 text-xs"
           >
             Back
           </button>
@@ -136,7 +136,7 @@ export function RequestJourney() {
               setPlaying(false);
               setActive((c) => Math.min(STEPS.length - 1, c + 1));
             }}
-            className="rounded border border-border px-2 py-1 text-xs"
+            className="border border-border px-2 py-1 text-xs"
           >
             Step
           </button>
@@ -150,9 +150,9 @@ export function RequestJourney() {
             <span className="w-24 shrink-0 text-xs text-muted">
               {LANE[lane].label}
             </span>
-            <div className="relative h-9 flex-1 rounded-lg border border-border bg-surface-2">
+            <div className="relative h-9 flex-1 border border-border bg-surface-2">
               <div
-                className={`absolute top-1 h-7 rounded-md transition-all duration-500 ease-out ${LANE[lane].tone} ${
+                className={`absolute top-1 h-7 transition-all duration-500 ease-out ${LANE[lane].tone} ${
                   step.where === lane ? "opacity-100" : "opacity-0"
                 }`}
                 style={{
@@ -175,7 +175,7 @@ export function RequestJourney() {
               setPlaying(false);
               setActive(index);
             }}
-            className={`h-6 w-6 rounded text-xs transition-colors ${
+            className={`h-6 w-6 text-xs transition-colors ${
               index === active
                 ? "bg-accent font-semibold text-white"
                 : index < active
@@ -194,7 +194,7 @@ export function RequestJourney() {
           {step.n}. {step.title}
         </p>
         <p className="mt-1 text-sm text-muted">{step.detail}</p>
-        <p className="mt-2 rounded-lg bg-bad-soft px-2.5 py-1.5 text-xs">
+        <p className="mt-2 bg-bad-soft px-2.5 py-1.5 text-xs">
           <strong>What breaks here. </strong>
           {step.breaks}
         </p>

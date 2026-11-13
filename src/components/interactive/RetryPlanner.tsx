@@ -106,7 +106,7 @@ export function RetryPlanner() {
   const ok = problems.length === 0;
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Retry configuration
@@ -180,7 +180,7 @@ export function RetryPlanner() {
               key={b}
               type="button"
               onClick={() => setBackoff(b)}
-              className={`rounded-lg border px-2 py-1 ${
+              className={`border px-2 py-1 ${
                 backoff === b
                   ? "border-accent bg-accent-soft font-semibold"
                   : "border-border bg-surface-2"
@@ -241,7 +241,7 @@ export function RetryPlanner() {
 
       <div className="space-y-2 p-3 text-sm">
         {ok ? (
-          <p className="rounded-lg border border-ok/40 bg-ok-soft p-2.5">
+          <p className="border border-ok/40 bg-ok-soft p-2.5">
             Nothing to flag. Retries on transient failures only, a worst case
             inside the interval, and writes protected by a key.
           </p>
@@ -249,7 +249,7 @@ export function RetryPlanner() {
           problems.map((problem) => (
             <p
               key={problem.text}
-              className={`rounded-lg border p-2.5 ${
+              className={`border p-2.5 ${
                 problem.level === "bad"
                   ? "border-bad/40 bg-bad-soft"
                   : "border-warn/40 bg-warn-soft"

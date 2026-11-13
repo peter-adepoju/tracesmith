@@ -73,25 +73,25 @@ export default function ResetPasswordPage() {
 
   return (
     <main className="mx-auto w-full max-w-sm px-5 py-10">
-      <h1 className="text-2xl font-semibold tracking-tight">
+      <h1 className="text-2xl">
         Set a new password
       </h1>
 
       {hasSession === false ? (
-        <div className="mt-4 rounded-xl border border-warn/40 bg-warn-soft p-3 text-sm">
+        <div className="mt-4 border border-warn/40 bg-warn-soft p-3 text-sm">
           <p>
             This page needs a valid reset link. Open the most recent link from
             your email, or request a new one.
           </p>
           <Link
             href="/login"
-            className="mt-3 inline-block rounded-xl border border-border bg-bg px-3 py-2 text-sm"
+            className="mt-3 inline-block border border-border bg-bg px-3 py-2 text-sm"
           >
             Back to sign in
           </Link>
         </div>
       ) : done ? (
-        <p className="mt-4 rounded-xl border border-ok/40 bg-ok-soft p-3 text-sm">
+        <p className="mt-4 border border-ok/40 bg-ok-soft p-3 text-sm">
           Password updated. Taking you back to the course…
         </p>
       ) : (
@@ -109,12 +109,12 @@ export default function ResetPasswordPage() {
                 minLength={6}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="w-full rounded-xl border border-border bg-surface px-3 py-3 pr-16 text-base outline-none focus:border-accent"
+                className="w-full border border-border bg-surface px-3 py-3 pr-16 text-base outline-none focus:border-accent"
               />
               <button
                 type="button"
                 onClick={() => setShow((s) => !s)}
-                className="no-touch-target absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1.5 text-xs text-muted"
+                className="no-touch-target absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1.5 text-xs text-muted"
               >
                 {show ? "Hide" : "Show"}
               </button>
@@ -132,14 +132,14 @@ export default function ResetPasswordPage() {
               required
               value={confirm}
               onChange={(event) => setConfirm(event.target.value)}
-              className="mt-1.5 w-full rounded-xl border border-border bg-surface px-3 py-3 text-base outline-none focus:border-accent"
+              className="mt-1.5 w-full border border-border bg-surface px-3 py-3 text-base outline-none focus:border-accent"
             />
           </div>
 
           {error ? (
             <p
               role="alert"
-              className="rounded-xl border border-bad/40 bg-bad-soft p-3 text-sm"
+              className="border border-bad/40 bg-bad-soft p-3 text-sm"
             >
               {error}
             </p>
@@ -148,7 +148,7 @@ export default function ResetPasswordPage() {
           <button
             type="submit"
             disabled={busy}
-            className="w-full rounded-xl bg-accent px-4 py-3.5 text-base font-medium text-white disabled:opacity-60"
+            className="w-full bg-accent px-4 py-3.5 text-base font-medium text-white disabled:opacity-60"
           >
             {busy ? "Saving…" : "Save new password"}
           </button>

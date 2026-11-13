@@ -76,7 +76,7 @@ export default function ReviewPage() {
 
     return (
       <main className="mx-auto max-w-2xl px-4 py-20 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1 className="text-2xl">
           {reviewed > 0 ? "Deck finished" : "Nothing due"}
         </h1>
         <p className="mt-2 text-muted">
@@ -89,7 +89,7 @@ export default function ReviewPage() {
         </p>
         <Link
           href="/course"
-          className="mt-6 inline-block rounded-lg bg-accent px-4 py-2 text-sm font-medium text-[#141008]"
+          className="mt-6 inline-block bg-accent px-4 py-2 text-sm font-medium"
         >
           Back to the course
         </Link>
@@ -106,7 +106,9 @@ export default function ReviewPage() {
         </span>
       </div>
 
-      <div className="mt-5 min-h-56 rounded-2xl border border-border bg-surface p-6">
+      {/* The one place a card metaphor is literally correct, so it keeps its
+          edge — squared off, like every other surface in this theme. */}
+      <div className="mt-5 min-h-56 border border-border bg-panel p-6">
         <p className="text-lg font-medium">{card.front}</p>
         {revealed ? (
           <>
@@ -125,7 +127,7 @@ export default function ReviewPage() {
               key={button.label}
               type="button"
               onClick={() => answer(button.rating)}
-              className={`rounded-lg border bg-surface px-2 py-2.5 text-sm font-medium transition-colors hover:bg-surface-2 ${button.tone}`}
+              className={`border bg-surface px-2 py-2.5 text-sm font-medium transition-colors hover:bg-surface-2 ${button.tone}`}
             >
               {button.label}
             </button>
@@ -135,7 +137,7 @@ export default function ReviewPage() {
         <button
           type="button"
           onClick={() => setRevealed(true)}
-          className="mt-4 w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white"
+          className="mt-4 w-full bg-accent px-4 py-2.5 text-sm font-medium"
         >
           Show answer
         </button>

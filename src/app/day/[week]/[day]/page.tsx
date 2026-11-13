@@ -110,7 +110,7 @@ export default async function DayPage({
           />
         </LessonProvider>
       ) : (
-        <div className="mt-10 rounded-xl border border-border bg-surface-2 p-6">
+        <div className="mt-10 border border-border bg-surface-2 p-6">
           <h2 className="!mt-0 text-lg font-semibold">Not written yet</h2>
           <p className="mt-2 text-sm text-muted">
             This day is planned and its objectives are above, but the lesson

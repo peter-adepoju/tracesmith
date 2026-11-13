@@ -55,7 +55,7 @@ export function StatusExplorer() {
       : CODES.filter((c) => String(c.code)[0] === family[0]);
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Status codes
@@ -66,7 +66,7 @@ export function StatusExplorer() {
               key={f}
               type="button"
               onClick={() => setFamily(f)}
-              className={`rounded px-2 py-0.5 font-mono text-xs ${
+              className={`px-2 py-0.5 font-mono text-xs ${
                 family === f ? "bg-accent text-white" : "text-muted hover:text-text"
               }`}
             >
@@ -82,7 +82,7 @@ export function StatusExplorer() {
             key={code.code}
             type="button"
             onClick={() => setPicked(code)}
-            className={`rounded-lg border px-2.5 py-1 font-mono text-sm transition-colors ${
+            className={`border px-2.5 py-1 font-mono text-sm transition-colors ${
               picked.code === code.code
                 ? "border-accent bg-accent-soft font-semibold"
                 : "border-border hover:bg-surface-2"

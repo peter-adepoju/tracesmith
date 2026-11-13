@@ -66,7 +66,7 @@ export function ViewportSlider() {
     width >= 1024 ? 1024 : width >= 768 ? 768 : width >= 480 ? 480 : null;
 
   return (
-    <figure className="no-touch-target my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="no-touch-target my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Drag through the breakpoints
@@ -106,7 +106,7 @@ export function ViewportSlider() {
               key={w}
               type="button"
               onClick={() => setWidth(Math.min(MAX, w))}
-              className="rounded border border-border px-1.5 py-0.5 font-mono text-[0.625rem] text-muted"
+              className="border border-border px-1.5 py-0.5 font-mono text-[0.625rem] text-muted"
             >
               {w}
             </button>
@@ -120,7 +120,7 @@ export function ViewportSlider() {
           title={`Layout at ${width} pixels`}
           sandbox=""
           style={{ width, height: 270 }}
-          className="mx-auto block rounded-lg border border-border bg-white"
+          className="mx-auto block border border-border bg-white"
         />
       </div>
 

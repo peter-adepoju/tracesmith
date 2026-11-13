@@ -74,7 +74,7 @@ export function ExposureScan() {
   };
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           What should not be here?
@@ -121,7 +121,7 @@ export function ExposureScan() {
         <button
           type="button"
           onClick={() => setShown(true)}
-          className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white"
+          className="bg-accent px-3 py-1.5 text-sm font-medium text-white"
         >
           Check
         </button>
@@ -142,7 +142,7 @@ export function ExposureScan() {
             {problems.map((index) => (
               <li
                 key={index}
-                className={`rounded-lg border p-2.5 ${
+                className={`border p-2.5 ${
                   marked.includes(index)
                     ? "border-ok/40 bg-ok-soft"
                     : "border-bad/40 bg-bad-soft"
@@ -155,7 +155,7 @@ export function ExposureScan() {
             {wrong.map((index) => (
               <li
                 key={index}
-                className="rounded-lg border border-border bg-surface-2 p-2.5"
+                className="border border-border bg-surface-2 p-2.5"
               >
                 <code className="text-xs">{LINES[index].text.trim()}</code>
                 <span className="mt-1 block">

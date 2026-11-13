@@ -169,21 +169,21 @@ export function BugReportGrader() {
           onChange={(e) => set(k, e.target.value)}
           rows={rows}
           placeholder={placeholder}
-          className="mt-1 w-full rounded-lg border border-border bg-bg px-2.5 py-2 text-sm"
+          className="mt-1 w-full border border-border bg-bg px-2.5 py-2 text-sm"
         />
       ) : (
         <input
           value={fields[k]}
           onChange={(e) => set(k, e.target.value)}
           placeholder={placeholder}
-          className="mt-1 w-full rounded-lg border border-border bg-bg px-2.5 py-2 text-sm"
+          className="mt-1 w-full border border-border bg-bg px-2.5 py-2 text-sm"
         />
       )}
     </label>
   );
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Write a bug report
@@ -195,7 +195,7 @@ export function BugReportGrader() {
               setFields(EXAMPLE);
               setChecked(false);
             }}
-            className="rounded border border-border px-2 py-1 text-xs"
+            className="border border-border px-2 py-1 text-xs"
           >
             Load an example
           </button>
@@ -205,7 +205,7 @@ export function BugReportGrader() {
               setFields(BLANK);
               setChecked(false);
             }}
-            className="rounded border border-border px-2 py-1 text-xs"
+            className="border border-border px-2 py-1 text-xs"
           >
             Clear
           </button>
@@ -237,7 +237,7 @@ export function BugReportGrader() {
         <button
           type="button"
           onClick={() => setChecked(true)}
-          className="w-full rounded-lg bg-accent px-3 py-2.5 text-sm font-medium text-white"
+          className="w-full bg-accent px-3 py-2.5 text-sm font-medium text-white"
         >
           Check the report
         </button>
@@ -246,7 +246,7 @@ export function BugReportGrader() {
       {checked ? (
         <figcaption className="border-t border-border p-3 text-sm">
           {safetyFailed ? (
-            <p className="mb-2 rounded-lg border border-bad/50 bg-bad-soft p-2.5 text-xs font-medium">
+            <p className="mb-2 border border-bad/50 bg-bad-soft p-2.5 text-xs font-medium">
               Stop. There is a credential in this report. Fix that before
               anything else on the list.
             </p>
@@ -264,7 +264,7 @@ export function BugReportGrader() {
                 </span>
                 <span className="flex-1">
                   {r.label}
-                  <span className="ml-1.5 rounded bg-surface-2 px-1 text-[0.5625rem] uppercase tracking-wide text-muted">
+                  <span className="ml-1.5 bg-surface-2 px-1 text-[0.5625rem] uppercase tracking-wide text-muted">
                     {r.kind}
                   </span>
                   {!r.pass ? (
@@ -274,7 +274,7 @@ export function BugReportGrader() {
               </li>
             ))}
           </ul>
-          <p className="mt-3 rounded-lg bg-surface-2 p-2.5 text-xs text-muted">
+          <p className="mt-3 bg-surface-2 p-2.5 text-xs text-muted">
             These checks cover structure, language and safety. None of them can
             tell whether the bug is real, whether your severity call is right,
             or whether the steps actually reproduce it. Only running them does

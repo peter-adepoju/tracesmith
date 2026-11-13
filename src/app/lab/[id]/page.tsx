@@ -37,7 +37,7 @@ export default async function LabPage({
       </nav>
 
       <header className="mt-3 mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">{lab.title}</h1>
+        <h1 className="text-2xl">{lab.title}</h1>
         <p className="mt-1 max-w-3xl text-sm text-muted">{lab.summary}</p>
       </header>
 

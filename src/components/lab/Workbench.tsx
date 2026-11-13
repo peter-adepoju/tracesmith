@@ -231,7 +231,7 @@ export function Workbench({ lab }: { lab: Lab }) {
             key={view}
             type="button"
             onClick={() => setMobileView(view)}
-            className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium capitalize transition-colors ${
+            className={`flex-1 px-3 py-2 text-sm font-medium capitalize transition-colors ${
               mobileView === view
                 ? "bg-accent text-white"
                 : "bg-surface-2 text-muted"
@@ -251,14 +251,14 @@ export function Workbench({ lab }: { lab: Lab }) {
           <span className="text-xs font-semibold uppercase tracking-wider text-muted">
             Meridian
           </span>
-          <span className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[0.625rem] text-muted">
+          <span className="bg-surface-2 px-1.5 py-0.5 font-mono text-[0.625rem] text-muted">
             stage {stage.n}
           </span>
           <div className="ml-auto flex gap-2">
             <button
               type="button"
               onClick={reset}
-              className="rounded-md border border-border px-2 py-1 text-xs"
+              className="border border-border px-2 py-1 text-xs"
             >
               Reset shop
             </button>
@@ -266,7 +266,7 @@ export function Workbench({ lab }: { lab: Lab }) {
               href={src}
               target="_blank"
               rel="noreferrer"
-              className="rounded-md border border-border px-2 py-1 text-xs"
+              className="border border-border px-2 py-1 text-xs"
             >
               Open in a tab
             </a>
@@ -278,7 +278,7 @@ export function Workbench({ lab }: { lab: Lab }) {
           src={src}
           onLoad={instrument}
           title="Meridian, the product under test"
-          className="h-[30rem] w-full rounded-xl border border-border bg-white sm:h-[36rem]"
+          className="h-[30rem] w-full border border-border bg-white sm:h-[36rem]"
         />
         <p className="text-xs text-muted">
           This is a real page. Press <kbd>F12</kbd> and the browser&apos;s own
@@ -289,7 +289,7 @@ export function Workbench({ lab }: { lab: Lab }) {
 
       {/* The tools */}
       <section
-        className={`rounded-xl border border-border bg-surface ${
+        className={`border border-border bg-surface ${
           mobileView === "tools" ? "" : "hidden lg:block"
         }`}
       >
@@ -299,7 +299,7 @@ export function Workbench({ lab }: { lab: Lab }) {
               key={name}
               type="button"
               onClick={() => setTab(name)}
-              className={`rounded px-2.5 py-1 text-xs capitalize ${
+              className={`px-2.5 py-1 text-xs capitalize ${
                 tab === name ? "bg-bg font-medium" : "text-muted hover:text-text"
               }`}
             >
@@ -320,7 +320,7 @@ export function Workbench({ lab }: { lab: Lab }) {
                     key={item.n}
                     type="button"
                     onClick={() => setStageNumber(item.n)}
-                    className={`rounded-lg border px-2.5 py-1 text-xs ${
+                    className={`border px-2.5 py-1 text-xs ${
                       item.n === stageNumber
                         ? "border-accent bg-accent-soft font-medium"
                         : "border-border"
@@ -338,13 +338,13 @@ export function Workbench({ lab }: { lab: Lab }) {
                 ))}
               </ol>
               {stage.defects.length > 0 ? (
-                <p className="rounded-lg border border-border bg-surface-2 p-3 text-xs text-muted">
+                <p className="border-l-2 border-border-2 py-1 pl-3 text-xs text-muted">
                   There are <strong>{stage.defects.length}</strong> defects
                   planted in this stage. You are not told what they are. File
                   each one in the Report tab, in your own words.
                 </p>
               ) : (
-                <p className="rounded-lg border border-ok/40 bg-ok-soft p-3 text-xs">
+                <p className="border-l-2 border-ok py-1 pl-3 text-xs text-ok">
                   Nothing is broken in this stage. Learn the product.
                 </p>
               )}
@@ -380,7 +380,7 @@ export function Workbench({ lab }: { lab: Lab }) {
             ) : (
               <ul className="space-y-2">
                 {network.map((entry, index) => (
-                  <li key={index} className="rounded-lg border border-border p-2">
+                  <li key={index} className="border-b border-border py-2 last:border-0">
                     <div className="flex items-center gap-2 font-mono text-xs">
                       <span className="font-semibold">{entry.method}</span>
                       <span className="truncate">{entry.url}</span>
@@ -390,12 +390,12 @@ export function Workbench({ lab }: { lab: Lab }) {
                       <span className="text-muted">{entry.ms}ms</span>
                     </div>
                     {entry.requestBody ? (
-                      <pre className="mt-1.5 overflow-x-auto rounded bg-surface-2 p-1.5 font-mono text-[0.6875rem]">
+                      <pre className="mt-1.5 overflow-x-auto bg-surface-2 p-1.5 font-mono text-[0.6875rem]">
                         → {entry.requestBody}
                       </pre>
                     ) : null}
                     {entry.responseBody ? (
-                      <pre className="mt-1 overflow-x-auto rounded bg-surface-2 p-1.5 font-mono text-[0.6875rem]">
+                      <pre className="mt-1 overflow-x-auto bg-surface-2 p-1.5 font-mono text-[0.6875rem]">
                         ← {entry.responseBody}
                       </pre>
                     ) : null}
@@ -416,7 +416,7 @@ export function Workbench({ lab }: { lab: Lab }) {
                         setDraft({ ...draft, title: event.target.value })
                       }
                       placeholder="Title: what, and where"
-                      className="w-full rounded-lg border border-border bg-bg px-2.5 py-2 text-sm"
+                      className="w-full border border-border bg-bg px-2.5 py-2 text-sm"
                     />
                     <textarea
                       value={draft.steps}
@@ -425,7 +425,7 @@ export function Workbench({ lab }: { lab: Lab }) {
                       }
                       rows={3}
                       placeholder="Steps to reproduce, numbered"
-                      className="w-full rounded-lg border border-border bg-bg px-2.5 py-2 text-sm"
+                      className="w-full border border-border bg-bg px-2.5 py-2 text-sm"
                     />
                     <div className="grid gap-2 sm:grid-cols-2">
                       <textarea
@@ -435,7 +435,7 @@ export function Workbench({ lab }: { lab: Lab }) {
                         }
                         rows={2}
                         placeholder="Expected"
-                        className="rounded-lg border border-border bg-bg px-2.5 py-2 text-sm"
+                        className="border border-border bg-bg px-2.5 py-2 text-sm"
                       />
                       <textarea
                         value={draft.actual}
@@ -444,7 +444,7 @@ export function Workbench({ lab }: { lab: Lab }) {
                         }
                         rows={2}
                         placeholder="Actual"
-                        className="rounded-lg border border-border bg-bg px-2.5 py-2 text-sm"
+                        className="border border-border bg-bg px-2.5 py-2 text-sm"
                       />
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -457,7 +457,7 @@ export function Workbench({ lab }: { lab: Lab }) {
                             severity: event.target.value as Severity,
                           })
                         }
-                        className="rounded-lg border border-border bg-bg px-2 py-1.5 text-sm capitalize"
+                        className="border border-border bg-bg px-2 py-1.5 text-sm capitalize"
                       >
                         {SEVERITY_ORDER.map((level) => (
                           <option key={level} value={level}>
@@ -468,7 +468,7 @@ export function Workbench({ lab }: { lab: Lab }) {
                       <button
                         type="button"
                         onClick={addReport}
-                        className="ml-auto rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white"
+                        className="ml-auto bg-accent px-3 py-1.5 text-sm font-medium text-white"
                       >
                         File it
                       </button>
@@ -481,9 +481,9 @@ export function Workbench({ lab }: { lab: Lab }) {
                         {reports.map((report) => (
                           <li
                             key={report.id}
-                            className="flex items-start gap-2 rounded-lg border border-border p-2 text-sm"
+                            className="flex items-start gap-2 border-b border-border py-2 text-sm last:border-0"
                           >
-                            <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[0.625rem] uppercase">
+                            <span className="bg-surface-2 px-1.5 py-0.5 text-[0.625rem] uppercase">
                               {report.severity}
                             </span>
                             <span className="flex-1">{report.title}</span>
@@ -504,7 +504,7 @@ export function Workbench({ lab }: { lab: Lab }) {
                       <button
                         type="button"
                         onClick={grade}
-                        className="w-full rounded-lg border border-accent bg-accent-soft px-3 py-2 text-sm font-medium"
+                        className="w-full border border-accent bg-accent-soft px-3 py-2 text-sm font-medium"
                       >
                         Submit {reports.length}{" "}
                         {reports.length === 1 ? "report" : "reports"} for marking
@@ -550,7 +550,7 @@ function Results({
 }) {
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-border bg-surface-2 p-3">
+      <div className="border border-border bg-surface-2 p-3">
         <div className="font-mono text-sm">
           Found{" "}
           <strong>
@@ -565,7 +565,7 @@ function Results({
       </div>
 
       {graded.unmatched.length > 0 ? (
-        <div className="rounded-lg border border-warn/40 bg-warn-soft p-3">
+        <div className="border-l-2 border-warn py-1 pl-3">
           <p className="text-xs font-semibold uppercase tracking-wider">
             Could not match
           </p>
@@ -586,7 +586,7 @@ function Results({
                 key={id}
                 type="button"
                 onClick={() => onOverride(id)}
-                className="rounded border border-border bg-bg px-2 py-1 text-xs"
+                className="border border-border bg-bg px-2 py-1 text-xs"
               >
                 I found: {DEFECTS[id].title.slice(0, 38)}…
               </button>
@@ -606,7 +606,7 @@ function Results({
             return (
               <li
                 key={id}
-                className={`rounded-lg border p-3 ${
+                className={`border p-3 ${
                   got ? "border-ok/40 bg-ok-soft" : "border-bad/40 bg-bad-soft"
                 }`}
               >
@@ -614,7 +614,7 @@ function Results({
                   <span className="text-xs font-semibold uppercase">
                     {got ? "found" : "missed"}
                   </span>
-                  <span className="ml-auto rounded bg-bg/60 px-1.5 py-0.5 text-[0.625rem] uppercase">
+                  <span className="ml-auto bg-bg/60 px-1.5 py-0.5 text-[0.625rem] uppercase">
                     {defect.severity}
                   </span>
                 </div>
@@ -639,7 +639,7 @@ function Results({
       <button
         type="button"
         onClick={onRetry}
-        className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+        className="w-full border border-border px-3 py-2 text-sm"
       >
         Back to my reports
       </button>

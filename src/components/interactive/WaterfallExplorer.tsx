@@ -79,7 +79,7 @@ export function WaterfallExplorer() {
   const shown = REQUESTS.filter((r) => matches(r, filter));
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           A page load, as a waterfall
@@ -95,7 +95,7 @@ export function WaterfallExplorer() {
           onChange={(event) => setFilter(event.target.value)}
           placeholder="Filter: status-code:500, method:POST, larger-than:1M, -.png"
           spellCheck={false}
-          className="w-full rounded-md border border-border bg-bg px-2 py-2 font-mono text-xs"
+          className="w-full border border-border bg-bg px-2 py-2 font-mono text-xs"
           aria-label="Filter requests"
         />
         <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -104,7 +104,7 @@ export function WaterfallExplorer() {
               key={f || "clear"}
               type="button"
               onClick={() => setFilter(f)}
-              className="rounded border border-border px-1.5 py-0.5 font-mono text-[0.625rem] text-muted"
+              className="border border-border px-1.5 py-0.5 font-mono text-[0.625rem] text-muted"
             >
               {f || "clear"}
             </button>
@@ -147,9 +147,9 @@ export function WaterfallExplorer() {
                     {ms} ms
                   </td>
                   <td className="px-2 py-1.5">
-                    <div className="relative h-3 w-full rounded bg-surface-2">
+                    <div className="relative h-3 w-full bg-surface-2">
                       <div
-                        className={`absolute h-3 rounded ${
+                        className={`absolute h-3 ${
                           req.status >= 500 ? "bg-bad" : "bg-accent"
                         }`}
                         style={{
@@ -187,9 +187,9 @@ export function WaterfallExplorer() {
                     <span>{label}</span>
                     <span className="text-muted">{value} ms</span>
                   </div>
-                  <div className="mt-0.5 h-1.5 rounded bg-surface-2">
+                  <div className="mt-0.5 h-1.5 bg-surface-2">
                     <div
-                      className="h-1.5 rounded bg-accent"
+                      className="h-1.5 bg-accent"
                       style={{
                         width: `${Math.max(1, (value / total(picked)) * 100)}%`,
                       }}

@@ -55,7 +55,7 @@ export function KeyboardPass() {
   ].filter(Boolean) as string[];
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Keyboard-only pass
@@ -95,7 +95,7 @@ export function KeyboardPass() {
           type="button"
           data-stop="Start here"
           onClick={() => setOrder([])}
-          className="rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 text-sm"
+          className="border border-border bg-surface-2 px-2.5 py-1.5 text-sm"
         >
           Start here
         </button>
@@ -104,7 +104,7 @@ export function KeyboardPass() {
           data-stop="Search"
           placeholder="Search"
           aria-label="Search"
-          className="rounded-lg border border-border bg-bg px-2.5 py-1.5 text-sm"
+          className="border border-border bg-bg px-2.5 py-1.5 text-sm"
         />
 
         {faults.divButton ? (
@@ -112,7 +112,7 @@ export function KeyboardPass() {
             data-stop="Filter"
             role="button"
             onClick={() => undefined}
-            className="cursor-pointer rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 text-sm"
+            className="cursor-pointer border border-border bg-surface-2 px-2.5 py-1.5 text-sm"
           >
             Filter
           </div>
@@ -120,7 +120,7 @@ export function KeyboardPass() {
           <button
             type="button"
             data-stop="Filter"
-            className="rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 text-sm"
+            className="border border-border bg-surface-2 px-2.5 py-1.5 text-sm"
           >
             Filter
           </button>
@@ -130,7 +130,7 @@ export function KeyboardPass() {
           type="button"
           data-stop="Sort"
           style={faults.noOutline ? { outline: "none", boxShadow: "none" } : undefined}
-          className="rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 text-sm"
+          className="border border-border bg-surface-2 px-2.5 py-1.5 text-sm"
         >
           Sort
         </button>
@@ -138,7 +138,7 @@ export function KeyboardPass() {
         <button
           type="button"
           data-stop="Help"
-          className="rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 text-sm"
+          className="border border-border bg-surface-2 px-2.5 py-1.5 text-sm"
         >
           Help
         </button>
@@ -147,7 +147,7 @@ export function KeyboardPass() {
           type="button"
           data-stop="Buy"
           style={faults.cssOrder ? { order: -1 } : undefined}
-          className="rounded-lg bg-accent px-2.5 py-1.5 text-sm font-medium text-white"
+          className="bg-accent px-2.5 py-1.5 text-sm font-medium text-white"
         >
           Buy
         </button>
@@ -178,7 +178,7 @@ export function KeyboardPass() {
             What you would write up
           </p>
           {findings.length === 0 ? (
-            <p className="mt-1.5 rounded-lg border border-ok/40 bg-ok-soft p-2.5 text-sm">
+            <p className="mt-1.5 border border-ok/40 bg-ok-soft p-2.5 text-sm">
               Every control is reachable, visibly focused, and in the order it
               appears on screen. Tab through it again and compare — that is
               what a clean pass feels like.
@@ -188,7 +188,7 @@ export function KeyboardPass() {
               {findings.map((finding) => (
                 <li
                   key={finding}
-                  className="rounded-lg border border-bad/40 bg-bad-soft p-2.5"
+                  className="border border-bad/40 bg-bad-soft p-2.5"
                 >
                   {finding}
                 </li>

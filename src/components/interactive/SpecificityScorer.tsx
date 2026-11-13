@@ -114,14 +114,14 @@ export function SpecificityScorer() {
     won: boolean;
   }) => (
     <div
-      className={`rounded-lg border p-3 transition-colors ${
+      className={`border p-3 transition-colors ${
         won ? "border-ok/50 bg-ok-soft" : "border-border"
       }`}
     >
       <div className="flex items-center gap-2">
         <span className="font-mono text-xs text-muted">{label}</span>
         {won ? (
-          <span className="rounded bg-ok/20 px-1.5 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wide text-ok">
+          <span className="bg-ok/20 px-1.5 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wide text-ok">
             wins
           </span>
         ) : null}
@@ -130,7 +130,7 @@ export function SpecificityScorer() {
         value={value}
         onChange={(event) => onChange(event.target.value)}
         spellCheck={false}
-        className="mt-1.5 w-full rounded-md border border-border bg-bg px-2 py-1.5 font-mono text-sm"
+        className="mt-1.5 w-full border border-border bg-bg px-2 py-1.5 font-mono text-sm"
         aria-label={`Selector ${label}`}
       />
       <div className="mt-2 flex items-center gap-3">
@@ -143,7 +143,7 @@ export function SpecificityScorer() {
             <span
               key={name}
               title={name}
-              className={`grid h-8 w-8 place-items-center rounded ${
+              className={`grid h-8 w-8 place-items-center ${
                 n > 0 ? "bg-accent text-white" : "bg-surface-2 text-muted"
               }`}
             >
@@ -164,13 +164,13 @@ export function SpecificityScorer() {
   );
 
   return (
-    <figure className="no-touch-target my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="no-touch-target my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Which selector wins
         </span>
         <select
-          className="ml-auto max-w-[12rem] rounded border border-border bg-bg px-1.5 py-1 text-xs"
+          className="ml-auto max-w-[12rem] border border-border bg-bg px-1.5 py-1 text-xs"
           defaultValue=""
           onChange={(event) => {
             const pair = EXAMPLES[Number(event.target.value)];

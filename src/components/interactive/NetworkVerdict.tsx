@@ -77,7 +77,7 @@ export function NetworkVerdict() {
   };
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Whose bug is it?
@@ -85,7 +85,7 @@ export function NetworkVerdict() {
         <select
           value={index}
           onChange={(event) => choose(Number(event.target.value))}
-          className="ml-auto max-w-[14rem] rounded border border-border bg-bg px-1.5 py-1 text-xs"
+          className="ml-auto max-w-[14rem] border border-border bg-bg px-1.5 py-1 text-xs"
           aria-label="Choose a case"
         >
           {CASES.map((c, i) => (
@@ -122,7 +122,7 @@ export function NetworkVerdict() {
             key={option}
             type="button"
             onClick={() => setGuess(option)}
-            className={`rounded-lg border px-2.5 py-1 text-xs ${
+            className={`border px-2.5 py-1 text-xs ${
               guess === option
                 ? "border-accent bg-accent-soft font-semibold"
                 : "border-border bg-surface-2"
@@ -135,7 +135,7 @@ export function NetworkVerdict() {
 
       {guess ? (
         <div className="border-t border-border p-3 text-sm">
-          <p className="rounded-lg border border-border bg-surface-2 p-2.5">
+          <p className="border border-border bg-surface-2 p-2.5">
             <strong>{current.verdict}</strong> Route to:{" "}
             <strong>{current.owner}</strong>.
           </p>

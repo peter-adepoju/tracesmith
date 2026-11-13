@@ -114,7 +114,7 @@ export function SlaClock() {
   const surprising = elapsedDays >= 1;
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           When is the first response due?
@@ -134,7 +134,7 @@ export function SlaClock() {
           <select
             value={arrival}
             onChange={(event) => setArrival(Number(event.target.value))}
-            className="mt-1 w-full rounded border border-border bg-bg px-2 py-1.5 text-sm"
+            className="mt-1 w-full border border-border bg-bg px-2 py-1.5 text-sm"
           >
             {ARRIVALS.map((a, i) => (
               <option key={a.iso} value={i}>
@@ -151,7 +151,7 @@ export function SlaClock() {
           <select
             value={priority}
             onChange={(event) => setPriority(event.target.value as Priority)}
-            className="mt-1 w-full rounded border border-border bg-bg px-2 py-1.5 text-sm"
+            className="mt-1 w-full border border-border bg-bg px-2 py-1.5 text-sm"
           >
             {(Object.keys(RESPONSE_HOURS) as Priority[]).map((p) => (
               <option key={p} value={p}>
@@ -170,7 +170,7 @@ export function SlaClock() {
             <strong>{format(raw)}</strong>
           </li>
           {waited ? (
-            <li className="rounded-lg border border-warn/40 bg-warn-soft p-2.5">
+            <li className="border border-warn/40 bg-warn-soft p-2.5">
               {waited}
             </li>
           ) : (
@@ -189,7 +189,7 @@ export function SlaClock() {
         </ol>
 
         <p
-          className={`mt-3 rounded-lg border p-2.5 text-sm ${
+          className={`mt-3 border p-2.5 text-sm ${
             surprising
               ? "border-bad/40 bg-bad-soft"
               : "border-border bg-surface-2"

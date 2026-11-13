@@ -70,7 +70,7 @@ export function Exercise({
           }}
           placeholder={placeholder}
           spellCheck={false}
-          className={`min-w-[12rem] flex-1 rounded-lg border bg-bg px-3 py-2 text-sm outline-none ${
+          className={`min-w-[12rem] flex-1 border bg-bg px-3 py-2 text-sm outline-none ${
             state === "right"
               ? "border-ok"
               : state === "wrong"
@@ -81,7 +81,7 @@ export function Exercise({
         <button
           type="button"
           onClick={check}
-          className="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-white"
+          className="bg-accent px-3 py-2 text-sm font-medium text-white"
         >
           {selfMarked ? "Show answer" : "Check"}
         </button>
@@ -117,12 +117,12 @@ export function Exercise({
         </p>
       ) : null}
       {showHint && hint ? (
-        <p className="mt-2 rounded-lg bg-surface-2 p-2.5 text-sm text-muted">
+        <p className="mt-2 bg-surface-2 p-2.5 text-sm text-muted">
           {hint}
         </p>
       ) : null}
       {showSolution ? (
-        <div className="mt-2 rounded-lg border border-ok/40 bg-ok-soft p-2.5 text-sm">
+        <div className="mt-2 border border-ok/40 bg-ok-soft p-2.5 text-sm">
           <span className="font-medium">Answer. </span>
           {solution}
         </div>

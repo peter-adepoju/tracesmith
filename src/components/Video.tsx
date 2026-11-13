@@ -16,7 +16,7 @@ export function Video({ id }: { id: VideoKey }) {
 
   if (!video) {
     return (
-      <div className="my-6 rounded-xl border border-bad/40 bg-bad-soft p-4 text-sm">
+      <div className="my-6 border border-bad/40 bg-bad-soft p-4 text-sm">
         Unknown video key: <code>{id}</code>
       </div>
     );
@@ -25,7 +25,7 @@ export function Video({ id }: { id: VideoKey }) {
   const watchUrl = `https://www.youtube.com/watch?v=${video.id}`;
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="relative aspect-video bg-surface-2">
         {playing ? (
           <iframe

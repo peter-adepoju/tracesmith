@@ -126,21 +126,21 @@ export function TestCaseBuilder() {
           onChange={(event) => set(k, event.target.value)}
           rows={rows}
           placeholder={placeholder}
-          className="mt-1 w-full rounded-lg border border-border bg-bg px-2.5 py-2 text-sm"
+          className="mt-1 w-full border border-border bg-bg px-2.5 py-2 text-sm"
         />
       ) : (
         <input
           value={fields[k]}
           onChange={(event) => set(k, event.target.value)}
           placeholder={placeholder}
-          className="mt-1 w-full rounded-lg border border-border bg-bg px-2.5 py-2 text-sm"
+          className="mt-1 w-full border border-border bg-bg px-2.5 py-2 text-sm"
         />
       )}
     </label>
   );
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Write a test case
@@ -152,7 +152,7 @@ export function TestCaseBuilder() {
               setFields(EXAMPLE);
               setChecked(false);
             }}
-            className="rounded border border-border px-2 py-1 text-xs"
+            className="border border-border px-2 py-1 text-xs"
           >
             Load an example
           </button>
@@ -162,7 +162,7 @@ export function TestCaseBuilder() {
               setFields(BLANK);
               setChecked(false);
             }}
-            className="rounded border border-border px-2 py-1 text-xs"
+            className="border border-border px-2 py-1 text-xs"
           >
             Clear
           </button>
@@ -200,7 +200,7 @@ export function TestCaseBuilder() {
         <button
           type="button"
           onClick={() => setChecked(true)}
-          className="w-full rounded-lg bg-accent px-3 py-2.5 text-sm font-medium text-white"
+          className="w-full bg-accent px-3 py-2.5 text-sm font-medium text-white"
         >
           Check the structure
         </button>
@@ -228,7 +228,7 @@ export function TestCaseBuilder() {
               </li>
             ))}
           </ul>
-          <p className="mt-3 rounded-lg bg-surface-2 p-2.5 text-xs text-muted">
+          <p className="mt-3 bg-surface-2 p-2.5 text-xs text-muted">
             These checks are mechanical. They can tell whether you numbered
             your steps; they cannot tell whether this test is worth running,
             or whether it covers the risk you meant it to. That judgement is

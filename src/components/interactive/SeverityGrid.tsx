@@ -82,7 +82,7 @@ export function SeverityGrid() {
   );
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Severity against priority
@@ -92,7 +92,7 @@ export function SeverityGrid() {
             type="button"
             onClick={() => setChecked(true)}
             disabled={unplaced.length > 0}
-            className="rounded bg-accent px-2.5 py-1 text-xs font-medium text-white disabled:opacity-40"
+            className="bg-accent px-2.5 py-1 text-xs font-medium text-white disabled:opacity-40"
           >
             Check
           </button>
@@ -103,7 +103,7 @@ export function SeverityGrid() {
               setChecked(false);
               setOpen(null);
             }}
-            className="rounded border border-border px-2 py-1 text-xs"
+            className="border border-border px-2 py-1 text-xs"
           >
             Reset
           </button>
@@ -116,7 +116,7 @@ export function SeverityGrid() {
             {unplaced.length} left to place. Pick a corner for each.
           </p>
           {unplaced.map((bug) => (
-            <div key={bug.id} className="rounded-lg border border-border p-2.5">
+            <div key={bug.id} className="border border-border p-2.5">
               <p className="text-sm">{bug.text}</p>
               <div className="no-touch-target mt-2 grid grid-cols-2 gap-1.5">
                 {CORNERS.map((corner) => (
@@ -129,7 +129,7 @@ export function SeverityGrid() {
                         [bug.id]: { s: corner.s, p: corner.p },
                       }))
                     }
-                    className="rounded border border-border px-2 py-1.5 text-[0.6875rem] hover:bg-surface-2"
+                    className="border border-border px-2 py-1.5 text-[0.6875rem] hover:bg-surface-2"
                   >
                     {corner.label}
                   </button>
@@ -148,7 +148,7 @@ export function SeverityGrid() {
           return (
             <div
               key={corner.label}
-              className={`min-h-24 rounded-lg border p-2 ${corner.tone}`}
+              className={`min-h-24 border p-2 ${corner.tone}`}
             >
               <p className="text-[0.625rem] font-semibold uppercase tracking-wider opacity-70">
                 {corner.label}
@@ -162,7 +162,7 @@ export function SeverityGrid() {
                       <button
                         type="button"
                         onClick={() => setOpen(bug)}
-                        className={`block w-full rounded border bg-bg/70 p-1.5 text-left text-xs ${
+                        className={`block w-full border bg-bg/70 p-1.5 text-left text-xs ${
                           checked
                             ? right
                               ? "border-ok"

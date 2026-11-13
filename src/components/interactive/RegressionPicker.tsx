@@ -155,7 +155,7 @@ export function RegressionPicker() {
   );
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           What would you re-run?
@@ -163,7 +163,7 @@ export function RegressionPicker() {
         <select
           value={index}
           onChange={(event) => switchScenario(Number(event.target.value))}
-          className="ml-auto max-w-[14rem] rounded border border-border bg-bg px-1.5 py-1 text-xs"
+          className="ml-auto max-w-[14rem] border border-border bg-bg px-1.5 py-1 text-xs"
           aria-label="Choose a change"
         >
           {SCENARIOS.map((s, i) => (
@@ -232,7 +232,7 @@ export function RegressionPicker() {
         <button
           type="button"
           onClick={() => setShown(true)}
-          className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white"
+          className="bg-accent px-3 py-1.5 text-sm font-medium text-white"
         >
           Check my selection
         </button>
@@ -247,7 +247,7 @@ export function RegressionPicker() {
       {shown ? (
         <div className="border-t border-border p-3 text-sm">
           {missed.length === 0 && wasted.length === 0 && !overBudget ? (
-            <p className="rounded-lg border border-ok/40 bg-ok-soft p-2.5">
+            <p className="border border-ok/40 bg-ok-soft p-2.5">
               Every suite that had to run, ran, nothing wasted, and inside the
               window. That is the whole skill.
             </p>
@@ -256,7 +256,7 @@ export function RegressionPicker() {
               {missed.map((s) => (
                 <li
                   key={s.id}
-                  className="rounded-lg border border-bad/40 bg-bad-soft p-2.5"
+                  className="border border-bad/40 bg-bad-soft p-2.5"
                 >
                   <strong>Missed: {s.label}.</strong> {s.why}
                 </li>
@@ -264,14 +264,14 @@ export function RegressionPicker() {
               {wasted.map((s) => (
                 <li
                   key={s.id}
-                  className="rounded-lg border border-border bg-surface-2 p-2.5"
+                  className="border border-border bg-surface-2 p-2.5"
                 >
                   <strong>Spent {s.minutes} minutes on {s.label}.</strong>{" "}
                   {s.why}
                 </li>
               ))}
               {overBudget ? (
-                <li className="rounded-lg border border-bad/40 bg-bad-soft p-2.5">
+                <li className="border border-bad/40 bg-bad-soft p-2.5">
                   <strong>Over the window by {spent - scenario.budget} minutes.</strong>{" "}
                   Either cut a suite to a smoke pass or say before the release,
                   not after, that the window is too short for the change.

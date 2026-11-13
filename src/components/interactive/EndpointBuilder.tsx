@@ -96,7 +96,7 @@ export function EndpointBuilder() {
   const bodyOnGet = method === "GET" && bodyParams.length > 0;
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Where does each value go?
@@ -107,7 +107,7 @@ export function EndpointBuilder() {
               key={m}
               type="button"
               onClick={() => setMethod(m)}
-              className={`rounded px-2 py-0.5 font-mono text-xs ${
+              className={`px-2 py-0.5 font-mono text-xs ${
                 method === m ? "bg-accent text-white" : "text-muted"
               }`}
             >
@@ -121,7 +121,7 @@ export function EndpointBuilder() {
         {params.map((param) => (
           <div
             key={param.key}
-            className={`rounded-lg border p-2.5 ${
+            className={`border p-2.5 ${
               param.placement === param.belongs
                 ? "border-border"
                 : "border-warn/50 bg-warn-soft"
@@ -139,7 +139,7 @@ export function EndpointBuilder() {
                       move(param.key, place);
                       setPicked({ ...param, placement: place });
                     }}
-                    className={`rounded px-2 py-1 text-xs ${
+                    className={`px-2 py-1 text-xs ${
                       param.placement === place
                         ? "bg-accent text-white"
                         : "bg-surface-2 text-muted"
@@ -162,7 +162,7 @@ export function EndpointBuilder() {
 
       <figcaption className="border-t border-border p-3 text-sm">
         {bodyOnGet ? (
-          <p className="mb-2 rounded-lg border border-bad/40 bg-bad-soft p-2.5 text-xs">
+          <p className="mb-2 border border-bad/40 bg-bad-soft p-2.5 text-xs">
             <strong>A GET with a body.</strong> Technically possible and almost
             always wrong: caches, proxies and many servers quietly discard it,
             so the value simply never arrives. If you need to send data, use

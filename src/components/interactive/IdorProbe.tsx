@@ -132,7 +132,7 @@ export function IdorProbe() {
     sent !== null && sent.status === 200 && id !== endpoint.own;
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Change the id
@@ -140,7 +140,7 @@ export function IdorProbe() {
         <select
           value={index}
           onChange={(event) => choose(Number(event.target.value))}
-          className="ml-auto max-w-[13rem] rounded border border-border bg-bg px-1.5 py-1 text-xs"
+          className="ml-auto max-w-[13rem] border border-border bg-bg px-1.5 py-1 text-xs"
           aria-label="Choose an implementation"
         >
           {ENDPOINTS.map((e, i) => (
@@ -163,7 +163,7 @@ export function IdorProbe() {
             setId(endpoint.own);
             setSent(null);
           }}
-          className="rounded-lg border border-border bg-surface-2 px-2.5 py-1 text-xs"
+          className="border border-border bg-surface-2 px-2.5 py-1 text-xs"
         >
           Your own id
         </button>
@@ -173,7 +173,7 @@ export function IdorProbe() {
             setId(endpoint.other);
             setSent(null);
           }}
-          className="rounded-lg border border-border bg-surface-2 px-2.5 py-1 text-xs"
+          className="border border-border bg-surface-2 px-2.5 py-1 text-xs"
         >
           Someone else&apos;s id
         </button>
@@ -183,7 +183,7 @@ export function IdorProbe() {
             setId(endpoint.missing);
             setSent(null);
           }}
-          className="rounded-lg border border-border bg-surface-2 px-2.5 py-1 text-xs"
+          className="border border-border bg-surface-2 px-2.5 py-1 text-xs"
         >
           An id that does not exist
         </button>
@@ -204,13 +204,13 @@ export function IdorProbe() {
               setSent(null);
             }}
             spellCheck={false}
-            className="min-w-0 flex-1 rounded border border-border bg-bg px-2 py-1 font-mono text-xs"
+            className="min-w-0 flex-1 border border-border bg-bg px-2 py-1 font-mono text-xs"
             aria-label="The id to request"
           />
           <button
             type="button"
             onClick={() => setSent(endpoint.respond(id, endpoint))}
-            className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white"
+            className="bg-accent px-3 py-1.5 text-sm font-medium text-white"
           >
             Send
           </button>
@@ -235,11 +235,11 @@ export function IdorProbe() {
                 ? "Not Found"
                 : ""}
           </p>
-          <pre className="mt-1.5 overflow-x-auto rounded-lg bg-[var(--code-bg)] p-2.5 font-mono text-[0.6875rem] text-[var(--code-text)]">
+          <pre className="mt-1.5 overflow-x-auto bg-[var(--code-bg)] p-2.5 font-mono text-[0.6875rem] text-[var(--code-text)]">
             {sent.body}
           </pre>
           {leaked ? (
-            <p className="mt-2 rounded-lg border border-bad/40 bg-bad-soft p-2.5 text-sm">
+            <p className="mt-2 border border-bad/40 bg-bad-soft p-2.5 text-sm">
               <strong>That is not your order.</strong> The server returned
               another customer&apos;s data to an account with no right to it.
               Stop here and write it up — do not enumerate further ids to see

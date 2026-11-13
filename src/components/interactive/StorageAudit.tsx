@@ -151,7 +151,7 @@ export function StorageAudit() {
   );
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Application panel
@@ -187,7 +187,7 @@ export function StorageAudit() {
           </p>
         )}
         {found === problems.length ? (
-          <p className="mt-2 rounded-lg border border-ok/40 bg-ok-soft p-2.5 text-xs">
+          <p className="mt-2 border border-ok/40 bg-ok-soft p-2.5 text-xs">
             All five found. Note that they are not equal: a password and a card
             number are escalate-now; the missing flags are report-today; the
             token in Local Storage is a risk observation, not a defect.

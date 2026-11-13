@@ -104,7 +104,7 @@ export function AccessMatrix() {
   );
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Access control matrix
@@ -171,7 +171,7 @@ export function AccessMatrix() {
         <button
           type="button"
           onClick={() => setShown(true)}
-          className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white"
+          className="bg-accent px-3 py-1.5 text-sm font-medium text-white"
         >
           Show what the server does
         </button>
@@ -188,7 +188,7 @@ export function AccessMatrix() {
               return (
                 <li
                   key={action.id}
-                  className={`rounded-lg border p-2.5 ${
+                  className={`border p-2.5 ${
                     broken
                       ? "border-bad/40 bg-bad-soft"
                       : "border-border bg-surface-2"

@@ -42,7 +42,7 @@ export default async function ProjectPage({
       </nav>
 
       <header className="mt-3">
-        <h1 className="text-3xl font-semibold tracking-tight">{project.name}</h1>
+        <h1 className="text-3xl">{project.name}</h1>
         <p className="mt-2 text-lg text-muted">{project.tagline}</p>
         <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted">
           <span>{STACK_LABEL[project.stack]}</span>
@@ -59,8 +59,8 @@ export default async function ProjectPage({
         <p>{project.sellable}</p>
       </section>
 
-      <section className="mt-8 rounded-xl border border-border bg-surface p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">
+      <section className="mt-8 border-l-2 border-border-2 pl-5">
+        <h2 className="!mt-0 text-[0.625rem] font-medium uppercase tracking-[0.18em] text-muted">
           What it teaches
         </h2>
         <ul className="mt-3 space-y-1.5 text-[0.9375rem]">
@@ -73,11 +73,11 @@ export default async function ProjectPage({
         </ul>
       </section>
 
-      <section className="mt-5 rounded-xl border border-bad/40 bg-bad-soft p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wider">
+      <section className="mt-7 border-l-2 border-bad pl-5">
+        <h2 className="!mt-0 text-[0.625rem] font-medium uppercase tracking-[0.18em] text-bad">
           Hard constraints
         </h2>
-        <p className="mt-1 text-xs opacity-80">
+        <p className="mt-1.5 text-xs text-muted">
           Not suggestions. A build that breaks one of these does not pass, even
           if it works.
         </p>
@@ -92,18 +92,18 @@ export default async function ProjectPage({
       </section>
 
       <section className="mt-10">
-        <h2 className="text-xl font-semibold">Milestones</h2>
+        <h2 className="text-xl">Milestones</h2>
         <ol className="mt-4 space-y-4">
           {project.milestones.map((milestone) => (
             <li
               key={milestone.n}
-              className="rounded-xl border border-border bg-surface p-4"
+              className="border-l-2 border-border py-3 pl-5"
             >
               <div className="flex items-baseline gap-2">
                 <span className="font-mono text-sm text-muted">
                   {milestone.n}
                 </span>
-                <h3 className="font-semibold">{milestone.title}</h3>
+                <h3 className="text-base">{milestone.title}</h3>
               </div>
               <p className="mt-1.5 text-[0.9375rem] text-muted">
                 {milestone.brief}
@@ -126,8 +126,10 @@ export default async function ProjectPage({
         </ol>
       </section>
 
-      <section className="mt-10 rounded-xl border border-border bg-surface-2 p-5">
-        <h2 className="font-semibold">The scaffold</h2>
+      <section className="mt-10 border-l-2 border-accent-soft pl-5">
+        <h2 className="!mt-0 text-[0.625rem] font-medium uppercase tracking-[0.18em] text-muted">
+          The scaffold
+        </h2>
         {project.scaffold ? (
           <>
             <p className="mt-2 text-sm text-muted">
@@ -135,7 +137,7 @@ export default async function ProjectPage({
               structure is there and the interesting parts are TODOs. Run the
               verifier against your work as you go:
             </p>
-            <pre className="mt-3 overflow-x-auto rounded-lg bg-[var(--code-bg)] p-3 text-xs text-[var(--code-text)]">
+            <pre className="mt-3 overflow-x-auto border-l-2 border-border-2 bg-[var(--code-bg)] p-3 text-xs text-[var(--code-text)]">
               <code>{`cd ${project.scaffold}
 python -I verify.py`}</code>
             </pre>
@@ -153,8 +155,8 @@ python -I verify.py`}</code>
         )}
       </section>
 
-      <section className="mt-6 rounded-xl border border-border bg-surface p-5">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">
+      <section className="mt-7 border-l-2 border-border-2 pl-5">
+        <h2 className="!mt-0 text-[0.625rem] font-medium uppercase tracking-[0.18em] text-muted">
           Before you call it finished
         </h2>
         <ul className="mt-3 space-y-1.5 text-sm">

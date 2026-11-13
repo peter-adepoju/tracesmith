@@ -96,7 +96,7 @@ export function WebhookSimulator() {
   const duplicated = orders > 1;
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Webhook delivery
@@ -105,7 +105,7 @@ export function WebhookSimulator() {
           type="button"
           onClick={deliver}
           disabled={running}
-          className="ml-auto rounded bg-accent px-2.5 py-1 text-xs font-medium text-white disabled:opacity-50"
+          className="ml-auto bg-accent px-2.5 py-1 text-xs font-medium text-white disabled:opacity-50"
         >
           {running ? "Delivering…" : "Send the event"}
         </button>
@@ -147,7 +147,7 @@ export function WebhookSimulator() {
             {attempts.map((attempt) => (
               <li
                 key={attempt.n}
-                className="flex flex-wrap items-center gap-2 rounded-lg border border-border p-2 text-xs"
+                className="flex flex-wrap items-center gap-2 border border-border p-2 text-xs"
               >
                 <span className="font-mono text-muted">
                   attempt {attempt.n} · {attempt.at}
@@ -160,7 +160,7 @@ export function WebhookSimulator() {
                   {attempt.status}
                 </span>
                 {attempt.created ? (
-                  <span className="rounded bg-warn-soft px-1.5 py-0.5 text-[0.625rem] uppercase text-warn">
+                  <span className="bg-warn-soft px-1.5 py-0.5 text-[0.625rem] uppercase text-warn">
                     order created
                   </span>
                 ) : null}
@@ -181,7 +181,7 @@ export function WebhookSimulator() {
         </p>
         <p className="mt-2 text-muted">{BEHAVIOUR[behaviour].note}</p>
         {duplicated ? (
-          <p className="mt-2 rounded-lg border border-bad/40 bg-bad-soft p-2.5 text-xs">
+          <p className="mt-2 border border-bad/40 bg-bad-soft p-2.5 text-xs">
             This is the bug. The sender behaved correctly — it could not tell a
             slow success from a failure, so it retried, which is exactly what
             you want it to do. The duplicate is <strong>your</strong> endpoint&apos;s
@@ -190,7 +190,7 @@ export function WebhookSimulator() {
           </p>
         ) : null}
         {idempotent && attempts.length > 1 && orders === 1 ? (
-          <p className="mt-2 rounded-lg border border-ok/40 bg-ok-soft p-2.5 text-xs">
+          <p className="mt-2 border border-ok/40 bg-ok-soft p-2.5 text-xs">
             Four deliveries, one order. The endpoint recognised an event it had
             already handled and did nothing the second time. That is all
             idempotency is, and it is the difference between a reliable

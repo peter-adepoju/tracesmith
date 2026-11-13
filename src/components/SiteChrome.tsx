@@ -49,7 +49,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
               <Link
                 key={link.href}
                 href={link.href}
-                className="rounded-md px-2.5 py-1.5 text-muted transition-colors hover:bg-surface-2 hover:text-text"
+                className="px-2.5 py-1.5 text-muted transition-colors hover:bg-surface-2 hover:text-text"
               >
                 {link.label}
               </Link>

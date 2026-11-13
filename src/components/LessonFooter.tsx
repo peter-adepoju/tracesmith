@@ -46,7 +46,7 @@ export function LessonFooter({
         type="button"
         onClick={toggle}
         disabled={!ready}
-        className={`w-full rounded-xl border px-4 py-3 text-sm font-medium transition-colors ${
+        className={`w-full border px-4 py-3 text-sm font-medium transition-colors ${
           done
             ? "border-ok/50 bg-ok-soft text-ok"
             : "border-border bg-surface hover:bg-surface-2"
@@ -59,7 +59,7 @@ export function LessonFooter({
         {previous ? (
           <Link
             href={`/day/${previous.week}/${previous.day}`}
-            className="flex-1 rounded-xl border border-border bg-surface px-4 py-3 transition-colors hover:bg-surface-2"
+            className="flex-1 border border-border bg-surface px-4 py-3 transition-colors hover:bg-surface-2"
           >
             <div className="text-xs text-muted">Previous</div>
             <div className="font-medium">
@@ -72,7 +72,7 @@ export function LessonFooter({
         {next ? (
           <Link
             href={`/day/${next.week}/${next.day}`}
-            className="flex-1 rounded-xl border border-border bg-surface px-4 py-3 text-right transition-colors hover:bg-surface-2"
+            className="flex-1 border border-border bg-surface px-4 py-3 text-right transition-colors hover:bg-surface-2"
           >
             <div className="text-xs text-muted">Next</div>
             <div className="font-medium">

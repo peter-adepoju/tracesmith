@@ -151,7 +151,7 @@ export function ConsoleLab() {
   }
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Console, on a page with real defects
@@ -172,7 +172,7 @@ export function ConsoleLab() {
             key={preset.label}
             type="button"
             onClick={() => setCode(preset.code)}
-            className="rounded border border-border px-2 py-1 text-xs text-muted transition-colors hover:text-text"
+            className="border border-border px-2 py-1 text-xs text-muted transition-colors hover:text-text"
           >
             {preset.label}
           </button>
@@ -205,13 +205,13 @@ export function ConsoleLab() {
             if (event.key === "Enter") run();
           }}
           spellCheck={false}
-          className="min-w-0 flex-1 rounded-md border border-border bg-bg px-2 py-2 font-mono text-xs"
+          className="min-w-0 flex-1 border border-border bg-bg px-2 py-2 font-mono text-xs"
           aria-label="Console expression"
         />
         <button
           type="button"
           onClick={run}
-          className="rounded-md bg-accent px-3 py-2 text-xs font-medium text-white"
+          className="bg-accent px-3 py-2 text-xs font-medium text-white"
         >
           Run
         </button>

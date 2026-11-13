@@ -218,7 +218,7 @@ export function SqlConsole() {
   };
 
   return (
-    <figure className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <figure className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           SQL console — real SQLite
@@ -229,7 +229,7 @@ export function SqlConsole() {
             setTask(Number(event.target.value));
             setVerdict(null);
           }}
-          className="ml-auto max-w-[13rem] rounded border border-border bg-bg px-1.5 py-1 text-xs"
+          className="ml-auto max-w-[13rem] border border-border bg-bg px-1.5 py-1 text-xs"
           aria-label="Choose a task"
         >
           {TASKS.map((t, i) => (
@@ -269,7 +269,7 @@ export function SqlConsole() {
           type="button"
           onClick={run}
           disabled={!ready}
-          className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+          className="bg-accent px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
         >
           {ready ? "Run" : "Loading SQLite…"}
         </button>

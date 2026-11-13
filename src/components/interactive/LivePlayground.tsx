@@ -74,7 +74,7 @@ export function LivePlayground({
   const dirty = htmlText !== html.trim() || cssText !== css.trim();
 
   return (
-    <div className="my-7 overflow-hidden rounded-xl border border-border bg-surface">
+    <div className="my-7 overflow-hidden border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">
           Try it
@@ -83,7 +83,7 @@ export function LivePlayground({
           <button
             type="button"
             onClick={() => setTab("html")}
-            className={`rounded px-2 py-0.5 text-xs ${tab === "html" ? "bg-bg font-medium" : "text-muted"}`}
+            className={`px-2 py-0.5 text-xs ${tab === "html" ? "bg-bg font-medium" : "text-muted"}`}
           >
             HTML
           </button>
@@ -91,7 +91,7 @@ export function LivePlayground({
             <button
               type="button"
               onClick={() => setTab("css")}
-              className={`rounded px-2 py-0.5 text-xs ${tab === "css" ? "bg-bg font-medium" : "text-muted"}`}
+              className={`px-2 py-0.5 text-xs ${tab === "css" ? "bg-bg font-medium" : "text-muted"}`}
             >
               CSS
             </button>
@@ -104,7 +104,7 @@ export function LivePlayground({
               setHtmlText(html.trim());
               setCssText(css.trim());
             }}
-            className="ml-auto rounded border border-border px-2 py-0.5 text-xs"
+            className="ml-auto border border-border px-2 py-0.5 text-xs"
           >
             Reset
           </button>
