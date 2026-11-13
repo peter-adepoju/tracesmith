@@ -1,0 +1,32 @@
+{
+  "_comment": "A pretend campaign. Every person here is invented. r3 has no research, so it must be skipped rather than padded. r4 is on the suppression list. r5 was contacted two days ago. Copy to campaign.json and replace with people you have a real reason to contact.",
+  "recipients": [
+    { "id": "r1", "email": "ada@example.test", "name": "Ada", "company": "Harmattan Supplies" },
+    { "id": "r2", "email": "grace@example.test", "name": "Grace", "company": "Lagos Canvas" },
+    { "id": "r3", "email": "tunde@example.test", "name": "Tunde", "company": "Jos Plateau Wool" },
+    { "id": "r4", "email": "chidi@example.test", "name": "Chidi", "company": "Kano Indigo" },
+    { "id": "r5", "email": "nneka@example.test", "name": "Nneka", "company": "Benin Brass" }
+  ],
+  "research": {
+    "r1": {
+      "hook": "your note about waxed cotton lead times slipping to nine weeks",
+      "source": "https://example.test/ada-post"
+    },
+    "r2": {
+      "hook": "the job advert for a part-time operations person",
+      "source": "https://example.test/grace-advert"
+    },
+    "r4": {
+      "hook": "your talk on dyeing at the trade fair",
+      "source": "https://example.test/chidi-talk"
+    },
+    "r5": {
+      "hook": "the new brass line you launched last month",
+      "source": "https://example.test/nneka-launch"
+    }
+  },
+  "contacts": {
+    "r5": { "messages": 1, "last_contacted": "2026-03-08" }
+  },
+  "suppression": ["chidi@example.test"]
+}

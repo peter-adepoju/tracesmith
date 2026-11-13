@@ -1,0 +1,34 @@
+{
+  "_comment": "A pretend nightly run. Three tests fail: two are the same broken endpoint and must group into one bug, one is genuinely flaky and must be quarantined rather than filed. Set suite_error to a string to see what a suite that could not run looks like — which is not the same as zero failures.",
+  "suite_error": null,
+  "secrets": ["hunter2seventeen"],
+  "flaky": ["search renders results"],
+  "results": [
+    { "name": "home page loads", "status": "pass" },
+    { "name": "sign in works", "status": "pass" },
+    {
+      "name": "checkout completes",
+      "status": "fail",
+      "message": "Timeout contacting /orders/8821 after 30000ms",
+      "evidence": ["screenshots/checkout.png", "trace: POST /orders/8821 -> no response"]
+    },
+    {
+      "name": "basket updates",
+      "status": "fail",
+      "message": "Timeout contacting /orders/9134 after 30000ms",
+      "evidence": ["screenshots/basket.png"]
+    },
+    {
+      "name": "search renders results",
+      "status": "fail",
+      "message": "Expected 10 results, received 0",
+      "evidence": ["screenshots/search.png"]
+    },
+    {
+      "name": "admin area is protected",
+      "status": "fail",
+      "message": "Logged in with password hunter2seventeen and reached /admin",
+      "evidence": ["console: using password hunter2seventeen", "curl -H 'Bearer eyJhbGciOiJIUzI1NiJ9' /admin"]
+    }
+  ]
+}

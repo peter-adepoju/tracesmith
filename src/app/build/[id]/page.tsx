@@ -148,9 +148,12 @@ python -I verify.py`}</code>
             </p>
           </>
         ) : (
-          <p className="mt-2 text-sm text-muted">
-            No scaffold written yet. The brief above is complete and you can
-            build from it today — the scaffold only saves you the boilerplate.
+          <p className="mt-2 text-sm leading-relaxed text-muted">
+            {/* A deliberate "none" reads differently from one still to be
+                written, and conflating them leaves someone waiting for a
+                starter that is never coming. */}
+            {project.noScaffoldBecause ??
+              "No scaffold written yet. The brief above is complete and you can build from it today — the scaffold only saves you the boilerplate."}
           </p>
         )}
       </section>

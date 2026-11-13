@@ -48,8 +48,14 @@ export type Project = {
   /** Hard rules the build must respect. */
   constraints: string[];
   milestones: Milestone[];
-  /** Folder in the repo, or null where the scaffold is not written yet. */
+  /** Folder in the repo, or null where there is no starter to give. */
   scaffold: string | null;
+  /**
+   * Why there is no scaffold, where that is a deliberate answer rather than
+   * work outstanding. Capstone has nothing to stub: every one of its
+   * milestones is a thing a person does, not a function someone writes.
+   */
+  noScaffoldBecause?: string;
 };
 
 /**
@@ -606,7 +612,7 @@ export const PROJECTS: Project[] = [
         ],
       },
     ],
-    scaffold: null,
+    scaffold: "projects/08-herald",
   },
   {
     id: "sentinel",
@@ -673,7 +679,7 @@ export const PROJECTS: Project[] = [
         ],
       },
     ],
-    scaffold: null,
+    scaffold: "projects/09-sentinel",
   },
   {
     id: "capstone",
@@ -741,6 +747,8 @@ export const PROJECTS: Project[] = [
       },
     ],
     scaffold: null,
+    noScaffoldBecause:
+      "There is nothing here to stub. Every milestone is something a person does: naming a buyer, having a stranger follow your README, operating it for two weeks, handing it to someone who then recovers from a failure using your runbook alone. A starter file and a verifier would be theatre — you cannot assert that someone else completed setup without your help. Pick one of the nine you have built, and ship that.",
   },
 ];
 
