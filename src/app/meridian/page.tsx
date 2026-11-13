@@ -173,7 +173,9 @@ function MeridianShop() {
           <button
             type="button"
             onClick={() => setView("catalogue")}
-            className="text-lg"
+            /* Meridian's own wordmark. It keeps its weight: this is meant to
+               look like somebody else's shop, not like Tracesmith. */
+            className="text-lg font-semibold tracking-tight"
           >
             Meridian
           </button>
