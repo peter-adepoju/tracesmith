@@ -37,6 +37,15 @@ export type Note = {
   tags: string[];
   /** Present when the note was started by clipping from a lesson. */
   source?: NoteSource;
+  /**
+   * A tombstone rather than a removed row.
+   *
+   * Without this, deleting a note on one device and then syncing from another
+   * would simply bring it back: the second device has a copy and no idea it
+   * was meant to go. The row stays, empty and hidden, until every device has
+   * seen the deletion.
+   */
+  deletedAt?: string | null;
 };
 
 export type NoteSummary = Omit<Note, "doc"> & { words: number };
@@ -100,16 +109,36 @@ export function countWords(doc: JSONContent): number {
   return text ? text.split(/\s+/).length : 0;
 }
 
+const alive = (note: Note) => !note.deletedAt;
+
 export async function listNotes(): Promise<NoteSummary[]> {
   const all = await run<Note[]>("readonly", (store) => store.getAll());
   return all
+    .filter(alive)
     .map(({ doc, ...rest }) => ({ ...rest, words: countWords(doc) }))
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
 export async function allNotes(): Promise<Note[]> {
   const all = await run<Note[]>("readonly", (store) => store.getAll());
-  return all.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  return all.filter(alive).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+/** Tombstones included. Only the sync layer wants these. */
+export async function allRows(): Promise<Note[]> {
+  return run<Note[]>("readonly", (store) => store.getAll());
+}
+
+export async function putMany(notes: Note[]): Promise<void> {
+  if (!notes.length) return;
+  const db = await open();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(STORE, "readwrite");
+    const store = tx.objectStore(STORE);
+    for (const note of notes) store.put(note);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
 }
 
 export async function getNote(id: string): Promise<Note | undefined> {
@@ -120,8 +149,33 @@ export async function putNote(note: Note): Promise<void> {
   await run("readwrite", (store) => store.put(note));
 }
 
+/**
+ * Delete, visibly and permanently to the reader, recoverably to the sync.
+ *
+ * The body is dropped straight away — there is no point keeping the text of
+ * something you asked to delete — but the row survives as a tombstone so the
+ * deletion can travel to your other devices instead of being undone by them.
+ */
 export async function deleteNote(id: string): Promise<void> {
-  await run("readwrite", (store) => store.delete(id));
+  const existing = await getNote(id);
+  if (!existing) return;
+  await putNote({
+    ...existing,
+    doc: emptyDoc(),
+    title: "",
+    tags: [],
+    updatedAt: new Date().toISOString(),
+    deletedAt: new Date().toISOString(),
+  });
+}
+
+/** Remove a tombstone for good, once every device has had the chance to see it. */
+export async function purgeTombstones(olderThanDays = 90): Promise<number> {
+  const cutoff = new Date(Date.now() - olderThanDays * 86_400_000).toISOString();
+  const rows = await allRows();
+  const stale = rows.filter((note) => note.deletedAt && note.deletedAt < cutoff);
+  for (const note of stale) await run("readwrite", (store) => store.delete(note.id));
+  return stale.length;
 }
 
 export async function createNote(partial: Partial<Note> = {}): Promise<Note> {
@@ -147,15 +201,19 @@ export async function createNote(partial: Partial<Note> = {}): Promise<Note> {
  */
 export async function noteForSource(source: NoteSource): Promise<Note> {
   const db = await open();
-  const existing = await new Promise<Note | undefined>((resolve, reject) => {
+  // getAll rather than get: the index also holds tombstones for this lesson,
+  // and get returns an arbitrary one of them. Taking all matches and picking
+  // a live one is what stops a deleted note being clipped back to life — or,
+  // worse, a second note quietly appearing beside it under the same key.
+  const matches = await new Promise<Note[]>((resolve, reject) => {
     const tx = db.transaction(STORE, "readonly");
-    const request = tx
-      .objectStore(STORE)
-      .index("sourceDayKey")
-      .get(source.dayKey);
-    request.onsuccess = () => resolve(request.result as Note | undefined);
+    const request = tx.objectStore(STORE).index("sourceDayKey").getAll(source.dayKey);
+    request.onsuccess = () => resolve(request.result as Note[]);
     request.onerror = () => reject(request.error);
   });
+  const existing = matches
+    .filter((note) => !note.deletedAt)
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
   if (existing) return existing;
 
   return createNote({

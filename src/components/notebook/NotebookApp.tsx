@@ -4,12 +4,15 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Editor } from "@/components/notebook/Editor";
 import { ExportMenu } from "@/components/notebook/ExportMenu";
+import { SyncBadge } from "@/components/notebook/SyncBadge";
+import { syncNotebook, type SyncState } from "@/lib/notebook/sync";
 import {
   createNote,
   deleteNote,
   getNote,
   importBackup,
   listNotes,
+  purgeTombstones,
   putNote,
   type Note,
   type NoteSummary,
@@ -42,14 +45,73 @@ export function NotebookApp() {
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [listOpen, setListOpen] = useState(false);
   const [ready, setReady] = useState(false);
+  const [sync, setSync] = useState<SyncState>({ kind: "off", reason: "unconfigured" });
+  const syncing = useRef(false);
 
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pending = useRef<Note | null>(null);
   const importInput = useRef<HTMLInputElement>(null);
+  const currentRef = useRef<Note | null>(null);
+  currentRef.current = current;
+
+  /**
+   * Bumped only when the open note is replaced from outside the editor —
+   * switching notes, or a sync bringing down a newer copy. The editor reloads
+   * its content on this rather than on every change, or it would fight the
+   * person typing.
+   */
+  const [revision, setRevision] = useState(0);
 
   const refresh = useCallback(async () => {
     setSummaries(await listNotes());
   }, []);
+
+  /**
+   * Sync, never more than once at a time.
+   *
+   * Two runs at once would race on last-write-wins and could push a note the
+   * other run had just pulled a newer copy of, so overlapping calls are
+   * dropped rather than queued — the next one along does the same work.
+   */
+  const runSync = useCallback(async () => {
+    if (syncing.current) return;
+    syncing.current = true;
+    setSync({ kind: "syncing" });
+    try {
+      const result = await syncNotebook();
+      setSync(result);
+      if (result.kind === "ok" && result.pulled > 0) {
+        await refresh();
+
+        // The note on screen may be one of the ones that just came down. An
+        // unsaved local edit wins — the person typing is the most recent
+        // writer — but otherwise show them the newer version rather than
+        // letting their next keystroke overwrite it with what is on screen.
+        const open = currentRef.current;
+        if (open && !pending.current) {
+          const fresh = await getNote(open.id);
+          if (fresh && fresh.updatedAt > open.updatedAt) {
+            if (fresh.deletedAt) {
+              // Deleted on another device while open here.
+              const list = await listNotes();
+              const next = list[0] ? await getNote(list[0].id) : await createNote();
+              setCurrent(next ?? null);
+            } else {
+              setCurrent(fresh);
+            }
+            setRevision((n) => n + 1);
+          }
+        }
+      }
+    } catch (error) {
+      setSync({
+        kind: "error",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    } finally {
+      syncing.current = false;
+    }
+  }, [refresh]);
 
   // Open whatever was last worked on, or make the first note.
   useEffect(() => {
@@ -63,11 +125,29 @@ export function NotebookApp() {
       setCurrent(first ?? (await createNote({ title: "First note" })));
       if (!list.length) await refresh();
       setReady(true);
+      void runSync();
+      // Housekeeping, not urgent: tombstones every device has long since
+      // seen are just clutter in the local database.
+      void purgeTombstones();
     })();
     return () => {
       live = false;
     };
-  }, [refresh]);
+  }, [refresh, runSync]);
+
+  // Sync when the tab comes back to the front and when the network returns —
+  // the two moments when the server is most likely to have moved on.
+  useEffect(() => {
+    const onFocus = () => {
+      if (document.visibilityState === "visible") void runSync();
+    };
+    document.addEventListener("visibilitychange", onFocus);
+    window.addEventListener("online", onFocus);
+    return () => {
+      document.removeEventListener("visibilitychange", onFocus);
+      window.removeEventListener("online", onFocus);
+    };
+  }, [runSync]);
 
   /** Write the note that is waiting, if any. Used by the timer and on exit. */
   const flush = useCallback(async () => {
@@ -77,7 +157,9 @@ export function NotebookApp() {
     await putNote(note);
     setSavedAt(note.updatedAt);
     await refresh();
-  }, [refresh]);
+    // Push shortly after the local write lands, not on every keystroke.
+    void runSync();
+  }, [refresh, runSync]);
 
   // An unsaved edit must not die with the tab. Both events are needed:
   // phones often fire only visibilitychange, desktops often only pagehide.
@@ -106,6 +188,7 @@ export function NotebookApp() {
     const note = await getNote(id);
     if (note) {
       setCurrent(note);
+      setRevision((n) => n + 1);
       setListOpen(false);
     }
   }
@@ -114,6 +197,7 @@ export function NotebookApp() {
     await flush();
     const note = await createNote();
     setCurrent(note);
+    setRevision((n) => n + 1);
     setListOpen(false);
     await refresh();
   }
@@ -128,6 +212,8 @@ export function NotebookApp() {
     const list = await listNotes();
     setSummaries(list);
     setCurrent(list[0] ? ((await getNote(list[0].id)) ?? null) : await createNote());
+    setRevision((n) => n + 1);
+    void runSync();
   }
 
   async function restore(file: File) {
@@ -244,19 +330,29 @@ export function NotebookApp() {
       ) : null}
 
       <main className="min-w-0 px-4 pb-16 lg:px-8">
-        <div className="sticky top-14 z-30 flex items-center gap-2 bg-bg/95 py-3 backdrop-blur">
+        {/* Wraps to a second line on a phone rather than hiding anything.
+            Sync state is the last thing to hide on the device you most want
+            your notes to have reached. */}
+        <div className="sticky top-14 z-30 flex flex-wrap items-center gap-x-2 gap-y-1.5 bg-bg/95 py-3 backdrop-blur">
           <button
             type="button"
             onClick={() => setListOpen(true)}
-            className="border border-border px-2.5 py-1.5 text-xs text-muted-2 lg:hidden"
+            className="order-1 border border-border px-2.5 py-1.5 text-xs text-muted-2 lg:hidden"
           >
             Notes
           </button>
-          <span className="truncate text-[0.6875rem] text-muted">
-            {words} word{words === 1 ? "" : "s"}
-            {savedAt ? ` · saved ${when(savedAt)}` : " · not yet saved"}
-          </span>
-          <div className="ml-auto flex items-center gap-1.5">
+
+          <div className="order-3 flex w-full min-w-0 items-center gap-2 sm:order-2 sm:w-auto">
+            <span className="shrink-0 text-[0.6875rem] text-muted">
+              {words} word{words === 1 ? "" : "s"}
+              {savedAt ? ` · saved ${when(savedAt)}` : " · not yet saved"}
+            </span>
+            <span className="min-w-0 truncate">
+              <SyncBadge state={sync} onSync={() => void runSync()} />
+            </span>
+          </div>
+
+          <div className="order-2 ml-auto flex items-center gap-1.5 sm:order-3">
             <ExportMenu note={current} />
             <button
               type="button"
@@ -296,6 +392,7 @@ export function NotebookApp() {
 
         <Editor
           note={current}
+          revision={revision}
           onChange={({ doc }) =>
             queueSave({ ...current, doc, updatedAt: new Date().toISOString() })
           }

@@ -78,3 +78,38 @@ create policy "own attempts" on public.attempts
   with check (auth.uid() = user_id);
 
 create index if not exists attempts_day_idx on public.attempts (user_id, day_key);
+
+-- ---------------------------------------------------------------------------
+-- Notebook: one row per person per note.
+--
+-- The document is stored as the editor's own JSON rather than HTML, which is
+-- what every export walks, so a synced note comes back identical rather than
+-- approximately. Images live inside that JSON as data URLs: it keeps a note
+-- self-contained and exportable offline, at the cost of some large rows.
+--
+-- deleted_at is a tombstone, not a flag nobody reads. Without it, deleting a
+-- note on your laptop and then opening your phone would simply put it back,
+-- because "missing here" and "deleted everywhere" are indistinguishable.
+-- ---------------------------------------------------------------------------
+create table if not exists public.notes (
+  user_id    uuid        not null references auth.users (id) on delete cascade,
+  id         text        not null,              -- the note's own id
+  title      text        not null default '',
+  doc        jsonb       not null,              -- TipTap/ProseMirror document
+  tags       text[]      not null default '{}',
+  source     jsonb,                             -- lesson it was clipped from
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  deleted_at timestamptz,
+  primary key (user_id, id)
+);
+
+alter table public.notes enable row level security;
+
+drop policy if exists "own notes" on public.notes;
+create policy "own notes" on public.notes
+  for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create index if not exists notes_updated_idx on public.notes (user_id, updated_at desc);

@@ -60,12 +60,15 @@ const EXTENSIONS = [
 
 export function Editor({
   note,
+  revision,
   onChange,
 }: {
   note: Note;
+  /** Changes only when the note is replaced from outside the editor. */
+  revision: number;
   onChange: (patch: { doc: Note["doc"]; words: number }) => void;
 }) {
-  const loadedId = useRef(note.id);
+  const loaded = useRef(revision);
 
   const editor = useEditor({
     extensions: EXTENSIONS,
@@ -110,13 +113,15 @@ export function Editor({
     }
   }
 
-  // Switching notes replaces the document rather than remounting the editor,
-  // which would throw away undo history and the scroll position together.
+  // Replace the document rather than remounting the editor, which would throw
+  // away undo history and the scroll position together. Keyed on revision and
+  // never on note.doc: reloading whenever the document changed would mean
+  // reloading on every keystroke, since each one produces a new doc object.
   useEffect(() => {
-    if (!editor || note.id === loadedId.current) return;
-    loadedId.current = note.id;
+    if (!editor || revision === loaded.current) return;
+    loaded.current = revision;
     editor.commands.setContent(note.doc, { emitUpdate: false });
-  }, [editor, note.id, note.doc]);
+  }, [editor, revision, note.doc]);
 
   if (!editor) {
     return (
