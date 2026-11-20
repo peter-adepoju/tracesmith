@@ -197,6 +197,44 @@ async function checkManifestImages(manifest) {
   }
 }
 
+// --- 6. The search index must match the content it was built from ---------
+// A stale index is the quietest failure here: search just stops finding the
+// paragraph you wrote this morning, and nothing says why.
+async function checkSearchIndex() {
+  let generated;
+  try {
+    generated = await readFile(join(root, "content/search-titles.ts"), "utf8");
+  } catch {
+    problem(
+      "content/search-titles.ts",
+      0,
+      "the search index has never been built — run `npm run search-index`",
+    );
+    return;
+  }
+
+  const stamped = /SEARCH_INDEX_STAMP = "([a-f0-9]+)"/.exec(generated);
+  if (!stamped) {
+    problem(
+      "content/search-titles.ts",
+      0,
+      "the search index has no stamp; rebuild it with `npm run search-index`",
+    );
+    return;
+  }
+
+  const { inputStamp } = await import("./search-stamp.mjs");
+  const current = await inputStamp();
+  if (stamped[1] !== current) {
+    problem(
+      "content/search-titles.ts",
+      0,
+      "the search index is out of date — lessons, labs, projects or the " +
+        "generator changed since it was built. Run `npm run search-index`",
+    );
+  }
+}
+
 // --- run ------------------------------------------------------------------
 const contentDir = join(root, "content");
 const weeks = (await readdir(contentDir, { withFileTypes: true }))
@@ -243,6 +281,8 @@ await checkLabDefects(labsText, meridianText);
 await checkManifestImages(
   JSON.parse(await readFile(join(root, "public/manifest.webmanifest"), "utf8")),
 );
+
+await checkSearchIndex();
 
 if (problems.length === 0) {
   console.log(

@@ -9,8 +9,9 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "registry": "node scripts/build-registry.mjs",
-    "validate": "node scripts/validate.mjs"
+    "registry": "node scripts/build-registry.mjs && node scripts/build-search-index.mjs",
+    "validate": "node scripts/validate.mjs",
+    "search-index": "node scripts/build-search-index.mjs"
   },
   "dependencies": {
     "@mdx-js/loader": "3.1.1",

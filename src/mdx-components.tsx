@@ -1,4 +1,5 @@
 import type { MDXComponents } from "mdx/types";
+import { slug, textOfNode } from "@/lib/slug";
 import { Callout } from "@/components/Callout";
 import { Exercise } from "@/components/Exercise";
 import { Quiz } from "@/components/Quiz";
@@ -101,6 +102,23 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     ViewportSlider,
     WaterfallExplorer,
     WebhookSimulator,
+
+    /* Headings carry an id derived from their own text, so search results can
+       link to the section they matched rather than the top of a long lesson.
+       scroll-mt keeps the sticky header from covering the heading it just
+       jumped to — without it the anchor technically works and visibly does
+       not. */
+    h2: ({ children, ...rest }) => (
+      <h2 id={slug(textOfNode(children))} className="scroll-mt-24" {...rest}>
+        {children}
+      </h2>
+    ),
+    h3: ({ children, ...rest }) => (
+      <h3 id={slug(textOfNode(children))} className="scroll-mt-24" {...rest}>
+        {children}
+      </h3>
+    ),
+
     ...components,
   };
 }

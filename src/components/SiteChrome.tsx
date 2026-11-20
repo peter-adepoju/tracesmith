@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AuthBadge } from "@/components/AuthBadge";
+import { useEffect, useState } from "react";
 import { InstallButton } from "@/components/InstallButton";
+import { SearchButton } from "@/components/SearchButton";
+import { SearchDialog } from "@/components/SearchDialog";
 import { MobileNav } from "@/components/mobile/MobileNav";
 
 /**
@@ -31,6 +34,36 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const bare = pathname?.startsWith("/meridian");
 
+  /* Search lives here because this is the one component rendered exactly
+     once. There are two triggers on screen and only ever one dialog. */
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        setSearchOpen((was) => !was);
+        return;
+      }
+      // "/" is the other shortcut fingers already know — but not while they
+      // are busy typing a "/" into something.
+      if (event.key === "/" && !event.metaKey && !event.ctrlKey && !event.altKey) {
+        const target = event.target as HTMLElement | null;
+        const typing =
+          target?.isContentEditable ||
+          ["INPUT", "TEXTAREA", "SELECT"].includes(target?.tagName ?? "");
+        if (!typing) {
+          event.preventDefault();
+          setSearchOpen(true);
+        }
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  // Meridian is the product under test and gets none of this chrome — but the
+  // hooks above must still run, so this check stays below them.
   if (bare) return <>{children}</>;
 
   return (
@@ -54,11 +87,16 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
                 {link.label}
               </Link>
             ))}
+            <SearchButton onOpen={() => setSearchOpen(true)} />
             <InstallButton />
             <AuthBadge />
           </nav>
 
-          <div className="ml-auto md:hidden">
+          {/* On a phone the labelled button would crowd the bar, so search
+              becomes an icon — but it stays in the top bar rather than moving
+              into the tab row, which is already full. */}
+          <div className="ml-auto flex items-center gap-1 md:hidden">
+            <SearchButton compact onOpen={() => setSearchOpen(true)} />
             <AuthBadge />
           </div>
         </div>
@@ -77,6 +115,8 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
       </footer>
 
       <MobileNav />
+
+      <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 }
